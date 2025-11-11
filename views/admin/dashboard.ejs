@@ -1,0 +1,93 @@
+<%- include("../../views/partials/admin/header") %>
+
+<section class="content-main">
+  <div class="content-header d-flex justify-content-between align-items-center">
+    <h2 class="content-title card-title mb-0">Dashboard</h2>
+    <div class="dashboard-date text-muted">
+      <%= new Date().toDateString() %>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-4">
+    <!-- Stats Cards -->
+    <div class="col-md-3">
+      <div class="card dashboard-card">
+        <div class="card-body text-center">
+          <i class="fas fa-users dashboard-icon text-primary"></i>
+          <h5>Total Users</h5>
+          <h2>1,250</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card dashboard-card">
+        <div class="card-body text-center">
+          <i class="fas fa-boxes dashboard-icon text-success"></i>
+          <h5>Products</h5>
+          <h2>342</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card dashboard-card">
+        <div class="card-body text-center">
+          <i class="fas fa-shopping-cart dashboard-icon text-warning"></i>
+          <h5>Orders</h5>
+          <h2>179</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card dashboard-card">
+        <div class="card-body text-center">
+          <i class="fas fa-dollar-sign dashboard-icon text-danger"></i>
+          <h5>Revenue</h5>
+          <h2>$12,480</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Section -->
+  <div class="card mt-5">
+    <div class="card-header">
+      <h5 class="mb-0">Sales Overview</h5>
+    </div>
+    <div class="card-body">
+      <canvas id="salesChart" height="120"></canvas>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Simple Chart.js Example
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      datasets: [{
+        label: 'Sales ($)',
+        data: [1200, 1900, 3000, 2500, 3200, 4000],
+        borderColor: '#4A90E2',
+        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

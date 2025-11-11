@@ -1,0 +1,69 @@
+<%- include("../../views/partials/admin/header") %>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 mt-60">
+            <form method="post" action="/admin/editCategory/<%= category._id %>" onsubmit="handleEditCategory(event)">
+                <div class="d-grid text-end mt-30 col-md-5">
+                    <button class="btn btn-primary" type="submit">Update category</button>
+                </div>
+                <div class="mb-4 mt-30">
+                    <label for="product_name" class="form-label">Name</label>
+                    <input id="edit-category-name" type="text" name="categoryName" value="<%= category.name %>" class="form-control border" />
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Description</label>
+                    <textarea id="edit-category-description" name="description" class="form-control border"><%= category.description %></textarea>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+
+<script>
+    async function handleEditCategory(){
+        event.preventDefault()
+        const categoryId = '<%= category._id %>'
+        const name = document.getElementById('edit-category-name').value.trim()
+        const description = document.getElementById('edit-category-description').value.trim()
+
+        if(name ===''||description ===""){
+            Swal.fire('Error','Please fill all the fields','error')
+            return false
+        }
+        try {
+            const response = await fetch(`/admin/editCategory/${categoryId}`,{
+                method:'POST',
+                headers:{
+                    'content-type':'application/json'
+                },
+                body:JSON.stringify({
+                    categoryName:name,
+                    description
+                })
+            })
+
+            const data = await response.json()
+            if(!response.ok){
+                 Swal.fire('Error',data.error||'Please fill all the fields','error')
+            }
+            else{
+                Swal.fire('Success', data.message||'Category has been updated Successfully','success')
+                .then(()=>location.href='/admin/category')
+            }
+            
+        } catch (error) {
+            Swal.fire('Error','Unexpected error has occured','error')
+            console.log('Edit category error',error)
+        }
+        
+    }
+
+</script>
+
+
+
+<%- include("../../views/partials/admin/footer") %>
+ 

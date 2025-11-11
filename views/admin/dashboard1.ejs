@@ -1,0 +1,201 @@
+<%- include('../partials/admin/header') %>
+
+<section class="content-main">
+  <div class="content-header d-flex justify-content-between align-items-center flex-wrap">
+    <h2 class="content-title">Dashboard</h2>
+    <div class="dashboard-date">
+      <%= new Date().toDateString() %>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-info">
+          <h4>Today's Sales</h4>
+          <div class="stat-value">$100,999</div>
+          <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> We have sold 123 items
+          </div>
+        </div>
+        <div class="stat-icon">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-info">
+          <h4>Today's Revenue</h4>
+          <div class="stat-value">$30,000</div>
+          <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> Total made so today so far
+          </div>
+        </div>
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-info">
+          <h4>Users Count</h4>
+          <div class="stat-value">20,930</div>
+          <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i> Total registered so far in database
+          </div>
+        </div>
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Total Revenue</h3>
+        <div class="time-filter">
+          <button class="time-btn">This</button>
+          <button class="time-btn active">Last</button>
+        </div>
+      </div>
+      <div class="chart-placeholder">
+        <div class="bar-chart">
+          <div class="bar" style="height: 80%;"></div>
+          <div class="bar" style="height: 60%;"></div>
+          <div class="bar" style="height: 75%;"></div>
+          <div class="bar" style="height: 55%;"></div>
+          <div class="bar" style="height: 45%;"></div>
+          <div class="bar" style="height: 70%;"></div>
+          <div class="bar" style="height: 85%;"></div>
+          <div class="bar" style="height: 90%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Most Sold Items</h3>
+      </div>
+      <div class="sold-items">
+        <div class="sold-item">
+          <div>
+            <div class="item-name">Nike</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 70%;"></div>
+            </div>
+          </div>
+          <div class="item-percent">70%</div>
+        </div>
+        <div class="sold-item">
+          <div>
+            <div class="item-name">Puma</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 40%;"></div>
+            </div>
+          </div>
+          <div class="item-percent">40%</div>
+        </div>
+        <div class="sold-item">
+          <div>
+            <div class="item-name">Adidas</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 60%;"></div>
+            </div>
+          </div>
+          <div class="item-percent">60%</div>
+        </div>
+        <div class="sold-item">
+          <div>
+            <div class="item-name">Jordan</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 80%;"></div>
+            </div>
+          </div>
+          <div class="item-percent">80%</div>
+        </div>
+        <div class="sold-item">
+          <div>
+            <div class="item-name">New AIR</div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 20%;"></div>
+            </div>
+          </div>
+          <div class="item-percent">20%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="products-section">
+    <div class="table-header">
+      <h3 class="chart-title">Selling Products</h3>
+      <div class="filter-group">
+        <button class="filter-btn">
+          <i class="fas fa-filter"></i>
+          Filter
+        </button>
+        <button class="filter-btn">
+          8 Jul - 24 Jul
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+    </div>
+
+    <table class="products-table">
+      <thead>
+        <tr>
+          <th>Product Name</th>
+          <th>Price</th>
+          <th>Sold</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="product-info">
+              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop" alt="Nike Shoe" class="product-image">
+              <span class="product-name">Navy White Nike</span>
+            </div>
+          </td>
+          <td>₹9022</td>
+          <td>52 pcs</td>
+          <td><span class="status-badge in-stock">In Stock</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="product-info">
+              <img src="https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=100&h=100&fit=crop" alt="Adidas" class="product-image">
+              <span class="product-name">Adidas UltraBoost</span>
+            </div>
+          </td>
+          <td>₹7323</td>
+          <td>10 pcs</td>
+          <td><span class="status-badge out-stock">Out of Stock</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="product-info">
+              <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=100&h=100&fit=crop" alt="Jordan" class="product-image">
+              <span class="product-name">Nike Air Force 1 High/Black</span>
+            </div>
+          </td>
+          <td>₹9022</td>
+          <td>10 pcs</td>
+          <td><span class="status-badge in-stock">In Stock</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/admin/footer') %>
