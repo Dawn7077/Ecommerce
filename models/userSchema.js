@@ -71,17 +71,33 @@ const userSchema = new Schema({
         // default:false
 
     }],
-    searchHistory:[{
-        type:Schema.Types.ObjectId,
-        ref:"Category",
-        brand:{
-            type:String
+    // searchHistory:[{
+    //     type:Schema.Types.ObjectId,
+    //     ref:"Category",
+    //     brand:{
+    //         type:String
+    //     },
+    //     searchOn:{
+    //         type:Date,
+    //         default:Date.now
+    //     }
+    // }],
+    searchHistory: [{
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
+            default: null
         },
-        searchOn:{
-            type:Date,
-            default:Date.now
+        brand: {
+            type: String,
+            default: null
+        },
+        searchedOn: {
+            type: Date,
+            default: Date.now
         }
-    }],
+        }]
+
     
     
 })

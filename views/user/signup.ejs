@@ -52,10 +52,11 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        max-width: 40%;
+        max-width: 38%;
+        margin-right: 20px;
       }
       .signup-image img {
-        max-width: 100%;
+        max-width: 125%;
         height: auto;
       }
       .social-btns {
@@ -103,14 +104,32 @@
         display: none;
 
       }
+      .card {
+        width: 100%;
+        max-width: 800px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
     </style>
   </head>
-  <body>
-    <div class="container mt-5 mb-1">
+  <body >
+    <div class="container mt-5 mb-1" style="
+        padding-top: 70px;">
       <div class="row justify-content-center">
         <div class="col-md-8">
           <div class="card">
             <div class="card-body signup-section">
+              
+              <div class="signup-image">
+                <a href="/">
+                  <img src="/img/basepage.png" alt="Shopping Site" />
+                </a>
+                <div class="text-center mt-2">
+                  <a href="/login" class="sign-in-link"
+                    >Already registered? Log in</a
+                  >
+                </div>
+              </div>
+              
               <div class="signup-form">
                 <h3 class="card-title text-center">Sign Up</h3>
 
@@ -148,7 +167,7 @@
                     />
                     <div class="error-message" id="error3"></div>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group position-relative">
                     <label for="password">Password</label>
                     <input
                       type="password"
@@ -157,6 +176,10 @@
                       id="password"
                       placeholder="Password"
                     />
+                    <i class="fa fa-eye toggle-password mt-3"
+                        onclick="togglePassword('password', this)"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                   
                     <div class="error-message" id="error4"></div>
                   </div>
                     <% if(locals.message && message.length>0){ %>
@@ -164,7 +187,7 @@
                         <%=message %>
                       </div>
                     <% } %>
-                  <div class="form-group">
+                  <div class="form-group position-relative">
                     <label for="confirm-password">Confirm Password</label>
                     <input
                       type="password"
@@ -173,6 +196,10 @@
                       id="confirm-password"
                       placeholder="Confirm Password"
                     />
+                    <i class="fa fa-eye toggle-password mt-3"
+                        onclick="togglePassword('confirm-password', this)"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d;"></i>
+                   
                     <div class="error-message" id="error5"></div>
                   </div>
                   <div
@@ -187,33 +214,33 @@
                     <div class="social-btns">
                       <a href="/auth/google" type="button" class="btn btn-outline-danger">
                         <img
-                          src="img/googlesignup.png"
+                          src="/img/google-Iconpng.png"
                           alt="Google Logo"
                           style="width: 24px; height: 24px"
                         />
                       </a>
                     </div>
+
+                    <!-- <div class="text-center">
+                  <button type="submit" class="btn btn-primary w-100 mb-3">Sign Up</button>
+                  <p>or sign up with</p>
+                  <div class="social-btns">
+                    <a href="/auth/google" class="btn-google">
+                      <img src="/img/google-Iconpng.png" alt="Google">
+                    </a>
+                  </div>
+                </div> -->
                   </div>
                 </form>
               </div>
-              <div class="signup-image">
-                <a href="/">
-                  <img src="img/signup.svg" alt="Shopping Site" />
-                </a>
-                <div class="text-center mt-2">
-                  <a href="#" class="sign-in-link"
-                    >Already registered? Log in</a
-                  >
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
       </div>
     </div>
     <div class="spacer"></div>
-    <%- include("../../views/partials/user/footer") %>
-
+     
     <script>
 
       const nameId = document.getElementById("name")
@@ -324,7 +351,243 @@
         })
       })
 
+      function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      }
+
     </script>
   </body>
 </html>
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="zxx">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="description" content="Male_Fashion Template" />
+  <meta name="keywords" content="Male_Fashion, unica, creative, html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Male-Fashion | Sign Up</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/font-awesome.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <style>
+    body {
+      font-family: 'Nunito Sans', sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    .card {
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .signup-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .signup-form {
+      flex: 1 1 50%;
+      padding: 30px;
+    }
+
+    .signup-image {
+      flex: 1 1 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+    }
+
+    .signup-image img {
+      max-width: 90%;
+      height: auto;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6c757d;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 0.8rem;
+      margin-top: 5px;
+    }
+
+    .social-btns {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .social-btns img {
+      width: 28px;
+      height: 28px;
+    }
+
+    .btn-google {
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    .btn-google:hover {
+      background: #f1f1f1;
+    }
+
+    .sign-in-link {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .sign-in-link:hover {
+      text-decoration: underline;
+    } 
+.form-group {
+  position: relative;  
+}
+ 
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 3;             
+  color: #6c757d;
+  font-size: 1rem;          
+  pointer-events: auto;
+}
+ 
+.form-control.with-eye {
+  padding-right: 40px;     
+}
+ 
+@media (max-width: 480px) {
+  .form-control.with-eye { padding-right: 48px; }
+  .toggle-password { right: 10px; }
+}
+
+  </style>
+</head>
+<body class="p-2">
+
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="card">
+          <div class="signup-section">
+             
+            <div class="signup-form">
+              <h3 class="text-center mb-4">Create Account</h3>
+
+              <form id="signform" method="POST" action="/signup">
+                
+                <div class="form-group">
+                  <label for="name">Full Name</label>
+                  <input type="text" class="form-control" id="name" name="name" placeholder="Enter name">
+                  <div class="error-message" id="error1"></div>
+                </div>
+ 
+                <div class="form-group">
+                  <label for="email">Email address</label>
+                  <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+                  <div class="error-message" id="error2"></div>
+                </div>
+ 
+                <div class="form-group">
+                  <label for="phone">Phone Number</label>
+                  <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter phone number">
+                  <div class="error-message" id="error3"></div>
+                </div>
+ 
+                <div class="form-group">
+                  <label for="password">Password</label>
+                  <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                  <i class="fa fa-eye toggle-password mt-3" onclick="togglePassword('password', this)"></i>
+                  <div class="error-message" id="error4"></div>
+                </div>
+ 
+                <div class="form-group">
+                  <label for="confirm-password">Confirm Password</label>
+                  <input type="password" class="form-control" id="confirm-password" name="cPassword" placeholder="Confirm password">
+                  <i class="fa fa-eye toggle-password mt-3" onclick="togglePassword('confirm-password', this)"></i>
+                  <div class="error-message" id="error5"></div>
+                </div>
+ 
+                <div class="text-center">
+                  <button type="submit" class="btn btn-primary w-100 mb-3">Sign Up</button>
+                  <p>or sign up with</p>
+                  <div class="social-btns">
+                    <a href="/auth/google" class="btn-google">
+                      <img src="img/googlesignup.png" alt="Google">
+                    </a>
+                  </div>
+                </div>
+              </form>
+
+              <div class="text-center mt-3">
+                <a href="/login" class="sign-in-link">Already have an account? Log in</a>
+              </div>
+            </div>
+ 
+            <div class="signup-image">
+              <img src="img/signup.svg" alt="Signup illustration">
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("fa-eye", "fa-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.replace("fa-eye-slash", "fa-eye");
+      }
+    }
+  </script>
+
+</body>
+</html> -->
+
 

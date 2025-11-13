@@ -1,0 +1,530 @@
+ <%- include("../../views/partials/user/header") %>
+<head> 
+<link rel="stylesheet" href="/user-assets/css/plugins/slick.css">
+<link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css">
+<style>
+    :root {
+        --primary-color: #3BB77E;
+        --secondary-color: #FDC040;
+        --text-dark: #253D4E;
+        --text-light: #7E7E7E;
+        --border-color: #ececec;
+        --bg-light: #F4F6FA;
+    }
+
+    /* Hero Section */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+        margin-bottom: 0;
+    }
+
+    .breadcrumb-wrap .breadcrumb {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .breadcrumb a {
+        color: var(--text-dark);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+    }
+
+    .breadcrumb a:hover {
+        color: var(--primary-color);
+    }
+
+    .breadcrumb span {
+        margin: 0 0.5rem;
+        color: var(--text-light);
+    }
+
+    .breadcrumb span:before {
+        content: "•";
+    }
+
+    /* Gallery Styles */
+    .detail-gallery {
+        position: relative;
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
+    }
+
+    .detail-gallery:hover {
+        transform: translateY(-5px);
+    }
+
+    .product-image-slider figure {
+        border-radius: 15px;
+        overflow: hidden;
+        background: #f8f9fa;
+        height: 450px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-image-slider figure img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.5s ease;
+    }
+
+    .product-image-slider figure:hover img {
+        transform: scale(1.05);
+    }
+
+    .slider-nav-thumbnails {
+        margin-top: 1.5rem;
+    }
+
+    .slider-nav-thumbnails div {
+        padding: 0 0.5rem;
+        cursor: pointer;
+    }
+
+    .slider-nav-thumbnails div img {
+        border-radius: 10px;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+        height: 90px;
+        width: 100%;
+        object-fit: contain;
+        background: #f8f9fa;
+        padding: 5px;
+    }
+
+    .slider-nav-thumbnails .slick-current img {
+        border-color: var(--primary-color);
+        box-shadow: 0 5px 15px rgba(59, 183, 126, 0.3);
+    }
+
+    .zoom-icon {
+        position: absolute;
+        top: 2.5rem;
+        right: 2.5rem;
+        width: 45px;
+        height: 45px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 10;
+    }
+
+    .zoom-icon:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    /* Product Info */
+    .detail-info {
+        padding: 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .title-detail {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        line-height: 1.3;
+    }
+
+    .product-detail-rating {
+        background: var(--bg-light);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pro-details-brand {
+        display: inline-flex;
+        align-items: center;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .pro-details-brand a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    .product-price-cover {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1.5rem 0;
+    }
+
+    .product-price ins {
+        text-decoration: none;
+    }
+
+    .text-brand {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-right: 1rem;
+    }
+
+    .old-price {
+        color: var(--text-light);
+        text-decoration: line-through;
+        font-size: 1.5rem;
+    }
+
+    .save-price {
+        background: #FF6B6B;
+        color: white !important;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .short-desc {
+        padding: 1.5rem;
+        background: var(--bg-light);
+        border-radius: 12px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .short-desc p {
+        color: var(--text-dark);
+        line-height: 1.8;
+        margin: 0;
+    }
+
+    .product_sort_info ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .product_sort_info li {
+        background: white;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid var(--primary-color);
+        transition: all 0.3s;
+    }
+
+    .product_sort_info li:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product_sort_info li i {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+    }
+
+    /* Buttons and Actions */
+    .detail-extralink {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .detail-qty {
+        display: flex;
+        align-items: center;
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-qty a {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-light);
+        transition: all 0.3s;
+        text-decoration: none;
+        color: var(--text-dark);
+    }
+
+    .detail-qty a:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .qty-val {
+        min-width: 60px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .product-extra-link2 {
+        display: flex;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .button-add-to-cart {
+        flex: 1;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #2a9d5f 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 5px 20px rgba(59, 183, 126, 0.3);
+    }
+
+    .button-add-to-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 183, 126, 0.4);
+    }
+
+    .action-btn {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: var(--text-dark);
+    }
+
+    .action-btn:hover {
+        background: #FF6B6B;
+        border-color: #FF6B6B;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    /* Product Meta */
+    .product-meta {
+        background: var(--bg-light);
+        padding: 1.5rem;
+        border-radius: 12px;
+        list-style: none;
+    }
+
+    .product-meta li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .product-meta li:last-child {
+        border-bottom: none;
+    }
+
+    .product-meta a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .in-stock {
+        background: #10b981;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-weight: 600;
+    }
+
+    .bt-1 {
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .product-image-slider figure {
+            height: 300px;
+        }
+
+        .title-detail {
+            font-size: 1.5rem;
+        }
+        
+        .text-brand {
+            font-size: 2rem;
+        }
+        
+        .detail-extralink {
+            flex-direction: column;
+        }
+
+        .product-extra-link2 {
+            width: 100%;
+        }
+        
+        .button-add-to-cart {
+            width: 100%;
+        }
+
+        .slider-nav-thumbnails div img {
+            height: 70px;
+        }
+    }
+</style>
+</head>
+<main class="main">
+ <div class="page-header breadcrumb-wrap">
+     <div class="container">
+         <div class="breadcrumb">
+             <a href="#" rel="nofollow">Home</a>
+             <span></span> Fashion
+             <span></span> Product Detail
+         </div>
+     </div>
+ </div>
+ <section class="mt-50 mb-50">
+     <div class="container">
+         <div class="row">
+             <div class="col-lg-9">
+                 <div class="product-detail accordion-detail">
+                     <div class="row mb-50">
+                         <div class="col-md-6 col-sm-12 col-xs-12">
+                             <div class="detail-gallery">
+                                 <span class="zoom-icon"><i class="fi-rs-search"></i></span>
+                                 <div class="product-image-slider">
+                                     <figure class="border-radius-10">
+                                         <img src="/uploads/product-image/<%=product.productImage[0] %>" alt="product Image">
+                                     </figure>
+                                     <figure class="border-radius-10">
+                                       <img src="/uploads/product-image/<%=product.productImage[1] %>" alt="product Image">
+                                   </figure>
+                                   <figure class="border-radius-10">
+                                       <img src="/uploads/product-image/<%=product.productImage[2] %>" alt="product Image">
+                                   </figure>
+                                   <figure class="border-radius-10">
+                                       <img src="/uploads/product-image/<%=product.productImage[3] %>" alt="product Image">
+                                   </figure>
+                                   <figure class="border-radius-10">
+                                       <img src="/uploads/product-image/<%=product.productImage[4] %>" alt="product Image">
+                                   </figure>
+                                 </div>
+                                 <div class="slider-nav-thumbnails pl-15 pr-15">
+                                    <% for(let i=0;i<product.productImage.length;i++) {%>
+                                       <div>
+                                           <img src="/uploads/product-image/<%=product.productImage[i] %>" alt="product Image">
+                                       </div>
+                                  <% } %>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="col-md-6 col-sm-12 col-xs-12">
+                             <div class="detail-info">
+                                 <h2 class="title-detail"><%= product.productName %></h2>
+                                 <div class="product-detail-rating">
+                                     <div class="pro-details-brand">
+                                         <span> Brands: <a href="#"><%= product.brand %></a></span>
+                                     </div>
+                                     <div class="product-rate-cover text-end">
+                                         <div class="product-rate d-inline-block">
+                                             <div class="product-rating" style="width:90%">
+                                             </div>
+                                         </div>
+                                         <span class="font-small ml-5 text-muted"> (25 reviews)</span>
+                                     </div>
+                                 </div>
+                                 <div class="clearfix product-price-cover">
+                                     <div class="product-price primary-color float-left">
+                                         <ins><span class="text-brand">₹<%= product.salesPrice %></span></ins>
+                                         <ins><span class="old-price font-md ml-15">₹<%= product.regularPrice %></span></ins>
+                                         <span class="save-price font-md ml-15">
+                                            <% if(!totalOffer){ %>
+                                                No Offer
+                                                <% }else{ %>
+                                                    <%= totalOffer %>% OFF
+                                                <% } %>
+                                       </span>
+                                     </div>
+                                 </div>
+                                 <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                                 <div class="short-desc mb-30">
+                                     <p><%= product.description %></p>
+                                 </div>
+                                 <div class="product_sort_info font-xs mb-30">
+                                     <ul>
+                                         <li class="mb-10"><i class="fi-rs-crown mr-5"></i> 1 Year Brand Warranty</li>
+                                         <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
+                                         <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
+                                     </ul>
+                                 </div>
+                               
+                                 <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                                 <div class="detail-extralink">
+                                     <div class="detail-qty border radius">
+                                         <a href="#" class="qty-down" onclick=""><i class="fi-rs-angle-small-down"></i></a>
+                                         <span class="qty-val" id="quantity">1</span>
+                                         <a href="#" class="qty-up" onclick=""><i class="fi-rs-angle-small-up"></i></a>
+                                     </div>
+                                     <div class="product-extra-link2">
+                                         <button type="submit" class="button button-add-to-cart" onclick="">Add to cart</button>
+                                         <a aria-label="Add To Wishlist" class="action-btn hover-up" href="#"><i class="fi-rs-heart"></i></a>
+                                     </div>
+                                 </div>
+                                 <ul class="product-meta font-xs color-grey mt-50">
+                                     <li class="mb-5">Stock Code: <a href="#">FWM15VKT</a></li>
+                                     <li class="mb-5">Tags: <a href="#" rel="tag"><%= category.name %></a></li>
+                                     <li>Availability:<span class="in-stock ml-5"><%= quantity %> Items in Stock</span></li>
+                                 </ul>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </section>
+</main>
+ 
+<script src="/user-assets/js/vendor/jquery-3.6.0.min.js"></script>
+<script src="/user-assets/js/plugins/slick.min.js"></script>
+<script>
+  $('.product-image-slider').slick({
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+    fade: false,
+    asNavFor: '.slider-nav-thumbnails'
+  });
+  $('.slider-nav-thumbnails').slick({
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    asNavFor: '.product-image-slider',
+    focusOnSelect: true
+  });
+</script>
+
+<%- include("../../views/partials/user/footer") %>

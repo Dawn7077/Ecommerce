@@ -13,7 +13,10 @@ const {customerInfo,customerBlocked,customerUnBlocked} = require('../controllers
 const {categoryInfo,addCategory, addCategoryOffer, removeCategoryOffer, getListCategory,getUnlistCategory,getEditCategory, editCategory
  } = require('../controllers/admin/categoryController') 
 const {userAuth, adminAuth} =require('../middleware/auth')
-const {getProductAddPage,addProducts} =require('../controllers/admin/productController')
+const {getProductAddPage,addProducts , getAllProducts,addProductOffer, removeProductOffer,
+    blockProduct,unBlockProduct,getEditProduct,editProduct,deleteSingleImage
+} =require('../controllers/admin/productController')
+const {getBannerPage, getAddBannerPage,addBanner,bannerDelete} = require('../controllers/admin/bannerController')
 
 
 //error management
@@ -49,5 +52,20 @@ router.post('/addProducts',((req,res,next)=>{
     next()
     
 }),adminAuth,uploads.array('images',4),addProducts)
+router.get('/products',adminAuth,getAllProducts)
+router.post('/addProductOffer',adminAuth,addProductOffer)
+router.post('/removeProductOffer',adminAuth,removeProductOffer)
+router.get('/blockProduct',adminAuth,blockProduct)
+router.get('/unBlockProduct',adminAuth,unBlockProduct)
+router.get('/editProduct',adminAuth,getEditProduct)
+router.post('/editProduct',adminAuth,uploads.array('images',4),editProduct)
+router.post('/deleteImage',adminAuth,uploads.array('images',4),deleteSingleImage)
+//banner management
+router.get('/banner',adminAuth,getBannerPage)
+router.get('/addBanner',adminAuth,getAddBannerPage)
+router.post('/addBanner',adminAuth,uploads.single('images'),addBanner)
+router.get('/deleteBanner',adminAuth,bannerDelete)
+
+
 
 module.exports = router

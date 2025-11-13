@@ -1,0 +1,288 @@
+<%- include("../../views/partials/user/header") %>
+
+<head>
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick.css">
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css">
+  <style>
+    /* --- Product Page Styling --- */
+    .product-page {
+      max-width: 1200px;
+      margin: 40px auto;
+      display: flex;
+      gap: 40px;
+    }
+
+    .product-gallery {
+      flex: 1;
+      position: relative;
+    }
+
+    .product-gallery img {
+      width: 100%;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    .slider-nav-thumbnails img {
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .slider-nav-thumbnails img:hover {
+      transform: scale(1.05);
+    }
+
+    .product-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-info h2 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    .price-section {
+      margin: 20px 0;
+      font-size: 1.3rem;
+    }
+
+    .price-section .old-price {
+      color: #888;
+      text-decoration: line-through;
+      margin-left: 10px;
+      font-size: 1rem;
+    }
+
+    .offer-tag {
+      background-color: #1e918b;
+      color: #fff;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 0.9rem;
+      margin-left: 10px;
+    }
+
+    
+
+
+    .product-description {
+      margin: 20px 0;
+      color: #444;
+      line-height: 1.6;
+    }
+
+    .product-meta {
+      font-size: 0.9rem;
+      color: #777;
+      margin-top: 15px;
+    }
+
+    .quantity-control {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #ddd;
+      border-radius: 30px;
+      padding: 5px 10px;
+      gap: 10px;
+    }
+
+    .quantity-control a {
+      color: #1e918b;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .add-to-cart-btn {
+      background-color: #1e918b;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+      margin-top: 15px;
+    }
+
+    .add-to-cart-btn:hover {
+      background-color: #156f6b;
+    }
+
+    .wishlist-btn {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-size: 1.4rem;
+      margin-left: 15px;
+    }
+
+    .breadcrumb {
+      background: #f9f9f9;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 1200px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .breadcrumb a {
+      color: #1e918b;
+      text-decoration: none;
+    }
+
+    .breadcrumb span {
+      margin: 0 8px;
+    }
+    .product-gallery {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.product-image-slider img {
+  width: 100%;
+  height: 450px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.slider-nav-thumbnails {
+  margin-top: 15px;
+}
+
+.slider-nav-thumbnails .slick-slide {
+  margin: 0 5px;
+}
+
+.slider-nav-thumbnails img {
+  width: 100px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.slider-nav-thumbnails .slick-current img {
+  border-color: #1e918b;
+}
+
+  </style>
+</head>
+
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span>/</span>
+  <a href="/shop">Shop</a>
+  <span>/</span>
+  <%= product.productName %>
+</div>
+
+<main class="product-page">
+  <!-- Gallery -->
+   <div class="product-gallery">
+  <div class="product-image-slider">
+    <% product.productImage.forEach(img => { %>
+      <div>
+        <img src="/uploads/product-image/<%= img %>" alt="Product Image">
+      </div>
+    <% }) %>
+  </div>
+
+  <div class="slider-nav-thumbnails">
+    <% product.productImage.forEach(img => { %>
+      <div>
+        <img src="/uploads/product-image/<%= img %>" alt="Thumbnail">
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+
+  <!-- Product Details -->
+  <div class="product-info">
+    <div>
+      <h2><%= product.productName %></h2>
+      <p><strong>Brand:</strong> <%= product.brand %></p>
+
+      <div class="price-section">
+        ₹<%= product.salesPrice.toLocaleString('en-IN') %>
+        <span class="old-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+        <% if (totalOffer) { %>
+          <span class="offer-tag"><%= totalOffer %>% OFF</span>
+        <% } %>
+      </div>
+
+      <div class="product-description">
+        <%- (product.description || '').replace(/\r?\n/g, '<br>') %>
+      </div>
+
+      <script>let cat =product.category
+        document.getElementById('cat').innerText = cat.name
+       </script>
+
+      <ul class="product-meta">
+        <li id="cat"><strong>Category:</strong><%= product.category[0].name %></li>
+        <li><strong>Availability:</strong> <%= quantity %> in stock</li>
+        <li><strong>Warranty:</strong> 1 year brand warranty   </li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="quantity-control mt-3">
+        <a href="#" class="qty-down">−</a>
+        <span id="quantity">1</span>
+        <a href="#" class="qty-up">+</a>
+      </div>
+
+      <div>
+        <button class="add-to-cart-btn">Add to Cart</button>
+        <button class="wishlist-btn" title="Add to Wishlist">❤️</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/user-assets/js/vendor/jquery-3.6.0.min.js"></script>
+<script src="/user-assets/js/plugins/slick.min.js"></script>
+
+<script>
+  $(document).ready(function(){
+    $('.product-image-slider').slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      arrows: false,
+      fade: false,
+      asNavFor: '.slider-nav-thumbnails'
+    });
+
+    $('.slider-nav-thumbnails').slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      asNavFor: '.product-image-slider',
+      focusOnSelect: true,
+      centerMode: false,
+      arrows: true,
+    });
+
+    // Optional: update active thumbnail
+    $('.slider-nav-thumbnails .slick-slide').removeClass('slick-active');
+    $('.slider-nav-thumbnails .slick-slide').eq(0).addClass('slick-active');
+
+    $('.product-image-slider').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
+      $('.slider-nav-thumbnails .slick-slide').removeClass('slick-active');
+      $('.slider-nav-thumbnails .slick-slide').eq(nextSlide).addClass('slick-active');
+    });
+  });
+</script>
+
+
+
+<%- include("../../views/partials/user/footer") %>
