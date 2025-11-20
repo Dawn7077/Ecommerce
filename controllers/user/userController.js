@@ -9,6 +9,7 @@ const Brand = require('../../models/brandSchema')
 const bcrypt = require('bcrypt')
 const { search } = require("../../routes/userRouter");
 const { productDetails } = require("./productController");
+const { parse } = require("dotenv");
 const env = require("dotenv").config()
 
 const loadHomePage = async (req,res)=>{
@@ -115,6 +116,10 @@ const signup = async(req,res)=>{
         }
         const findUser = await User.findOne({email})
         if(findUser){
+            if(findUser.isGoogleUser){
+                return res.render('user/signup',{message:"User with this email already exists, Please login using Google"})
+            }
+
             return res.render('user/signup',{message:"User with this email already exists"})
         }
         const otp = generateOtp()
@@ -211,8 +216,9 @@ const resendOtp = async(req,res)=>{
 
 const loadlogin = async(req,res)=>{
     try {
+        const errorMsg = req.query.errorMsg ||'' 
         if(!req.session.user){
-            return res.render("user/login")
+            return res.render("user/login",{errorMsg: errorMsg})
         }else{
             res.redirect('/')
         }
@@ -220,24 +226,29 @@ const loadlogin = async(req,res)=>{
     } catch (error) {
         res.redirect('/pageNotFound')
     }
-}
-
+} 
 const login = async(req,res)=>{
     try {
         const{email,password}= req.body
-        const findUser  = await User.findOne({isAdmin:0,email:email})
+        const findUser  = await User.findOne({isAdmin:0,email:email}) 
         
         if(!findUser){
-            return res.render('user/login',{message:"User Not found"})
+            return res.render('user/login',{message:"User Not found" ,errorMsg:''})
         }
         if(findUser.isBlocked){
-            res.render('user/login',{message:"User is Blocked by admin"})
+           return res.render('user/login',{message:"User is Blocked by admin",errorMsg:''})
         }
 
+        if (findUser.isGoogleUser===true) {
+            return res.render('user/login', { 
+                message: "This account uses Google Sign-In only. Please login with Google.",
+                errorMsg: ''
+            });
+        }
         const passportMatch = await bcrypt.compare(password,findUser.password)
 
         if(!passportMatch){
-            return res.render('user/login',{message:"Incorrect Password"})
+            return res.render('user/login',{message:"Incorrect Password",errorMsg:''})
         }
 
         req.session.user = {
@@ -249,7 +260,7 @@ const login = async(req,res)=>{
 
     } catch (error) {
         console.error("login error",error);
-        res.render('user/login',{message:"Login Failed ,Please try again later"})
+        res.render('user/login',{message:"Login Failed ,Please try again later",errorMsg:''})
         
     }
 }
@@ -260,6 +271,7 @@ const logout = async(req,res)=>{
                 console.log('Session destruction error',err.message);
                 return res.redirect('/pageNotFound')
             }
+            res.clearCookie('connect.sid')
             return res.redirect('/login')
         })
     } catch (error) {
@@ -268,22 +280,43 @@ const logout = async(req,res)=>{
         
     }
 }
+  
 const loadShoppingPage = async(req,res)=>{
     try {
         const user = req.session.user
         const userData = await User.findOne({_id:user})
         const categories = await Category.find({isListed:true})
         const categoryIds = categories.map(category=>category._id.toString())
+        
         const page = parseInt(req.query.page) || 1
         const limit =9
         const skip =(page-1)*limit
+
+        const sortType = req.query.sort || ''
+        let sortQuery = {}
+
+        if(sortType ==='az'){
+            sortQuery ={productName:1}
+        }else if(sortType ==='za'){
+            sortQuery ={productName:-1}
+        }else if(sortType ==='low-high'){
+            sortQuery ={salesPrice:1}
+        }else if(sortType ==='high-low'){
+            sortQuery ={salesPrice:-1}
+        }else{
+            sortQuery ={createdAt:-1} // for  lateset products as defualt
+        }
+
+
+
         const products = await Product.find({
             isBlocked:false,
             category:{$in:categoryIds},
             quantity:{$gt:0},
 
         })
-        .sort({createdAt:-1}).skip(skip).limit(limit)
+        .collation({ locale: "en", strength: 2 }) 
+        .sort(sortQuery).skip(skip).limit(limit)
 
         const totalProducts = await Product.countDocuments({
             isBlocked:false,
@@ -304,10 +337,14 @@ const loadShoppingPage = async(req,res)=>{
             totalProducts,
             currentPage:page,
             totalPages,
+            sort:sortType,
             selectedCategory:null,
             selectedBrand:null,
             selectedPrice: null,
-
+            crumbs: [
+                        { label: "Home", url: "/" },
+                        { label: "Shop", url: "/shop" }
+                    ]
         })
 
     } catch (error) {
@@ -377,6 +414,10 @@ const filterProduct = async(req,res)=>{
             selectedCategory:category||null,
             selectedBrand:brand||null,
             selectedPrice: null,
+            crumbs: [
+                        { label: "Home", url: "/" },
+                        { label: "Shop", url: "/shop" }
+                    ]
         })
 
     } catch (error) {
@@ -422,6 +463,10 @@ const filterByPrice = async(req,res)=>{
             selectedCategory:null,
             selectedBrand:null,
             selectedPrice: { gt, lt },
+            crumbs: [
+                        { label: "Home", url: "/" },
+                        { label: "Shop", url: "/shop" }
+                    ]
         })
 
     } catch (error) {
@@ -474,12 +519,105 @@ const searchProducts = async(req,res)=>{
             selectedCategory:null,
             selectedBrand:null,
             selectedPrice: null,
+            crumbs: [
+                        { label: "Home", url: "/" },
+                        { label: "Shop", url: "/shop" }
+                    ]
         })
 
 
 
     } catch (error) {
         console.log('Error in filterByPrice',error)
+        res.redirect('/pageNotFound')
+    }
+}
+
+const loadShop = async(req,res)=>{
+    try {   
+        const user = req.session.user
+        const userData = user? await User.findById(user):null
+        const category =req.query.category? req.query.category.trim() : null
+        const brand = req.query.brand? req.query.brand.trim() : null
+        const { 
+            search,
+            sort,
+            page=1, 
+            gt,
+            lt
+        } = req.query
+
+        const limit =9
+        const skip =(page-1)*limit
+
+        let query = {
+            isBlocked:false,
+            quantity:{$gt:0},
+        }
+
+        if(category){
+            query.category = category
+        }
+        if(brand){
+            const findBrand = await Brand.findById(brand)
+            if(findBrand){
+                query.brand = findBrand.brandName
+            }
+        }
+        if(gt||lt){
+            query.salesPrice = {
+                $gt:parseFloat(gt)||0,
+                $lt:parseFloat(lt)||1000000
+            }
+        }
+
+        if(search){
+            query.productName = {$regex:'.*'+search+'.*',$options:'i'}
+        }
+        let sortQuery = {}
+
+        if(sort==='az')sortQuery ={productName:1}
+        else if(sort==='za')sortQuery ={productName:-1}
+        else if(sort==='low-high')sortQuery ={salesPrice:1}
+        else if(sort==='high-low')sortQuery ={salesPrice:-1}
+        else sortQuery ={createdAt:-1} // for  lateset products as defualt
+
+        const products = await Product.find(query)
+        .collation({ locale: "en", strength: 2  }) 
+        .sort(sortQuery).skip(skip).limit(limit).lean()
+
+        const totalProducts = await Product.countDocuments(query)
+        const totalPages = Math.ceil(totalProducts/limit)
+
+        const categories = await Category.find({isListed:true}).lean()
+        const brands = await Brand.find({isBlocked:false}).lean()
+
+        res.render('user/shop',{
+            user:userData,
+            products,
+            category:categories,
+            brand:brands,   
+            totalProducts,
+            currentPage:parseInt(page),
+            totalPages,
+
+            selectedBrand:brand||null,
+            selectedCategory:category||null,
+            selectedPrice:{gt,lt}||null,
+            searchQuery:search||'',
+            sort,
+            crumbs: [
+                        { label: "Home", url: "/" },
+                        { label: "Shop", url: "/shop" }
+                    ]
+        })
+
+
+
+         
+    }       
+    catch (error) {     
+        console.log('Error in loadShop',error)  
         res.redirect('/pageNotFound')
     }
 }
@@ -498,5 +636,6 @@ module.exports = {
     loadShoppingPage,
     filterProduct,
     filterByPrice,
-    searchProducts
+    searchProducts,
+    loadShop
 }

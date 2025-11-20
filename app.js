@@ -26,7 +26,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use((req,res,next)=>{
-    res.set('Cache-Control','no-store')
+    res.setHeader('Cache-Control','no-store','no-cache','must-revalidate','private')
     next()
 })
 
@@ -36,8 +36,10 @@ app.use(express.static(path.join(__dirname,'public')))
 
 app.use((req,res,next)=>{
     res.locals.user = req.session.user||null
+    res.locals.admin = req.session.admin||null
     next()
 })
+
 app.use('/',userRouter)
 app.use('/admin',adminRouter)
 

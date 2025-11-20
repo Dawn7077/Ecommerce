@@ -1,0 +1,46 @@
+ <style>
+  .breadcrumb-wrap .breadcrumb {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .breadcrumb a {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--primary-color);
+    }
+
+    .breadcrumb span {
+      margin: 0 0.5rem;
+      color: var(--text-light);
+    }
+
+    .breadcrumb span:before {
+      content: "•";
+    }
+ </style>
+ 
+ <div class="page-header breadcrumb-wrap">
+  <div class="container">
+    <div class="breadcrumb"> 
+      <% crumbs.forEach((item,index)=>{ %>
+        <% if(index === crumbs.length-1){ %>
+            <a href="<%= item.url %>"> <%= item.label %>  </a>
+            <% }else{ %>
+                <a href="<%= item.url %>">  <%= item.label %> ></a>
+            <% } %>
+        <% }) %>
+    </div>
+  </div>
+</div>
+

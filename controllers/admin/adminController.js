@@ -17,7 +17,12 @@ const login= async(req,res)=>{
         if (admin){
             const passwordMatch = await bcrypt.compare(password,admin.password)
             if(passwordMatch){
-                req.session.admin= true
+                // req.session.admin= true
+                req.session.admin= {
+                    _id:admin._id,
+                    name:admin.name,
+                    email:admin.email
+                }
                 return res.redirect('/admin/dashboard')
             }else{
                 return res.redirect('/admin/login')
@@ -37,8 +42,10 @@ const loadDashboard = async (req,res)=>{
         try {
             res.render('admin/dashboard')
         } catch (error) {
-            res.redirect('/pageError')
+            res.redirect('/admin/pageError')
         }
+    }else{
+        res.redirect('/admin/login')
     }
 }
 const pageError = async(req,res)=>{
@@ -52,6 +59,7 @@ const logout =async(req,res)=>{
                 console.log("Error destroying the session",err);
                 res.redirect('/pageError')
             }
+            res.clearCookie('connect.sid')
             res.redirect('/admin/login')
         }) 
     } catch (error) {

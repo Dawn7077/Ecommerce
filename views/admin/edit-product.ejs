@@ -76,7 +76,7 @@
         <div class="col-lg-8">
             <div class="card mb-4">
                 <div class="card-body">
-                    <form method="post" action="/admin/editProduct?id=<%=product._id %>" enctype="multipart/form-data">
+                    <form method="post" action="/admin/editProduct?id=<%=product._id %>&page=<%= page %>" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label for="product_name" class="form-label">Product Name</label>
                             <input type="text" name="productName" value="<%= product.productName %>"
@@ -101,6 +101,31 @@
                             <label class="form-label">Full description</label>
                             <textarea name="descriptionData" class="form-control border" rows="4" id="descriptionData"><%= product.description %></textarea>
                             <div id="description-error" class="error-message"></div>
+                        </div>
+
+                        <div class="mb-4">
+                             <label class="form-label">Highlights (Specs)</label>
+                            <div id="highlights-container">
+                                <% if(product.highlights && product.highlights.length>0) {%>
+                                    <% product.highlights.forEach(h=>{ %>
+
+                                        <div class="d-flex mb-2">
+                                            <input type="text" name="highlights[]"
+                                            class="form-control border"
+                                            value="<%= h %>"
+                                            placeholder="Enter highlights/specs">
+
+                                            <button type="button"
+                                            class="btn btn-sm btn-danger ms-2"
+                                            onclick="this.parentElement.remove()">
+                                            Remove
+                                            </button>
+                                        </div> 
+                                        <% }) %> 
+                                    <% } %> 
+                            </div> 
+                            <button type="button" class="btn btn-sm btn-primary mt-2" onclick="addHighlightEdit()">+ Add Highlight</button>
+                           </div>
                         </div>
                         
                         <div class="row">
@@ -144,7 +169,8 @@
                                     <label class="form-label">Category</label>
                                     <select class="form-select border" name="category">
                                         <% for(let i=0;i<cat.length;i++){ %>
-                                            <option value="<%= cat[i].name %>">
+                                            <option value="<%= cat[i]._id %>">
+                                                <%= product.category && product.category[0] == cat[i]._id ? "selected" : "" %>
                                                 <%= cat[i].name %>
                                             </option>
                                         <% } %>
@@ -290,6 +316,13 @@
                             <a href="/admin/products" class="btn btn-secondary btn-lg">
                                 <i class="fa fa-arrow-left"></i> Cancel
                             </a>
+                            <button
+                                class="btn btn-danger"
+                                style="width: 90px; height:43px;  "
+                                onclick="return confirmDelete('<%= product._id %>')"
+                                >
+                                Delete
+                            </button>  
                         </div>
                     </form>
                 </div>
@@ -300,6 +333,8 @@
 
 <!-- ✅ Load Cropper.js ONCE with specific version -->
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script> 
 console.log('=== Library Check ===');
@@ -483,6 +518,16 @@ function validateForm() {
     
     const hasExistingImages = document.querySelectorAll('.existing-image-data').length > 0;
     const hasNewImages = document.getElementById('input1').files.length > 0;
+    const existingImagesCount = document.querySelectorAll('.existing-image-data').length 
+    let newImagesCount = 0;
+    ['input1', 'input2', 'input3', 'input4'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input && input.files.length>0) newImagesCount+= input.files.length;
+    })
+
+    const totalImages = existingImagesCount + newImagesCount
+
+    const MaxImages = 6
 
     let isValid = true;
 
@@ -495,8 +540,12 @@ function validateForm() {
     if (isNaN(saleprice) || saleprice < 0) { displayErrorMessage('salePrice-error', 'Enter valid sale price'); isValid = false; }
     if (!isNaN(price) && !isNaN(saleprice) && price <= saleprice) { displayErrorMessage('salePrice-error', 'Sale price must be lower'); isValid = false; }
     if (!color) { displayErrorMessage('color-error', 'Please enter a color'); isValid = false; }
-    if (!hasExistingImages && !hasNewImages) { displayErrorMessage('images-error', 'Product must have at least one image'); isValid = false; }
-
+    // if (!hasExistingImages && !hasNewImages) { displayErrorMessage('images-error', 'Product must have at least one image'); isValid = false; }
+    if (totalImages< 3 ) { displayErrorMessage('images-error', 'Product must have at least three image'); isValid = false; }
+    if(totalImages>MaxImages){
+        displayErrorMessage('images-error', `You can upload maximum ${MaxImages} images. You have selected total ${totalImages} images.`); 
+        isValid = false;
+    }
     console.log(isValid ? '✓ Validation passed' : '✗ Validation failed');
     return isValid;
 }
@@ -546,8 +595,59 @@ function deleteSingleImage(imageId, productId) {
     .then(res => res.ok ? window.location.reload() : alert('Failed to delete'))
     .catch(err => alert('Error: ' + err.message));
 }
+
+
+    async function confirmDelete(id){
+            event.preventDefault()
+            const productId = id
+            const result = await Swal.fire({
+                title:'Are you sure?',
+                text:'You cannot undo this!',
+                icon:'warning',
+                showCancelButton:true,
+                confirmButtonColor:'#3085d6',
+                cancelButtonColor:'#d33',
+                confirmButtonText:'Yes, delete it!'
+            })
+
+            if(result.isConfirmed){
+                try {
+                    const response = await fetch(`/admin/deleteProduct?id=${productId}`,{
+                        method:'DELETE',
+                    })
+                    const data = await response.json()
+                    if(!response.ok){
+                        Swal.fire('Error',data.error||'Failed to delete product','error')
+                    } else {
+                        Swal.fire('Success', data.message||'Product deleted successfully','success')
+                        .then(() => location.href='/admin/products')
+                    }
+                } catch (error) {
+                    Swal.fire('Error','Unexpected error has occured','error')
+                    console.log('Delete product error',error)
+                }
+            }
+        }
+
+function addHighlightEdit(value=''){
+    const container = document.getElementById('highlights-container')
+    const wrapper = document.createElement('div')
+    wrapper.classList.add('d-flex','mb-2')
+    wrapper.innerHTML=`
+        <input type="text" name="highlights[]"
+         class="form-control border" 
+         value="${value}" 
+         placeholder="Enter highlights/specs">
+
+        <button type="button" 
+        class="btn btn-sm btn-danger ms-2" 
+        onclick="this.parentElement.remove()">Remove</button>
+    `;
+    container.appendChild(wrapper);
+}
 </script>
  
+
 
 <%- include("../../views/partials/admin/footer") %>
 

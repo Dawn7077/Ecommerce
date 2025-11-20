@@ -1,4 +1,5 @@
 <%- include("../../views/partials/user/header") %>
+<%- include("../../views/partials/user/crumbs") %>
 <style>
  .main-container {
    max-width: 1200px;
@@ -236,14 +237,36 @@
 </style>
 
 
+
 <div class="main-container">
  <section class="shop-page container">
    <div class="shop-topbar">
      <div class="search-bar">
-       <form action="/search" method="POST" class="search-form">
-         <input type="text" name="query" placeholder="Search items..." class="search-input" />
-         <button type="submit" class="search-button">Search</button>
+       <form action="/shop" method="GET" class="search-form">
+         <input type="text" name="search" value="<%= searchQuery ||'' %>"  placeholder="Search items..." class="search-input" />
+         <% if(searchQuery !=='') {%>
+          <a href="/shop" class="d-flex align-items-center p-1">X</a>
+          <button type="submit" class="search-button"><img src="\img\icon\search.png" alt=""></button>
+            <% }else{ %>
+            <button type="submit" class="search-button">Search</button>
+            <% } %>
        </form>
+     </div>
+     <div class="sort-dropdown">
+      <form id="sortForm" action="/shop" method="GET"> 
+        <input type="hidden" name="category" value="<%= selectedCategory || '' %>"> 
+        <input type="hidden" name="brand" value="<%= selectedBrand || '' %>"> 
+        <input type="hidden" name="search" value="<%= searchQuery || '' %>"> 
+        <input type="hidden" name="gt" value="<%= selectedPrice?.gt || '' %>">
+        <input type="hidden" name="lt" value="<%= selectedPrice?.lt || '' %>">
+        <select name="sort"  onchange="document.getElementById('sortForm').submit()">
+          <option value="">Sort by</option>
+          <option value="az" <%= sort === 'az'?'selected':'' %>>A-Z</option>
+          <option value="za" <%= sort === 'za'?'selected':'' %>>Z-A</option>
+          <option value="low-high" <%= sort === 'low-high'?'selected':'' %>>low-high</option>
+          <option value="high-low" <%= sort === 'high-low'?'selected':'' %>>high-low</option>
+        </select>
+      </form>
      </div>
    </div>
   
@@ -255,7 +278,7 @@
            <ul>
             <% for(let i=0;i<category.length;i++){ %>
                <li class="filter-item">
-                <a href="/filter?category=<%= category[i]._id %><%= selectedBrand ? '&brand=' + selectedBrand : '' %>" 
+                <a href="/shop?category=<%= category[i]._id %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery?'&search='+searchQuery:'' %><%= sort?'&sort='+sort:'' %><%= selectedPrice?.gt?'&gt='+selectedPrice.gt:'' %><%= selectedPrice?.lt?'&lt='+selectedPrice.lt:'' %>" 
                 class="<%= selectedCategory == category[i]._id ? 'active-filter' : '' %>">
                 <%= category[i].name %>
                 </a>
@@ -274,7 +297,7 @@
            <ul>
             <% for(let i=0;i<brand.length;i++){ %>
                <li class="filter-item">
-                <a href="/filter?brand=<%= brand[i]._id %><%= selectedCategory ? '&category=' + selectedCategory : '' %>" 
+                <a href="/shop?brand=<%= brand[i]._id %><%= selectedCategory ? '&category=' + selectedCategory : '' %><%= searchQuery?'&search='+searchQuery:'' %><%= sort?'&sort='+sort:'' %><%= selectedPrice?.gt?'&gt='+selectedPrice.gt:'' %><%= selectedPrice?.lt?'&lt='+selectedPrice.lt:'' %>" 
                 class="<%= selectedBrand == brand[i]._id ? 'active-filter' : '' %>">
                 <%= brand[i].brandName %>
                 </a>
@@ -284,29 +307,39 @@
            </ul>
          </div>
        </div>
-
+       
 
       
        <div class="price-filter">
          <div class="filter-title"><a href="/shop" style="text-decoration: none; color: #333;">Filter by Price</a></div>
          <form id="price-filter-form">
            <div class="price-options">
-             <a href="/filterPrice?gt=0&lt=500" class="<%= selectedPrice && selectedPrice.gt == 0 && selectedPrice.lt == 500 ? 'active-filter' : '' %>"
+             <a href="/shop?gt=0&lt=500
+              <%= selectedCategory ? '&category=' + selectedCategory : '' %>
+              <%= selectedBrand ? '&brand=' + selectedBrand : '' %>
+              <%= searchQuery ? '&search=' + searchQuery : '' %>
+              <%= sort ? '&sort=' + sort : '' %> 
+             " class="<%= selectedPrice && selectedPrice.gt == 0 && selectedPrice.lt == 500 ? 'active-filter' : '' %>"
              ><button type="button" class="price-button">Under ₹500</button></a>
 
-             <a href="/filterPrice?gt=500&lt=1000"  class="<%= selectedPrice && selectedPrice.gt == 500 && selectedPrice.lt == 1000 ? 'active-filter' : '' %>"
+             <a href="/shop?gt=500&lt=1000<%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %>"  
+              class="<%= selectedPrice && selectedPrice.gt == 500 && selectedPrice.lt == 1000 ? 'active-filter' : '' %>"
              ><button type="button" class="price-button">₹500 - ₹1000</button></a>
 
-             <a href="/filterPrice?gt=1000&lt=2500"  class="<%= selectedPrice && selectedPrice.gt == 1000 && selectedPrice.lt == 2500 ? 'active-filter' : '' %>"
+             <a href="/shop?gt=1000&lt=2500<%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %>" 
+               class="<%= selectedPrice && selectedPrice.gt == 1000 && selectedPrice.lt == 2500 ? 'active-filter' : '' %>"
              ><button type="button" class="price-button">₹1000- ₹2500</button></a>
 
-             <a href="/filterPrice?gt=2500&lt=100000" class="<%= selectedPrice && selectedPrice.gt == 2500 && selectedPrice.lt == 100000  ? 'active-filter' : '' %>"
+             <a href="/shop?gt=2500&lt=100000<%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %>" 
+              class="<%= selectedPrice && selectedPrice.gt == 2500 && selectedPrice.lt == 100000  ? 'active-filter' : '' %>"
              ><button type="button" class="price-button">Above ₹2500</button></a>
            </div>
          </form>
        </div>
-     </aside>
 
+       
+     </aside>
+     
 
      <main class="product-grid">
         <% for(let i=0;i<products.length;i++){ %>
@@ -327,17 +360,17 @@
 
     <div class="pagination">
      <% if (currentPage > 1) { %>
-       <a class="btn" href="/shop?page=<%= currentPage - 1 %>">Prev</a>
+       <a class="btn" href="/shop?page=<%= currentPage - 1 %><%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %><%= selectedPrice?.gt ? '&gt=' + selectedPrice.gt : '' %><%= selectedPrice?.lt ? '&lt=' + selectedPrice.lt : '' %>">Prev</a>
      <% } %>
 
 
      <% for (let i = 1; i <= totalPages; i++) { %>
-       <a class="btn <%= currentPage === i ? 'active' : '' %>" href="/shop?page=<%= i %>"><%= i %></a>
+       <a class="btn <%= currentPage === i ? 'active' : '' %>" href="/shop?page=<%= i %><%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %><%= selectedPrice?.gt ? '&gt=' + selectedPrice.gt : '' %><%= selectedPrice?.lt ? '&lt=' + selectedPrice.lt : '' %> "><%= i %></a>
      <% } %>
 
 
      <% if (currentPage < totalPages) { %>
-       <a class="btn" href="/shop?page=<%= currentPage + 1 %>">Next</a>
+       <a class="btn" href="/shop?page=<%= currentPage + 1 %><%= selectedCategory ? '&category=' + selectedCategory : '' %><%= selectedBrand ? '&brand=' + selectedBrand : '' %><%= searchQuery ? '&search=' + searchQuery : '' %><%= sort ? '&sort=' + sort : '' %><%= selectedPrice?.gt ? '&gt=' + selectedPrice.gt : '' %><%= selectedPrice?.lt ? '&lt=' + selectedPrice.lt : '' %>">Next</a>
      <% } %>
    </div>
 

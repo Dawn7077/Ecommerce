@@ -76,8 +76,12 @@
     </div>
     <header class="card-header text-center mb-20">
       <form action="/admin/category/" method="get" class="d-inline">
-        <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px">
-          <input type="text" class="form-control border-0 rounded-pill mt-3" placeholder="Search categories" name="search"/>
+        <div class="input-group input-group-sm border border-1 border-grey rounded-pill  d-flex align-items-center" style="width: 500px; margin-left: 230px;  " >
+          <input type="text" value="<%= search?search:'' %>" class="form-control border-0 rounded-pill " placeholder="Search categories" name="search" style="margin-top: 10px;"/>
+
+          <% if(search !=='') {%>
+          <a href="/admin/category" class="btn btn-secondary rounded-pill d-flex align-items-center ">X</a>
+            <% } %>
           <button class="btn" type="submit">Search</button>
         </div>
       </form>
@@ -120,7 +124,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                    <% cat.reverse().forEach((category,index)=>{ %>
+                    <% cat.forEach((category,index)=>{ %>
                   <tr>
                     <td></td>
                     <td class="text-start"><%= category.name %></td>
@@ -175,19 +179,23 @@
       </div>
     </div>
 
-    <div class="pagination-container">
-        <% if(currentPage>1){ %>
-            <a href="?page=<%=currentPage - 1 %>&laquo; Previous"></a>
-        <% } %> <% for(let i=0; i<totalPages; i++){ %>
-                <% if(i=== currentPage){ %>
-                    <span class="current-page"><%= i %></span>
-                <% }else{ %>
-                    <a href="?page=<%= i %>"><% i %></a>
-                <% } %>
-                <% } %>
-                <% if(currentPage<totalPages){ %>
-                <a href="?page=<%=currentPage +1 %>">Next &raquo;</a>
-                <% } %>
+
+    <div class="container mt-3">
+      <div class="pagination-container">
+          <% if(currentPage>1){ %>
+              <a href="?page=<%=currentPage - 1 %>">&laquo; Previous</a>
+          <% } %> <% for(let i=1; i<=totalPages; i++){ %>
+                  <% if(i=== currentPage){ %>
+                      <span class="current-page"><%= i %></span>
+                  <% }else{ %>
+                      <a href="?page=<%= i %>"><%= i %></a>
+                  <% } %>
+                  <% } %>
+                  <% if(currentPage<totalPages){ %>
+                  <a href="?page=<%=currentPage +1 %>">Next &raquo;</a>
+                  <% } %>
+      </div>
+
     </div>
 
   </section>

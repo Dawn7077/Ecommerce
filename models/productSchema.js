@@ -47,6 +47,14 @@ const productSchema =new Schema({
         type:[String],
         require:true
     },
+    // highlights:[{
+    //     type:String,
+    //     value:String,
+    // }],
+    highlights:{
+        type:[String],
+        default:[]
+    },
     isBlocked:{
         type:Boolean,
         default:false

@@ -3,17 +3,23 @@ const Product =require('../../models/productSchema')
 
 const getBrandPage = async(req,res)=>{
     try {
+        const updated = req.query.updated
         const page = parseInt(req.query.page)||1
+        const search = req.query.search || ''
         const limit = 4 
         const skip = (page-1)*limit
 
-        const brandData = await Brand.find({})
+        const brandData = await Brand.find({
+            brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        })
         .sort({createdAt:-1})
         .skip(skip)
         .limit(limit)
         console.log('brandData',brandData);
         
-        const totalBrands = await Brand.countDocuments()
+        const totalBrands = await Brand.countDocuments({
+             brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        })
         const totalPages = Math.ceil(totalBrands/limit)
         const reverseBrand = brandData.reverse()
 
@@ -22,6 +28,8 @@ const getBrandPage = async(req,res)=>{
             currentPage:page,
             totalPages,
             totalBrands,
+            search,
+            updated
             
         })
     } catch (error) {
@@ -81,6 +89,22 @@ const deleteBrand =async (req,res)=> {
         return res.status(500).redirect('/admin/pageError')
     }
 }
+const editBrand = async(req,res)=>{
+    try {
+        const {brandId,name} = req.body
+        let updateData = {
+            brandName:name
+        }
+        if(req.file){
+            updateData.brandImage = req.file.filename
+        }
+
+        await Brand.findByIdAndUpdate(brandId,updateData),
+        res.redirect('/admin/brands?updated=true')
+    } catch (error) {
+        console.log("Error editing brand:",error)
+    }
+}
 
 
 module.exports= {
@@ -89,4 +113,5 @@ module.exports= {
     blockBrand,
     unBlockBrand,
     deleteBrand,
+    editBrand,
 }

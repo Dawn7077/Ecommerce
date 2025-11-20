@@ -5,41 +5,34 @@ const User = require('../../models/userSchema')
 const customerInfo = async(req,res)=>{
     try {
         
-        let search =''
-        if(req.query.search){
-            search = req.query.search
-        }
-        let page =1 
-        if(req.query.page){
-            page =req.query.page
-        }
+        const search = req.query.search || ''
+        const page = req.query.page || 1
         const limit = 3
-        const userData = await User.find({
+
+        const query = {
             isAdmin:false,
             $or:[
-                {name:{$regex:'.*'+search+'.*'}},
-                {email:{$regex:'.*'+search+'.*'}}
-            ],
-        })
+                {name:{$regex:'.*'+search+'.*', $options:'i'}},
+                {email:{$regex:'.*'+search+'.*', $options:'i'}},
+                {phone:{$regex:'.*'+search+'.*', $options:'i'}},
+            ]
+        } 
+        const userData = await User.find(query)
         .limit(limit*1)
         .skip((page-1)*limit)
         .exec()
 
-        const count = await User.find({
-            isAdmin:false,
-            $or:[
-                {name:{$regex:'.*'+search+'.*'}},
-                {email:{$regex:'.*'+search+'.*'}}
-            ],
-        }).countDocuments()
+        const count = await User.find(query).countDocuments()
 
         const totalPages = Math.ceil(count/limit)
+        const deleted = req.query.deleted === 'true'
 
         res.render('admin/customers',{
             data:userData,
             totalPages,
             currentPage:page,
-            search
+            search,
+            deleted
         })
 
     } catch (error) {
@@ -65,9 +58,20 @@ const customerUnBlocked = async(req,res)=>{
         req.redirect('/pageError')
     }
 }
+const deleteCustomer = async(req,res)=>{
+     try {
+        const id = req.query.id
+        await User.deleteOne({_id:id})
+        res.redirect('/admin/users?deleted=true')
+     } catch (error) {
+        console.log('Error deleting',error);
+        res.redirect('/admin/pageError')
+     }
+}
 
 module.exports = {
     customerInfo,
     customerBlocked,
-    customerUnBlocked
+    customerUnBlocked,
+    deleteCustomer
 }

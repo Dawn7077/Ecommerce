@@ -1,517 +1,720 @@
- <%- include("../../views/partials/user/header") %>
-<head> 
-<link rel="stylesheet" href="/user-assets/css/plugins/slick.css">
-<link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css">
-<style>
+<%- include("../../views/partials/user/header") %> 
+<%- include("../../views/partials/user/crumbs") %>
+<head>
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick.css" />
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+/>
+  <style>
     :root {
-        --primary-color: #3BB77E;
-        --secondary-color: #FDC040;
-        --text-dark: #253D4E;
-        --text-light: #7E7E7E;
-        --border-color: #ececec;
-        --bg-light: #F4F6FA;
+      --primary-color: #3bb77e;
+      --secondary-color: #fdc040;
+      --text-dark: #253d4e;
+      --text-light: #7e7e7e;
+      --border-color: #ececec;
+      --bg-light: #f4f6fa;
     }
 
     /* Hero Section */
-    .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem 0;
-        margin-bottom: 0;
-    }
+     
 
     .breadcrumb-wrap .breadcrumb {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        display: inline-flex;
-        align-items: center;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      
+      border-radius: 50px;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
     .breadcrumb a {
-        color: var(--text-dark);
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.3s;
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
     }
 
     .breadcrumb a:hover {
-        color: var(--primary-color);
+      color: var(--primary-color);
     }
 
     .breadcrumb span {
-        margin: 0 0.5rem;
-        color: var(--text-light);
+      margin: 0 0.5rem;
+      color: var(--text-light);
     }
 
     .breadcrumb span:before {
-        content: "•";
+      content: "•";
     }
 
     /* Gallery Styles */
     .detail-gallery {
-        position: relative;
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        transition: transform 0.3s ease;
+      position: relative;
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease;
     }
 
     .detail-gallery:hover {
-        transform: translateY(-5px);
+      transform: translateY(-5px);
     }
 
     .product-image-slider figure {
-        border-radius: 15px;
-        overflow: hidden;
-        background: #f8f9fa;
-        height: 450px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      border-radius: 15px;
+      overflow: hidden;
+      background: #f8f9fa;
+      height: 450px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .product-image-slider figure img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        transition: transform 0.5s ease;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.5s ease;
     }
 
     .product-image-slider figure:hover img {
-        transform: scale(1.05);
+      transform: scale(1.05);
     }
 
     .slider-nav-thumbnails {
-        margin-top: 1.5rem;
+      margin-top: 1.5rem;
     }
 
     .slider-nav-thumbnails div {
-        padding: 0 0.5rem;
-        cursor: pointer;
+      padding: 0 0.5rem;
+      cursor: pointer;
     }
 
     .slider-nav-thumbnails div img {
-        border-radius: 10px;
-        border: 2px solid transparent;
-        transition: all 0.3s;
-        height: 90px;
-        width: 100%;
-        object-fit: contain;
-        background: #f8f9fa;
-        padding: 5px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+      height: 90px;
+      width: 100%;
+      object-fit: contain;
+      background: #f8f9fa;
+      padding: 5px;
     }
 
     .slider-nav-thumbnails .slick-current img {
-        border-color: var(--primary-color);
-        box-shadow: 0 5px 15px rgba(59, 183, 126, 0.3);
+      border-color: var(--primary-color);
+      box-shadow: 0 5px 15px rgba(59, 183, 126, 0.3);
     }
 
     .zoom-icon {
-        position: absolute;
-        top: 2.5rem;
-        right: 2.5rem;
-        width: 45px;
-        height: 45px;
-        background: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        cursor: pointer;
-        transition: all 0.3s;
-        z-index: 10;
+      position: absolute;
+      top: 2.5rem;
+      right: 2.5rem;
+      width: 45px;
+      height: 45px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.3s;
+      z-index: 10;
     }
 
     .zoom-icon:hover {
-        background: var(--primary-color);
-        color: white;
-        transform: scale(1.1);
+      background: var(--primary-color);
+      color: white;
+      transform: scale(1.1);
     }
 
     /* Product Info */
     .detail-info {
-        padding: 2rem;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      padding: 2rem;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     }
 
     .title-detail {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--text-dark);
-        margin-bottom: 1.5rem;
-        line-height: 1.3;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1.5rem;
+      line-height: 1.3;
     }
 
     .product-detail-rating {
-        background: var(--bg-light);
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+      background: var(--bg-light);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .pro-details-brand {
-        display: inline-flex;
-        align-items: center;
-        background: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      background: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
     }
 
     .pro-details-brand a {
-        color: var(--primary-color);
-        text-decoration: none;
+      color: var(--primary-color);
+      text-decoration: none;
     }
 
     .product-price-cover {
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        padding: 1.5rem;
-        border-radius: 15px;
-        margin: 1.5rem 0;
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      padding: 1.5rem;
+      border-radius: 15px;
+      margin: 1.5rem 0;
     }
 
     .product-price ins {
-        text-decoration: none;
+      text-decoration: none;
     }
 
     .text-brand {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin-right: 1rem;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-right: 1rem;
     }
 
     .old-price {
-        color: var(--text-light);
-        text-decoration: line-through;
-        font-size: 1.5rem;
+      color: var(--text-light);
+      text-decoration: line-through;
+      font-size: 1.5rem;
     }
 
     .save-price {
-        background: #FF6B6B;
-        color: white !important;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-        display: inline-block;
+      background: #ff6b6b;
+      color: white !important;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      display: inline-block;
     }
 
     .short-desc {
-        padding: 1.5rem;
-        background: var(--bg-light);
-        border-radius: 12px;
-        border-left: 4px solid var(--primary-color);
+      padding: 1.5rem;
+      background: var(--bg-light);
+      border-radius: 12px;
+      border-left: 4px solid var(--primary-color);
     }
 
     .short-desc p {
-        color: var(--text-dark);
-        line-height: 1.8;
-        margin: 0;
+      color: var(--text-dark);
+      line-height: 1.8;
+      margin: 0;
     }
 
     .product_sort_info ul {
-        list-style: none;
-        padding: 0;
+      list-style: none;
+      padding: 0;
     }
 
     .product_sort_info li {
-        background: white;
-        padding: 0.75rem 1rem;
-        border-radius: 10px;
-        margin-bottom: 0.5rem;
-        border-left: 3px solid var(--primary-color);
-        transition: all 0.3s;
+      background: white;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid var(--primary-color);
+      transition: all 0.3s;
     }
 
     .product_sort_info li:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transform: translateX(5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
     .product_sort_info li i {
-        color: var(--primary-color);
-        font-size: 1.2rem;
+      color: var(--primary-color);
+      font-size: 1.2rem;
     }
 
     /* Buttons and Actions */
     .detail-extralink {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .detail-qty {
-        display: flex;
-        align-items: center;
-        background: white;
-        border: 2px solid var(--border-color);
-        border-radius: 50px;
-        overflow: hidden;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
     }
 
     .detail-qty a {
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--bg-light);
-        transition: all 0.3s;
-        text-decoration: none;
-        color: var(--text-dark);
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-light);
+      transition: all 0.3s;
+      text-decoration: none;
+      color: var(--text-dark);
     }
 
     .detail-qty a:hover {
-        background: var(--primary-color);
-        color: white;
+      background: var(--primary-color);
+      color: white;
     }
 
     .qty-val {
-        min-width: 60px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 1.1rem;
+      min-width: 60px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.1rem;
     }
 
     .product-extra-link2 {
-        display: flex;
-        gap: 1rem;
-        flex: 1;
+      display: flex;
+      gap: 1rem;
+      flex: 1;
     }
 
     .button-add-to-cart {
-        flex: 1;
-        background: linear-gradient(135deg, var(--primary-color) 0%, #2a9d5f 100%);
-        color: white;
-        border: none;
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s;
-        box-shadow: 0 5px 20px rgba(59, 183, 126, 0.3);
+      flex: 1;
+      background: linear-gradient(
+        135deg,
+        var(--primary-color) 0%,
+        #2a9d5f 100%
+      );
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 5px 20px rgba(59, 183, 126, 0.3);
     }
 
     .button-add-to-cart:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(59, 183, 126, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 183, 126, 0.4);
     }
 
     .action-btn {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        border: 2px solid var(--border-color);
-        border-radius: 50%;
-        transition: all 0.3s;
-        text-decoration: none;
-        color: var(--text-dark);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: var(--text-dark);
     }
 
     .action-btn:hover {
-        background: #FF6B6B;
-        border-color: #FF6B6B;
-        color: white;
-        transform: scale(1.1);
+      background: #ff6b6b;
+      border-color: #ff6b6b;
+      color: white;
+      transform: scale(1.1);
     }
 
     /* Product Meta */
     .product-meta {
-        background: var(--bg-light);
-        padding: 1.5rem;
-        border-radius: 12px;
-        list-style: none;
+      background: var(--bg-light);
+      padding: 1.5rem;
+      border-radius: 12px;
+      list-style: none;
     }
 
     .product-meta li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e0e0e0;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     .product-meta li:last-child {
-        border-bottom: none;
+      border-bottom: none;
     }
 
     .product-meta a {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 600;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
     }
 
     .in-stock {
-        background: #10b981;
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-weight: 600;
+      background: #10b981;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-weight: 600;
     }
 
     .bt-1 {
-        border-top: 1px solid var(--border-color);
+      border-top: 1px solid var(--border-color);
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-        .product-image-slider figure {
-            height: 300px;
-        }
+      .product-image-slider figure {
+        height: 300px;
+      }
 
-        .title-detail {
-            font-size: 1.5rem;
-        }
-        
-        .text-brand {
-            font-size: 2rem;
-        }
-        
-        .detail-extralink {
-            flex-direction: column;
-        }
+      .title-detail {
+        font-size: 1.5rem;
+      }
 
-        .product-extra-link2 {
-            width: 100%;
-        }
-        
-        .button-add-to-cart {
-            width: 100%;
-        }
+      .text-brand {
+        font-size: 2rem;
+      }
 
-        .slider-nav-thumbnails div img {
-            height: 70px;
-        }
+      .detail-extralink {
+        flex-direction: column;
+      }
+
+      .product-extra-link2 {
+        width: 100%;
+      }
+
+      .button-add-to-cart {
+        width: 100%;
+      }
+
+      .slider-nav-thumbnails div img {
+        height: 70px;
+      }
     }
-</style>
+  </style>
 </head>
 <main class="main">
- <div class="page-header breadcrumb-wrap">
-     <div class="container">
-         <div class="breadcrumb">
-             <a href="#" rel="nofollow">Home</a>
-             <span></span> Fashion
-             <span></span> Product Detail
-         </div>
-     </div>
- </div>
- <section class="mt-50 mb-50">
-     <div class="container">
-         <div class="row">
-             <div class="col-lg-9">
-                 <div class="product-detail accordion-detail">
-                     <div class="row mb-50">
-                         <div class="col-md-6 col-sm-12 col-xs-12">
-                             <div class="detail-gallery">
-                                 <span class="zoom-icon"><i class="fi-rs-search"></i></span>
-                                 <div class="product-image-slider">
-                                     <figure class="border-radius-10">
-                                         <img src="/uploads/product-image/<%=product.productImage[0] %>" alt="product Image">
-                                     </figure>
-                                     <figure class="border-radius-10">
-                                       <img src="/uploads/product-image/<%=product.productImage[1] %>" alt="product Image">
-                                   </figure>
-                                   <figure class="border-radius-10">
-                                       <img src="/uploads/product-image/<%=product.productImage[2] %>" alt="product Image">
-                                   </figure>
-                                   <figure class="border-radius-10">
-                                       <img src="/uploads/product-image/<%=product.productImage[3] %>" alt="product Image">
-                                   </figure>
-                                   <figure class="border-radius-10">
-                                       <img src="/uploads/product-image/<%=product.productImage[4] %>" alt="product Image">
-                                   </figure>
-                                 </div>
-                                 <div class="slider-nav-thumbnails pl-15 pr-15">
-                                    <% for(let i=0;i<product.productImage.length;i++) {%>
-                                       <div>
-                                           <img src="/uploads/product-image/<%=product.productImage[i] %>" alt="product Image">
-                                       </div>
-                                  <% } %>
-                                 </div>
-                             </div>
-                         </div>
-                         <div class="col-md-6 col-sm-12 col-xs-12">
-                             <div class="detail-info">
-                                 <h2 class="title-detail"><%= product.productName %></h2>
-                                 <div class="product-detail-rating">
-                                     <div class="pro-details-brand">
-                                         <span> Brands: <a href="#"><%= product.brand %></a></span>
-                                     </div>
-                                     <div class="product-rate-cover text-end">
-                                         <div class="product-rate d-inline-block">
-                                             <div class="product-rating" style="width:90%">
-                                             </div>
-                                         </div>
-                                         <span class="font-small ml-5 text-muted"> (25 reviews)</span>
-                                     </div>
-                                 </div>
-                                 <div class="clearfix product-price-cover">
-                                     <div class="product-price primary-color float-left">
-                                         <ins><span class="text-brand">₹<%= product.salesPrice %></span></ins>
-                                         <ins><span class="old-price font-md ml-15">₹<%= product.regularPrice %></span></ins>
-                                         <span class="save-price font-md ml-15">
-                                            <% if(!totalOffer){ %>
-                                                No Offer
-                                                <% }else{ %>
-                                                    <%= totalOffer %>% OFF
-                                                <% } %>
-                                       </span>
-                                     </div>
-                                 </div>
-                                 <div class="bt-1 border-color-1 mt-15 mb-15"></div>
-                                 <div class="short-desc mb-30">
-                                     <p><%= product.description %></p>
-                                 </div>
-                                 <div class="product_sort_info font-xs mb-30">
-                                     <ul>
-                                         <li class="mb-10"><i class="fi-rs-crown mr-5"></i> 1 Year Brand Warranty</li>
-                                         <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
-                                         <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
-                                     </ul>
-                                 </div>
-                               
-                                 <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                                 <div class="detail-extralink">
-                                     <div class="detail-qty border radius">
-                                         <a href="#" class="qty-down" onclick=""><i class="fi-rs-angle-small-down"></i></a>
-                                         <span class="qty-val" id="quantity">1</span>
-                                         <a href="#" class="qty-up" onclick=""><i class="fi-rs-angle-small-up"></i></a>
-                                     </div>
-                                     <div class="product-extra-link2">
-                                         <button type="submit" class="button button-add-to-cart" onclick="">Add to cart</button>
-                                         <a aria-label="Add To Wishlist" class="action-btn hover-up" href="#"><i class="fi-rs-heart"></i></a>
-                                     </div>
-                                 </div>
-                                 <ul class="product-meta font-xs color-grey mt-50">
-                                     <li class="mb-5">Stock Code: <a href="#">FWM15VKT</a></li>
-                                     <li class="mb-5">Tags: <a href="#" rel="tag"><%= category.name %></a></li>
-                                     <li>Availability:<span class="in-stock ml-5"><%= quantity %> Items in Stock</span></li>
-                                 </ul>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-         </div>
-     </div>
- </section>
+   
+  <section class="mt-50 mb-50">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-9">
+          <div class="product-detail accordion-detail">
+            <div class="row mb-50">
+              <div class="col-md-6 col-sm-12 col-xs-12">
+                <div class="detail-gallery">
+                  
+
+
+
+
+
+                  <!-- test area -->
+
+
+                  <style>
+                    .thumbImg {
+                      opacity: 0.41;
+                      transition: opacity 0.3s ease;
+                      border-radius: 10px;
+                      border: 2px solid transparent;
+                      transition: all 0.3s;
+                      height: 90px;
+                      width: 100%;
+                      object-fit: contain;
+                      background: #f8f9fa;
+                      padding: 5px;
+                    }
+                    .thumbImg:hover {
+                      opacity: 1; 
+                    }
+                    .select {
+                      opacity: 1;  
+                      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+                    }
+                    .thumbImg.select {
+                      opacity: 1;
+                      border: 2px solid #75ff85;
+                    }
+                    #featuredPic {
+                      max-width: 475px;
+                      max-height: 300px;
+                    }
+                    #sliderWrap {
+                      max-width: 500px;
+                      display: flex;
+                      min-height: 100px;
+                      align-items: center;
+                      overflow-x: scroll;
+                      margin: 4px;
+                      scrollbar-width: none;
+                    }
+                    #sliderWrap::-webkit-scrollbar {
+                      display: none;  
+                    }
+                    #slider { 
+                      display: flex;
+                      gap: 10px;
+                      width: max-content;
+                    }
+
+                    .arrow{
+                      width: 30px;
+                      height: 30px;
+                      cursor: pointer;
+                      transition: .3s;
+                    }
+                    .arrow:hover{
+                      opacity: .5;
+                      width: 32px;
+                      height: 32px;
+                    }
+                    .product-gallery{
+                      max-width: 600px;
+                    }
+                    #imageContainer{
+                      max-width: 375px;
+                      z-index: 1;
+                      position: relative;
+                    }
+                    #lens{
+                      z-index: 2;
+                      position: absolute;
+                      height: 125px;
+                      width: 125px;
+                      border: 2px solid black;
+                      pointer-events: none;
+                      background-repeat: no-repeat;
+                    }
+                  </style>
+
+                  <div class="product-gallery">
+                     
+                      <div id="imageContainer" class="d-flex justify-content-center">
+                        <div id="lens"></div>
+                        <img
+                          id="featuredPic"
+                          src="/uploads/product-image/<%= product.productImage[1] %>"
+                          alt="Product Image"
+                        />
+                      </div>
+                     
+
+                    <div class="thumbslider d-flex align-items-center">
+                      <!-- <span class="slide-btn  " id="slideLeft">
+                        <i class="bi bi-chevron-left"></i>
+                      </span> -->
+                      <img src="/img/icon/arrow-left.png" alt=""  id="slideLeft" class="arrow">
+                     
+                      <div class="d-flex justify-content-evenly " id="sliderWrap">
+                      <div id="slider">
+                        <% product.productImage.forEach(img => { %>
+                        <img
+                          class="thumbImg"
+                          src="/uploads/product-image/<%= img %>"
+                          alt="Thumbnail"
+                        />
+                        <% }) %>
+                      </div>
+                    </div>
+                    <!-- <span class="slide-btn " id="slideRight">
+                        <i class=" " src="/img/icon/arrow-right.png"></i>
+                      </span> -->
+                      
+                      <img src="/img/icon/arrow-right.png" alt=""  id="slideRight" class="arrow">
+                     
+                    </div> 
+                    <script>
+                      //sliderArrow
+                      const left_Arrowbtn = document.getElementById('slideLeft')
+                      const right_Arrowbtn = document.getElementById('slideRight')
+                      left_Arrowbtn.addEventListener('click',()=>{
+                        document.getElementById('sliderWrap').scrollBy({ left: -120, behavior: "smooth" });
+                      })
+                      right_Arrowbtn.addEventListener('click',()=>{
+                        document.getElementById('sliderWrap').scrollBy({ left: 120, behavior: "smooth" });
+                      })
+
+
+                      //sliders
+                      let thumbImg =document.getElementsByClassName("thumbImg");
+                      let mainImg = document.getElementById("featuredPic");
+                      let previousImg = mainImg.src;
+                      let selectImg = document.getElementsByClassName("select");
+                      thumbImg[0].classList.add("select");
+                      for (let i = 0; i < thumbImg.length; i++) {
+                        thumbImg[i].addEventListener("mouseover", () => {
+                          mainImg.src = thumbImg[i].src;
+                        });
+                        thumbImg[i].addEventListener("mouseout", () => {
+                          mainImg.src = previousImg;
+                        });
+
+                        thumbImg[i].addEventListener("click", () => {
+                          mainImg.src = thumbImg[i].src;
+                          previousImg = thumbImg[i].src;
+                          if (selectImg.length > 0) {
+                            selectImg[0].classList.remove("select");
+                          }
+                          thumbImg[i].classList.add("select");
+                        });
+                      }
+                    </script>
+                    
+                    <script>
+                      function enableZoom(imgId){
+                        const img = document.getElementById(imgId);
+                        const lens = document.getElementById("lens");
+                        const zoomLevel = 3;
+
+                        lens.style.backgroundSize = (img.width * zoomLevel) + "px " + (img.height * zoomLevel) + "px";
+
+                        img.addEventListener("mousemove", move);
+                        lens.addEventListener("mousemove", move);
+                        img.addEventListener("mouseenter", () => {
+                          lens.style.display = "block";
+                        });
+                        img.addEventListener("mouseleave", () => {
+                          lens.style.display = "none";
+                        });
+
+                        function move(e){
+                          const rect = img.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const y = e.clientY - rect.top;
+
+                          lens.style.left = (x - lens.offsetWidth / 2) + "px";
+                          lens.style.top = (y - lens.offsetHeight / 2) + "px";
+
+                          lens.style.backgroundImage = `url('${img.src}')`;
+                          lens.style.backgroundPosition = '-' + (x * zoomLevel - lens.offsetWidth / 2) + 'px -' + (y * zoomLevel - lens.offsetHeight / 2) + 'px';
+                        }
+                      }
+                      enableZoom("featuredPic");
+                    </script>
+                  </div>
+
+                  
+                  <!-- test area  -->
+                  
+
+
+
+
+
+                </div>
+              </div>
+              <div class="col-md-6 col-sm-12 col-xs-12">
+                <div class="detail-info">
+                  <h2 class="title-detail"><%= product.productName %></h2>
+                  <div class="product-detail-rating">
+                    <div class="pro-details-brand">
+                      <span> Brands: <a href="#"><%= product.brand %></a></span>
+                    </div>
+                    <div class="product-rate-cover text-end">
+                      <div class="product-rate d-inline-block">
+                        <div class="product-rating" style="width: 90%"></div>
+                      </div>
+                      <span class="font-small ml-5 text-muted">
+                        (25 reviews)</span
+                      >
+                    </div>
+                  </div>
+                  <div class="clearfix product-price-cover">
+                    <div class="product-price primary-color float-left">
+                      <ins
+                        ><span class="text-brand"
+                          >₹<%= product.salesPrice %></span
+                        ></ins
+                      >
+                      <ins
+                        ><span class="old-price font-md ml-15"
+                          >₹<%= product.regularPrice %></span
+                        ></ins
+                      >
+                      <span class="save-price font-md ml-15">
+                        <% if(!totalOffer){ %> No Offer <% }else{ %> <%=
+                        totalOffer %>% OFF <% } %>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                  <div class="short-desc mb-30">
+                    <p><%= product.description %></p>
+                  </div>
+                  <div class="product_sort_info font-xs mb-30">
+                    <ul>
+                      <li class="mb-10">
+                        <i class="fi-rs-crown mr-5"></i> 1 Year Brand Warranty
+                      </li>
+                      <li class="mb-10">
+                        <i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy
+                      </li>
+                      <li>
+                        <i class="fi-rs-credit-card mr-5"></i> Cash on Delivery
+                        available
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                  <div class="detail-extralink">
+                    <div class="detail-qty border radius">
+                      <a href="#" class="qty-down" onclick=""
+                        ><i class="fi-rs-angle-small-down"></i
+                      ></a>
+                      <span class="qty-val" id="quantity">1</span>
+                      <a href="#" class="qty-up" onclick=""
+                        ><i class="fi-rs-angle-small-up"></i
+                      ></a>
+                    </div>
+                    <div class="product-extra-link2">
+                      <button
+                        type="submit"
+                        class="button button-add-to-cart"
+                        onclick=""
+                      >
+                        Add to cart
+                      </button>
+                      <a
+                        aria-label="Add To Wishlist"
+                        class="action-btn hover-up"
+                        href="#"
+                        ><i class="fi-rs-heart"></i
+                      ></a>
+                    </div>
+                  </div>
+                  <ul class="product-meta font-xs color-grey mt-50">
+                    <li class="mb-5">Stock Code: <a href="#">FWM15VKT</a></li>
+                    <li class="mb-5">
+                      Tags: <a href="#" rel="tag"><%= category.name %></a>
+                    </li>
+                    <li>
+                      Availability:<span class="in-stock ml-5"
+                        ><%= quantity %> Items in Stock</span
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
- 
+
 <script src="/user-assets/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user-assets/js/plugins/slick.min.js"></script>
-<script>
+<!-- <script>
   $('.product-image-slider').slick({
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -525,6 +728,6 @@
     asNavFor: '.product-image-slider',
     focusOnSelect: true
   });
-</script>
+</script> -->
 
 <%- include("../../views/partials/user/footer") %>

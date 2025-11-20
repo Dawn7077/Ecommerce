@@ -167,7 +167,7 @@
                   id="password"
                   placeholder="Password"
                 />
-                <i class="fa fa-eye toggle-password mt-3" id="togglePassword"></i>
+                <i class="fa fa-eye toggle-password mt-3" id="togglePassword" onclick="togglePassword('password', this)"></i>
                 <div id="error2" class="error-message"></div>
               </div>
 
@@ -175,11 +175,7 @@
                 <a href="/forgot-password" class="forgot-password-link ms-auto"> Forgot Password</a>
               </div>
               
-              <% if(locals.message && message.length>0){ %>
-                <div class="alert alert-danger text-center">
-                  <%=message %>
-                </div>
-              <% } %>
+              
 
               <div class="d-flex justify-content-between align-items-center ">
                 <button type="submit" class="btn btn-primary">Log In</button>
@@ -196,6 +192,16 @@
                   </a>
                 </div>
               </div>
+              <% if(locals.message && message.length>0){ %>
+                <div class="alert alert-danger text-center">
+                  <%=message %>
+                </div>
+              <% } %>
+              <% if(errorMsg){ %>
+                <div class="alert alert-danger text-center">
+                  <%=errorMsg ||'Google login error ' %>
+                </div>
+              <% } %>
             </form>
           </div>
           <div class="login-image">

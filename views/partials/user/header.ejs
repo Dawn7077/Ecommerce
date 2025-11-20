@@ -158,7 +158,7 @@
                         <ul>
                             <li class="active"><a href="/">Home</a></li>
                             <li><a href="/shop">Shop</a></li>
-                            <li><a href="/">Pages</a>
+                            <li><a href="/page">Pages</a>
                                 <ul class="dropdown">
                                     <li><a href="">About Us</a></li>
                                     <li><a href="/shop">Shop Details</a></li>
@@ -183,5 +183,27 @@
             </div>
             <div class="canvas__open"><i class="fa fa-bars"></i></div>
         </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const currentPath = window.location.pathname;
+                const menuItems = document.querySelectorAll(".header__menu ul li a");
+
+                menuItems.forEach(link => {
+                    // Remove any previous 'active'
+                    link.parentElement.classList.remove("active");
+
+                    // Match exact path
+                    if (link.getAttribute("href") === currentPath) {
+                        link.parentElement.classList.add("active");
+                    }
+
+                    // Special rule: mark Home active for '/'
+                    if (currentPath === "/" && link.getAttribute("href") === "/") {
+                        link.parentElement.classList.add("active");
+                    }
+                });
+            });
+        </script>
+
     </header>
     <!-- Header Section End -->

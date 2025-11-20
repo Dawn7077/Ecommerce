@@ -2,6 +2,7 @@
 <%- include("../../views/partials/admin/header") %>
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   
 </head>
@@ -68,6 +69,11 @@
                                <textarea placeholder="Type here" id="descriptionId" name="description" class="form-control border"
                                    rows="4"></textarea>
                                <div id="description-error" class="error-message"></div>
+                           </div>
+                           <div class="mb-4">
+                            <label class="form-label">Highlights(Specs)</label>
+                            <div id="highlights-container"></div>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="addHighlights()">Add</button>
                            </div>
                            <div class="row">
                                <div class="col-lg-4">
@@ -212,6 +218,9 @@
  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
  
  <script>
+
+
+
     document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.image-cropper').forEach(el => {
         el.style.display = 'none';
@@ -445,8 +454,24 @@ function validateForm() {
         valid = false;
     }
     
-    if (images.length === 0) {
-        showError('images-error', 'Please upload at least one image');
+    // if (images.length === 0) {
+    //     showError('images-error', 'Please upload at least one image');
+    //     valid = false;
+    // }
+    let totalImages = 0;
+    const imgInputs = [
+        document.getElementById('input1'),
+        document.getElementById('input2'),
+        document.getElementById('input3'),
+        document.getElementById('input4')
+    ]
+    imgInputs.forEach(input => {
+        if (input.files && input.files.length > 0) {
+            totalImages ++;
+        }
+    }); 
+    if (totalImages < 3) {
+        showError('images-error', `Please upload at least three image ,You uploaded ${totalImages} images.`);
         valid = false;
     }
 
@@ -474,7 +499,7 @@ function clearErrorMessages() {
   });
 }
 
-function validateAndSubmit() {
+async function validateAndSubmit() {
   console.log("/addProducts form submission triggered");
   
   // Check if any croppers are still active
@@ -486,11 +511,54 @@ function validateAndSubmit() {
   
   if (validateForm()) {
     console.log('✓ Submitting form...');
-    document.forms[0].submit();
+    const form = document.forms[0] 
+    const formData = new FormData(form);
+
+    const response = await fetch('/admin/addProducts', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+    if (result.status) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Product added successfully',
+        text:result.message,
+        showConfirmButton: false,
+        timer: 1500
+      }).then(() => {
+        window.location.reload();
+      });
+
+ 
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error adding product',
+        text: result.message,
+      });
+    }
+
+
+
   } else {
     console.log('✗ Form validation failed, not submitting');
+    return
   }
 }
+
+function addHighlights(value=''){
+  const container = document.getElementById('highlights-container');
+  const div = document.createElement('input');
+  div.classList.add('d-flex','mb-2')
+  div.innerHTML=`
+  <input type="text" name="highlights" class="form-control border" value="${value}" placeholder="Enter highlight/spec" />
+  <button type="button" class="btn btn-sm btn-danger ms-2" onclick="this.parentElement.remove()">Remove</button>
+  `
+  container.appendChild(div);
+}
+
 </script>
 
 <style>

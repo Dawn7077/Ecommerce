@@ -155,7 +155,8 @@ const postNewPassword = async(req,res)=>{
 
 const userProfile = async(req,res)=>{
     try {
-        const userId = req.session.user
+        const userId = req.session.user._id
+        console.log('>>>>',req.session.user);
         const userData = await User.findById(userId)
         res.render('user/profile',{
             user:userData

@@ -23,9 +23,19 @@ const getProductAddPage= async(req,res)=>{
 
 const addProducts = async(req,res)=>{
     try {
-        const products = req.body
+        const products = req.body 
+
+        let highlights =[]
+            if(Array.isArray(products.highlights)){
+                highlights = products.highlights.filter(h=>h.trim()!=='')
+            }else if(products.highlights && products.highlights.trim()!==''){
+              highlights = [products.highlights.trim()]
+            }
+            console.log('highlights:',highlights)
+            
+
         const productExists = await Product.findOne({
-            productName:products.productName,
+            productName:{$regex:`^${products.productName}$`,$options:'i'},
         })
         if(!productExists){
             const images = []
@@ -63,6 +73,8 @@ const addProducts = async(req,res)=>{
                 return res.status(400).json('Invalid category name')
             }
 
+            
+
             const newProduct = new Product({
                 productName:products.productName,
                 description:products.description,
@@ -75,17 +87,18 @@ const addProducts = async(req,res)=>{
                 size:products.size,
                 color:products.color,
                 productImage:images,
+                highlights:highlights,
                 status:'Available'
  
             })
 
             await newProduct.save()
             console.log(`---!!! Product "${products.productName}" added successfully!`);
-            return res.redirect('/admin/addProducts')
+            return res.json({status:true,message:'Product added successfully'})
 
         }
         else{
-           return res.status(400).json('Product already exists, please try with another name')
+           return res.status(400).json({status:false,message:'Product already exists, please try with another name'})
         }
     } catch (error) {
         console.error("Error saving product",error);
@@ -172,26 +185,33 @@ const getAllProducts = async(req,res)=>{
   try {
     const search = req.query.search || ''
     const page = req.query.page || 1
+    const updated = req.query.updated === 'true' 
     const limit = 4
     const productData = await Product.find({
       $or:[
-        {productName:{$regex: new RegExp('.'+search+'.*','i')}},
+        {productName:{$regex: new RegExp('.*'+search+'.*','i')}},
 
-        {brand:{$regex: new RegExp('.'+search+'.*','i')}}
+        {brand:{$regex: new RegExp('.*'+search+'.*','i')}}
       ],
-    }).limit((limit*1)).skip((page-1)*limit).populate('category').exec()
+    }).sort({createdAt:-1})
+    .limit((limit*1)).skip((page-1)*limit).populate('category').exec()
+
+    const noCategoryProducts = await Product.find({ category: { $size: 0 }});
+    console.log(noCategoryProducts);
+
+
 
     const count = await Product.find({
       $or:[
-        {productName:{$regex: new RegExp('.'+search+'.*','i')}},
+        {productName:{$regex: new RegExp('.*'+search+'.*','i')}},
 
-        {brand:{$regex: new RegExp('.'+search+'.*','i')}}
+        {brand:{$regex: new RegExp('.*'+search+'.*','i')}}
       ],
     }).countDocuments()
 
     const category = await Category.find({isListed:true})
     const brand = await Brand.find({isBlocked:false})
-
+    // console.log(productData.category.name,"====cat===> ",category)
     if(category && brand){
       res.render('admin/products',{
         data:productData,
@@ -200,14 +220,16 @@ const getAllProducts = async(req,res)=>{
         totalPages:Math.ceil((count/limit)),
         cat:category,
         brand:brand,
+        search,
+        updated
       })
     }else{
-      res.render('admin/pageError')
+      res.render('/admin/pageError')
     }
     
 
   } catch (error) {
-    res.redirect('admin/pageError')
+    res.redirect('/admin/pageError')
   }
 }
 
@@ -215,18 +237,18 @@ const addProductOffer = async(req,res)=>{
   try {
     const {productId,percentage} = req.body
     const findProduct = await Product.findOne({_id:productId})
-    const findCategory = await Category.findOne({_id:findProduct.category})
+    // const findCategory = await Category.findOne({_id:findProduct.category})
 
-    if(findCategory.categoryOffer>percentage){
-      return res.json({status:false,message:'This product category has a category offer'})
+    // if(findCategory.categoryOffer>percentage){
+    //   return res.json({status:false,message:'This product category has a category offer'})
 
-    }
-    findProduct.salesPrice = findProduct.salesPrice - Math.floor(findProduct.regularPrice*(percentage/100))
+    // }
     findProduct.productOffer = parseInt(percentage)
+    findProduct.salesPrice = findProduct.salesPrice - Math.floor(findProduct.regularPrice*(percentage/100))
     
     await findProduct.save()
-    findCategory.categoryOffer = 0
-    await findCategory.save()
+    // findCategory.categoryOffer = 0
+    // await findCategory.save()
     res.json({status:true})
   } catch (error) {
     res.redirect('/pageError')
@@ -270,23 +292,25 @@ const unBlockProduct = async(req,res)=>{
 const getEditProduct =async(req,res)=>{
   try {
     const id = req.query.id
+    const page = req.query.page || 1
     const product = await Product.findOne({_id:id})
     const category =await Category.find({})
     const brand = await Brand.find({})
     res.render('admin/edit-product',{
       product,
       cat:category,
-      brand
+      brand,
+      page
     })
   } catch (error) {
     res.redirect('/pageError')
   }
 }
-
-
+ 
 const editProduct =async(req,res)=>{
   try {
     const id = req.query.id
+    const page = req.query.page || 1
     const product = await Product.findOne({_id:id})
     const data = req.body
     const existingProduct = await Product.findOne({
@@ -296,6 +320,16 @@ const editProduct =async(req,res)=>{
     if(existingProduct){
       return res.status(400).json({error:'Product with this name already exists, please try with another one'})
     }
+
+    let highlights =[]
+
+    if(Array.isArray(data.highlights)){
+        highlights = data.highlights.filter(h=>h.trim()!=='')
+    }else if(data.highlights && data.highlights.trim()!==''){
+      highlights = [data.highlights.trim()]
+    }
+
+    
 
     const images =[]
 
@@ -309,23 +343,27 @@ const editProduct =async(req,res)=>{
       productName:data.productName,
       description:data.descriptionData,
       brand:data.brand,
-      category:product.category,
+      category:[data.category],
       regularPrice:data.regularPrice,
       salesPrice:data.salePrice,
       quantity:data.quantity,
       size:data.size,
-      color:data.color
+      color:data.color,
+      highlights:highlights
     }
-    if(req.files.length>0){
+    if(req.files &&req.files.length>0){
       updateFields.$push = {productImage:{$each:images}}
+    }
+    if(data.productOffer!==undefined && data.productOffer!==''){
+      updateFields.productOffer = parseInt(data.productOffer)
     }
 
     await Product.findByIdAndUpdate(id,updateFields,{new:true})
-    res.redirect('/admin/products')
+    res.redirect(`/admin/products?page=${page}&updated=true`) 
 
   } catch (error) {
     console.error(error)
-    res.redirect('/pageError')
+    res.redirect('/admin/pageError')
   }
 }
 
@@ -351,6 +389,20 @@ const deleteSingleImage = async(req,res)=>{
   }
 }
 
+const deleteProduct = async(req,res)=>{
+  try {
+    const id = req.query.id
+    if(!id){
+      return res.status(400).json({status:false,message:'Product id is required'})
+    }
+    await Product.deleteOne({_id:id})
+    res.json({status:true,message:'Product deleted successfully'})
+  } catch (error) {
+    console.log("Error deleting product:",error)
+    res.redirect('/pageError')
+  }
+}
+
 module.exports={
     getProductAddPage,
     addProducts,
@@ -362,4 +414,5 @@ module.exports={
     getEditProduct,
     editProduct,
     deleteSingleImage,
+    deleteProduct
 }

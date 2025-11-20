@@ -1,8 +1,10 @@
 <%- include("../../views/partials/user/header") %>
+<%- include("../../views/partials/user/crumbs") %>
 
 <head>
-  <link rel="stylesheet" href="/user-assets/css/plugins/slick.css">
-  <link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css">
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick.css" />
+  <link rel="stylesheet" href="/user-assets/css/plugins/slick-theme.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
   <style>
     /* --- Product Page Styling --- */
     .product-page {
@@ -18,13 +20,14 @@
     }
 
     .product-gallery img {
-      width: 100%;
+      width: auto;
       border-radius: 10px;
       object-fit: contain;
     }
 
     .slider-nav-thumbnails img {
       border-radius: 8px;
+      width: auto;
       cursor: pointer;
       transition: transform 0.2s ease;
     }
@@ -65,9 +68,6 @@
       font-size: 0.9rem;
       margin-left: 10px;
     }
-
-    
-
 
     .product-description {
       margin: 20px 0;
@@ -141,53 +141,341 @@
       margin: 0 8px;
     }
     .product-gallery {
-  max-width: 500px;
-  margin: 0 auto;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .product-image-slider img {
+      width: 100%;
+      height: 450px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .slider-nav-thumbnails {
+      margin-top: 15px;
+    }
+
+    .slider-nav-thumbnails .slick-slide {
+      margin: 0 5px;
+    }
+
+    .slider-nav-thumbnails img {
+      width: 100px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+
+    .slider-nav-thumbnails .slick-current img {
+      border-color: #1e918b;
+    }
+
+    .product-gallery {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    /* Main Image */
+    #featuredPic {
+      width: 350px;
+      height: 350px;
+      object-fit: contain;
+      border-radius: 10px;
+      transition: transform 0.3s ease;
+      cursor: zoom-in;
+    }
+
+    #featuredPic:hover {
+      transform: scale(1.05);
+    }
+
+    /* Thumbnail container */
+    .slider-nav-thumbnails {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: nowrap;
+      margin-top: 10px;
+    }
+
+    /* Thumbnails */
+    .thumbImg {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+      opacity: 0.6;
+      cursor: pointer;
+      transition: 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .thumbImg:hover {
+      opacity: 1;
+      /* transform: scale(1.05); */
+    }
+
+    /* Active thumbnail */
+    .thumb-active {
+      opacity: 1;
+      border-color: #007bff;
+    }
+
+#imageContainer {
+  max-width: 375px;
+  position: relative;
 }
 
-.product-image-slider img {
-  width: 100%;
-  height: 450px;
+#featuredPic {
+  width: 350px;
+  height: 350px;
   object-fit: contain;
+  cursor: zoom-in;
   border-radius: 10px;
 }
 
-.slider-nav-thumbnails {
-  margin-top: 15px;
+#lens {
+  position: absolute;
+  height: 130px;
+  width: 130px;
+  border: 2px solid #000;
+  border-radius: 10%;
+  background-repeat: no-repeat;
+  display: none;
+  pointer-events: none;
+  z-index: 10000;
 }
 
-.slider-nav-thumbnails .slick-slide {
-  margin: 0 5px;
+.thumbslider {
+  width: 380px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: 10px;
 }
 
-.slider-nav-thumbnails img {
-  width: 100px;
-  height: 80px;
-  object-fit: contain;
+#sliderWrap {
+  width: 300px;
+  display: flex;
+  overflow-x: scroll;
+  gap: 10px;
+  padding: 5px 0;
+  scrollbar-width: none;
+}
+
+#sliderWrap::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbImg {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
   border-radius: 8px;
+  flex-shrink: 0;
+  opacity: 0.6;
   cursor: pointer;
+  transition: 0.3s;
   border: 2px solid transparent;
-  transition: border-color 0.3s;
 }
 
-.slider-nav-thumbnails .slick-current img {
-  border-color: #1e918b;
+.thumb-active {
+  opacity: 1;
+  border-color: #007bff;
 }
+
+.arrow {
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: 0.3s;
+}
+
+.arrow:hover {
+  opacity: 1;
+}
+
+/* recommeded section */
+.btn {
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #ff6b6b;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn:hover {
+    background-color: #ff4c4c;
+    transform: translateY(-2px);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .wishlist-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 50%;
+    color: #ff6b6b;
+    font-size: 18px;
+    z-index: 10;
+    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+  }
+
+  .wishlist-btn:hover {
+    background-color: rgba(255, 255, 255, 1);
+    color: #ff4c4c;
+    transform: translateY(-2px);
+  }
+
+  .wishlist-btn:active {
+    transform: translateY(1px);
+  }
+
+  .product-img-action-wrap {
+    position: relative;
+  }
+
+  .product-img {
+    position: relative;
+    display: block;
+    overflow: hidden;
+  }
+
+  .product-cart-wrap {
+    border: 1px solid #eee;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .product-content-wrap h6 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .product-content-wrap h5 {
+    font-size: 16px;
+    color: #ff6b6b;
+    margin-bottom: 10px;
+  }
+
+  .product-content-wrap a {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #ff6b6b;
+    color: white;
+    text-transform: uppercase;
+    font-size: 14px;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  .product-content-wrap a:hover {
+    background-color: #ff4c4c;
+  }
+
+ .recommended-product h3 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: left;
+}
+
+.recommended-product .product-cart-wrap {
+  border: 1px solid #f0f0f0; /* lighter border */
+  padding: 15px;              /* slightly smaller padding */
+  margin-bottom: 20px;        /* less spacing */
+  transition: transform 0.3s;
+}
+
+.recommended-product .product-cart-wrap:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.recommended-product .product-content-wrap h6 {
+  font-size: 16px;  /* smaller font than main product */
+  margin-bottom: 3px;
+}
+
+.recommended-product .product-content-wrap h5 {
+  font-size: 14px;
+  color: #ff6b6b;
+  margin-bottom: 5px;
+}
+
+.recommended-product .product-content-wrap a {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* review section */
+#reviewsContainer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.review-card {
+  border: 1px solid #eee;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fafafa;
+  width: 100%;
+}
+
+.review-card strong {
+  color: #333;
+}
+
+.review-card span {
+  color: #ffb400; /* stars color */
+  margin-left: 5px;
+}
+
+.review-card p {
+  margin-top: 5px;
+  color: #555;
+}
+
 
   </style>
+
+  
 </head>
 
-<div class="breadcrumb">
+<!-- <div class="breadcrumb">
   <a href="/">Home</a>
   <span>/</span>
   <a href="/shop">Shop</a>
   <span>/</span>
   <%= product.productName %>
-</div>
+</div> -->
 
 <main class="product-page">
   <!-- Gallery -->
-   <div class="product-gallery">
+  <!-- <div class="product-gallery">
   <div class="product-image-slider">
     <% product.productImage.forEach(img => { %>
       <div>
@@ -203,9 +491,35 @@
       </div>
     <% }) %>
   </div>
-</div>
+</div> -->
 
+  <div class="product-gallery">
+    <div id="imageContainer" class="d-flex justify-content-center">
+      <div id="lens"></div>
+        <img
+          id="featuredPic"
+          src="/uploads/product-image/<%= product.productImage[0] %>"
+          alt="Product Image"
+        /> 
+    </div>
+    <div class="thumbslider d-flex align-items-center mt-3">
+      <img src="/img/icon/arrow-left.png" alt="" id="slideLeft" class="arrow" style="width: 20px;"/> 
+      <div id="sliderWrap">
+        <% product.productImage.forEach(img => { %>
+        <img
+          class="thumbImg"
+          src="/uploads/product-image/<%= img %>"
+          alt="Thumbnail"
+        />
+        <% }) %>
+      </div> 
+      <img src="/img/icon/arrow-right.png" alt="" id="slideRight" class="arrow"  style="width: 20px;"/>
+    </div>
+    
 
+    
+  </div> 
+  
   <!-- Product Details -->
   <div class="product-info">
     <div>
@@ -213,25 +527,47 @@
       <p><strong>Brand:</strong> <%= product.brand %></p>
 
       <div class="price-section">
-        ₹<%= product.salesPrice.toLocaleString('en-IN') %>
-        <span class="old-price">₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+        <!-- ₹<%= product.salesPrice.toLocaleString('en-IN') %>
+        <span class="old-price" style="color: #f16c5d;"
+          >₹<%= product.regularPrice.toLocaleString('en-IN') %></span
+        >
         <% if (totalOffer) { %>
-          <span class="offer-tag"><%= totalOffer %>% OFF</span>
-        <% } %>
+        <span class="offer-tag"><%= totalOffer %>% OFF</span>
+        <% } %> -->
+        <% 
+        const effectiveDiscount = totalOffer
+        const discountedPrice = product.regularPrice - Math.floor(product.regularPrice*effectiveDiscount/100) %>
+        <span class="new-price">₹<%= discountedPrice.toLocaleString('en-IN') %></span>
+        <span class="old-price" style="color: #f16c5d;"
+          >₹<%= product.regularPrice.toLocaleString('en-IN') %></span
       </div>
 
       <div class="product-description">
-        <%- (product.description || '').replace(/\r?\n/g, '<br>') %>
+        <%- (product.description || '').replace(/\r?\n/g, '<br />') %>
       </div>
 
-      <script>let cat =product.category
-        document.getElementById('cat').innerText = cat.name
-       </script>
+      <script>
+        let cat = product.category;
+        document.getElementById("cat").innerText = cat.name;
+      </script>
 
       <ul class="product-meta">
-        <li id="cat"><strong>Category:</strong><%= product.category[0].name %></li>
-        <li><strong>Availability:</strong> <%= quantity %> in stock</li>
-        <li><strong>Warranty:</strong> 1 year brand warranty   </li>
+        <li id="cat">
+          <strong>Category:</strong><%= product.category[0].name %>
+        </li>
+        <% if(quantity<1){ %>
+          <li><strong style="color: #e74c3c;">Availability:</strong> Out of stock</li>
+          <% }else if(product.isBlocked){ %>
+            <li style="color: #000;"><strong style="color: #e74c3c;">Availability:</strong> This Product is No longer available</li> 
+          <% }else{ %>
+            <li><strong>Availability:</strong> <%= quantity %> in stock</li>
+            <% } %>
+        <li><strong>Warranty:</strong> 1 year brand warranty</li>
+        <li><strong>Rating:</strong>★★★★☆<span style="margin-left:5px; color:#777;">(4.0)</span>
+          </li>
+        <% if(totalOffer){ %>
+          <li><strong>Discount:</strong><%= totalOffer %>%</li>
+        <% } %>
       </ul>
     </div>
 
@@ -248,41 +584,260 @@
       </div>
     </div>
   </div>
-</main>
+</main> 
+
+<!-- highlights -->
+  <div class="container mt-5">
+    <h4 class="mt-5">About this item</h4>
+
+    <% if(product.highlights && product.highlights.length>0){ %>
+      <ul class="  mb-4" style="max-width: 600px;">
+        <% product.highlights.forEach((item,index)=>{%>
+          <li class="  d-flex align-items-center">
+            <i class="fas fa-check-circle" style="color: #1e918b; margin-right:10px;"></i>
+            <strong><%= index+1 %>.</strong> <%= item %>
+          </li>
+          <% })  %>
+      </ul>
+      <% }else{ %>
+        <p style="color: #777;">No Highlights available for this Product</p>
+      <% } %>
+  </div>
+<!-- reviews section -->
+  <div class="row mt-5 ">
+    <div class="col-lg-12  d-flex mx-4  flex-column align-items-start">
+      <div style="max-width: 600px; width: 100%;">
+      <h4  style="margin-left: 165px;">Reviews</h4> 
+
+      <div class="reviewContainer mt-3 d-flex flex-column gap-3" style="margin-left: 165px;">
+        <div class="review-Card mb-3 p-3 border rounded  ">
+          <strong>John Doe</strong> - <span>⭐⭐⭐⭐⭐</span>
+          <p>Great product! Really loved it.</p>
+        </div>
+        <div class="review-Card mb-3 p-3 border rounded  ">
+          <strong>Sam Peter</strong> - <span>⭐⭐⭐⭐⭐</span>
+          <p>Great product! Really loved it.</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+ <section class="recommended-product m-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 d-flex justify-content-start">
+        <h3>Recommended for you</h3>
+      </div>
+    </div>
+    <div class="row product__filter d-flex justify-content-center">
+      <% for(let i = 0; i < recommendedProducts.length; i++) { %>
+      <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+        <div class="product-cart-wrap mb-30">
+          <div class="product-img-action-wrap">
+            <div class="product-img product-img-zoom">
+              <a href="/productDetails?id=<%= recommendedProducts[i]._id %>">
+                <img
+                  class="default-img"
+                  src="/uploads/product-image/<%= recommendedProducts[i].productImage[0] %>"
+                  alt="<%= recommendedProducts[i].productName %>"
+                />
+              </a>
+            </div>
+            <a
+              href="/addToWishlist?id=<%= recommendedProducts[i]._id %>"
+              class="wishlist-btn"
+            >
+              <i class="fas fa-heart"></i>
+            </a>
+          </div>
+          <div class="product-content-wrap">
+            <h6><%= recommendedProducts[i].productName %></h6>
+            <h5>₹ <%= recommendedProducts[i].salesPrice %></h5>
+            <a href="/addToCart?id=<%= recommendedProducts[i]._id %>">Add to cart</a>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+
 
 <script src="/user-assets/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user-assets/js/plugins/slick.min.js"></script>
 
+
 <script>
-  $(document).ready(function(){
-    $('.product-image-slider').slick({
-      slidesToShow: 1,
-      slidesToScroll: 1,
-      arrows: false,
-      fade: false,
-      asNavFor: '.slider-nav-thumbnails'
+  //sliderArrow
+  const left_Arrowbtn = document.getElementById('slideLeft')
+  const right_Arrowbtn = document.getElementById('slideRight')
+  left_Arrowbtn.addEventListener('click',()=>{
+    document.getElementById('sliderWrap').scrollBy({ left: -120, behavior: "smooth" });
+  })
+  right_Arrowbtn.addEventListener('click',()=>{
+    document.getElementById('sliderWrap').scrollBy({ left: 120, behavior: "smooth" });
+  })
+ 
+  //sliders
+  let thumbImg =document.getElementsByClassName("thumbImg");
+  let mainImg = document.getElementById("featuredPic");
+  let previousImg = mainImg.src;
+
+  thumbImg[0].classList.add("thumb-active");
+  
+  for (let i = 0; i < thumbImg.length; i++) {
+    thumbImg[i].addEventListener("mouseover", () => {
+      mainImg.src = thumbImg[i].src;
+    });
+    thumbImg[i].addEventListener("mouseout", () => {
+      mainImg.src = previousImg;
     });
 
-    $('.slider-nav-thumbnails').slick({
-      slidesToShow: 4,
-      slidesToScroll: 1,
-      asNavFor: '.product-image-slider',
-      focusOnSelect: true,
-      centerMode: false,
-      arrows: true,
+    thumbImg[i].addEventListener("click", () => {
+      mainImg.src = thumbImg[i].src;
+      previousImg = thumbImg[i].src;
+      
+      for (let j = 0; j < thumbImg.length; j++) {
+      thumbImg[j].classList.remove("thumb-active");
+    }
+
+      thumbImg[i].classList.add("thumb-active");
+    });
+  }
+  //zoom effect
+  function enableZoom(imgId){
+    const img = document.getElementById(imgId);
+    const lens = document.getElementById("lens");
+    const zoomLevel = 1.7;
+
+    lens.style.backgroundSize = (img.width * zoomLevel) + "px " + (img.height * zoomLevel) + "px";
+
+    img.addEventListener("mousemove", move);
+    lens.addEventListener("mousemove", move);
+    img.addEventListener("mouseenter", () => {
+      lens.style.display = "block";
+    });
+    img.addEventListener("mouseleave", () => {
+      lens.style.display = "none";
     });
 
-    // Optional: update active thumbnail
-    $('.slider-nav-thumbnails .slick-slide').removeClass('slick-active');
-    $('.slider-nav-thumbnails .slick-slide').eq(0).addClass('slick-active');
+    function move(e){
+      const rect = img.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    $('.product-image-slider').on('beforeChange', function (event, slick, currentSlide, nextSlide) {
-      $('.slider-nav-thumbnails .slick-slide').removeClass('slick-active');
-      $('.slider-nav-thumbnails .slick-slide').eq(nextSlide).addClass('slick-active');
-    });
-  });
+      lens.style.left = (x - lens.offsetWidth / 2) + "px";
+      lens.style.top = (y - lens.offsetHeight / 2) + "px";
+
+      lens.style.backgroundImage = `url('${img.src}')`;
+      lens.style.backgroundPosition = '-' + (x * zoomLevel - lens.offsetWidth / 2) + 'px -' + (y * zoomLevel - lens.offsetHeight / 2) + 'px';
+    }
+  }
+   enableZoom("featuredPic");
 </script>
 
-
-
 <%- include("../../views/partials/user/footer") %>
+
+<script>
+  // $(document).ready(function () {
+  //   $(".product-image-slider").slick({
+  //     slidesToShow: 1,
+  //     slidesToScroll: 1,
+  //     arrows: false,
+  //     fade: false,
+  //     asNavFor: ".slider-nav-thumbnails",
+  //   });
+
+  //   $(".slider-nav-thumbnails").slick({
+  //     slidesToShow: 4,
+  //     slidesToScroll: 1,
+  //     asNavFor: ".product-image-slider",
+  //     focusOnSelect: true,
+  //     centerMode: false,
+  //     arrows: true,
+  //   });
+
+  //   // Optional: update active thumbnail
+  //   $(".slider-nav-thumbnails .slick-slide").removeClass("slick-active");
+  //   $(".slider-nav-thumbnails .slick-slide").eq(0).addClass("slick-active");
+
+  //   $(".product-image-slider").on(
+  //     "beforeChange",
+  //     function (event, slick, currentSlide, nextSlide) {
+  //       $(".slider-nav-thumbnails .slick-slide").removeClass("slick-active");
+  //       $(".slider-nav-thumbnails .slick-slide")
+  //         .eq(nextSlide)
+  //         .addClass("slick-active");
+  //     }
+  //   );
+  // });
+
+  //imageslider vanilla js
+  // const mainImg = document.getElementById("featuredPic");
+  // const thumbs = document.querySelectorAll(".thumbImg");
+  // let selectedImg = mainImg.src 
+  // thumbs[0].classList.add("thumb-active");
+  // thumbs.forEach((thumb, index) => {
+
+  //   thumb.addEventListener("mouseover", () => {
+  //     mainImg.src = thumb.src;
+
+  //     thumbs.forEach((t) => t.classList.remove("thumb-active"));
+
+  //     thumb.classList.add("thumb-active");
+  //   });
+
+  //   thumb.addEventListener("mouseout", () => {
+  //     mainImg.src = selectedImg
+
+  //     thumbs.forEach((t) => t.classList.remove("thumb-active"));
+ 
+  //   });
+
+  //   thumb.addEventListener("click", () => {
+  //     mainImg.src = thumb.src;
+  //     selectedImg = thumb.src;
+      
+  //     thumbs.forEach((t) => t.classList.remove("thumb-active"));
+
+  //     thumb.classList.add("thumb-active");
+  //   });
+  // });
+
+
+
+  // document.getElementById("slideLeft").addEventListener("click", () => {
+  //   document.getElementById("sliderWrap").scrollBy({left: -120, behavior: 'smooth'});
+  // });
+  // document.getElementById("slideRight").onclick = function() {
+  //   document.getElementById("sliderWrap").scrollBy({left: 120, behavior: 'smooth'});
+  // };
+
+  // const thumbs = document.querySelectorAll(".thumbImg");
+  // const mainImg = document.getElementById("featuredPic");
+  // let selectedImg = mainImg.src;
+  // thumbs[0].classList.add("thumb-active");
+
+  // thumbs.forEach((thumb) => {
+  //   thumb.addEventListener("mouseover", () => {
+  //     mainImg.src = thumb.src;
+  //   });
+  //   thumb.addEventListener("mouseout", () => {
+  //     mainImg.src = selectedImg;
+  //   });
+  //   thumb.addEventListener("click", () => {
+  //     selectedImg = thumb.src;
+  //     mainImg.src = selectedImg;
+
+  //     thumbs.forEach((t) => t.classList.remove("thumb-active"));
+  //     thumb.classList.add("thumb-active");
+  //   });
+  // });
+
+  
+</script>

@@ -10,18 +10,53 @@ passport.use(new GoogleStrategy({
 },
 async (accessToken,refreshToke,profile,done)=> {
     try {
-        let user = await User.findOne({googleId:profile.id})
-        if(user){
-            return done(null,user)
-        }else{
-            user = new User({
-                name:profile.displayName,
-                email:profile.emails[0].value,
-                googleId:profile.id
-            })
-            await user.save()
-            return done(null,user)
-        }
+        let existingUser= await User.findOne({email:profile.emails[0].value})
+        console.log( 'existing user ::',existingUser);
+         
+            if(existingUser){
+                if(existingUser.isBlocked){
+                    return done(null, false, { message: "User is blocked by admin" });
+                }
+                if( !existingUser.googleId){
+                return done(null,false,{message:"This email is registered with password login. Please login normally1."})
+                }
+                 
+                if (existingUser && existingUser.isGoogleUser) {
+                    return done(null, false, { message: "This email is registered with password login. Please login normally2." });
+                }
+
+                
+                 
+                return done(null, existingUser);
+            }
+
+       
+        // let user = await User.findOne({googleId:profile.id})
+        // if(user){
+        //     if(user.isBlocked){
+        //         return done(null,false,{message:"User is blocked by admin"})
+        //     }
+        //     return done(null,user)
+        // }else{
+        //     user = new User({
+        //         name:profile.displayName,
+        //         email:profile.emails[0].value,
+        //         googleId:profile.id,
+        //         isGoogleUser:true
+        //     })
+        //     await user.save() 
+        //     return done(null,user)
+        // }
+
+        const newUser = new User({  
+            name: profile.displayName,
+            email: profile.emails[0].value,
+            googleId: profile.id,
+            isGoogleUser: true
+        });
+        await newUser.save();
+        return done(null, newUser);
+
     } catch (error) {
         return done(error,null)
 
