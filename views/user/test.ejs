@@ -1,0 +1,694 @@
+ <!--mockUP Pg  -->
+
+<%- include("../../views/partials/user/header") %>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Checkout | Irowz Elite - Mockup</title>
+
+    <!-- Keep your partial style include --> 
+
+    <!-- Fonts & icons (kept) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-straight/css/uicons-regular-straight.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert (kept for nice alerts) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <!-- Razorpay script kept (not used in mock) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        :root {
+            --brand: #3399cc; /* primary blue chosen */
+            --muted: #666;
+            --card-bg: #ffffff;
+            --surface: #f8f9fa;
+            --accent: #bfe7ff;
+            --radius: 10px;
+            --max-width: 1320px;
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+            font-family: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        body {
+            background: #f4f6f8;
+            color: #222;
+            margin: 0;
+            padding: 0 16px 40px;
+        }
+
+        .site-container {
+            max-width: var(--max-width);
+            margin: 28px auto;
+        }
+
+        /* Header include will supply site header — spacing below it */
+        .content-wrap { padding-top: 10px; }
+
+        .breadcrumb {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 18px;
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .breadcrumb a { color: var(--brand); text-decoration: none; }
+
+        h2.page-title { margin: 8px 0 22px; color: #222; font-weight:700; }
+
+        .checkout-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 28px;
+        }
+
+        /* Left column cards */
+        .checkout-section {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            background: var(--surface);
+            padding: 16px 18px;
+            border-bottom: 1px solid #e9ecef;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .section-header h3 {
+            margin:0;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            color: #222;
+            font-size: 16px;
+            font-weight:700;
+        }
+
+        .section-content { padding: 16px; }
+
+        /* Address card */
+        .address-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all .18s ease;
+            cursor: pointer;
+            position: relative;
+            background: white;
+        }
+        .address-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
+        .address-card.selected { border-color: var(--brand); background: #f2fbff; }
+        .address-card .address-title { font-weight:700; margin-bottom:6px; color:#222; }
+        .address-card .address-line { color: var(--muted); font-size:14px; margin:0 0 6px; line-height:1.45; }
+        .address-actions { display:flex; gap:8px; margin-top:8px; }
+
+        .btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor:pointer;
+            font-weight:600;
+            font-size:14px;
+        }
+
+        .btn-outline { background:transparent; color:var(--brand); border:1px solid var(--brand); }
+        .btn-danger { background: transparent; color:#dc3545; border:1px solid #dc3545; }
+        .btn-primary { background: var(--brand); color: #fff; }
+
+        .add-address-card {
+            border: 2px dashed #e3eef8;
+            border-radius:8px;
+            padding: 24px;
+            text-align:center;
+            color:var(--muted);
+            cursor:pointer;
+            transition: all .15s ease;
+            background: linear-gradient(180deg, #ffffff 0%, rgba(51,153,204,0.03) 100%);
+        }
+        .add-address-card:hover { transform: translateY(-2px); }
+
+        /* Payment method */
+        .payment-method {
+            display:flex;
+            gap:12px;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #e9ecef;
+            margin-bottom:10px;
+            cursor:pointer;
+            align-items:center;
+            background:white;
+            transition: all .15s ease;
+        }
+        .payment-method:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.04); transform: translateY(-2px); }
+        .payment-method.selected { border-color: var(--brand); background: #f2fbff; }
+        .payment-icon { width:46px; height:46px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--surface); color:var(--brand); font-size:18px; }
+
+        /* Order items */
+        .checkout-item { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid #f0f2f4; align-items:center; }
+        .item-image { width:80px; height:80px; border-radius:8px; overflow:hidden; background:#f0f2f4; display:flex; align-items:center; justify-content:center; }
+        .item-image img { width:100%; height:100%; object-fit:cover; }
+        .item-details { flex:1; }
+        .item-name { margin:0; font-weight:700; color:#222; }
+        .item-quantity { color:var(--muted); margin-top:6px; font-size:14px; }
+        .item-price { color:var(--brand); font-weight:800; }
+
+        /* Right column summary */
+        .order-summary {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding:18px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .summary-row { display:flex; justify-content:space-between; margin-bottom:12px; color:#333; }
+        .summary-row.total { border-top:1px solid #eef2f5; padding-top:12px; font-weight:800; font-size:18px; }
+
+        .coupon-section { background: var(--surface); padding:12px; border-radius:8px; margin-bottom:16px; border:1px solid #e9ecef; }
+        .coupon-item { background:white; padding:10px; border-radius:8px; border:1px solid #e9ecef; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+        .coupon-item.applied { background:#e6faff; border-color:var(--brand); }
+        .coupon-code { color:var(--brand); font-weight:700; }
+
+        .place-order-btn {
+            display:block;
+            width:100%;
+            padding:14px;
+            border-radius:8px;
+            border:none;
+            background:var(--brand);
+            color:white;
+            font-weight:800;
+            cursor:pointer;
+            margin-top:14px;
+            font-size:16px;
+        }
+        .place-order-btn:disabled { background:#cfd9de; cursor:not-allowed; }
+
+        /* responsive */
+        @media (max-width: 1000px) {
+            .checkout-container { grid-template-columns: 1fr; }
+            .order-summary { position: static; margin-top:8px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Keep your site header include --> 
+
+    <div class="site-container content-wrap">
+        <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="/">Home</a> <span style="color:var(--muted)">›</span>
+            <a href="/cart">Cart</a> <span style="color:var(--muted)">›</span>
+            <span>Checkout</span>
+        </nav>
+
+        <h2 class="page-title">Checkout</h2>
+
+        <div class="checkout-container">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- Shipping Address -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-map-marker-alt"></i> Shipping Address</h3>
+                        <button class="btn btn-outline" onclick="openAddressModal()"><i class="fas fa-plus"></i> Add New</button>
+                    </div>
+                    <div class="section-content" id="addressesList">
+                        <!-- STATIC sample address cards -->
+                        <div class="address-card selected" data-address-id="addr_1" onclick="selectAddress('addr_1')">
+                            <div class="address-title">John Doe (Home)</div>
+                            <div class="address-line">+91 98765 43210</div>
+                            <div class="address-line">No. 12, MG Road, Chennai, Tamil Nadu - 600001, India</div>
+                            <div class="address-actions">
+                                <button class="btn btn-outline btn-sm" onclick="editAddress('addr_1', event)"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteAddress('addr_1', event)"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="address-card" data-address-id="addr_2" onclick="selectAddress('addr_2')">
+                            <div class="address-title">Jane Smith (Office)</div>
+                            <div class="address-line">+91 91234 56789</div>
+                            <div class="address-line">Plot 8, Business Park, Bangalore, Karnataka - 560001, India</div>
+                            <div class="address-actions">
+                                <button class="btn btn-outline btn-sm" onclick="editAddress('addr_2', event)"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteAddress('addr_2', event)"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="add-address-card" onclick="openAddressModal()">
+                            <i class="fas fa-plus" style="font-size:22px;color:var(--brand)"></i>
+                            <h4 style="margin:8px 0 6px;color:#222">Add New Address</h4>
+                            <p style="margin:0;color:var(--muted)">Add a new shipping address for delivery</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment method -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="payment-method selected" data-payment="cod" onclick="selectPayment('cod')">
+                            <div class="payment-icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <div>
+                                <div style="font-weight:700">Cash on Delivery</div>
+                                <div style="color:var(--muted);font-size:13px">Pay when your order is delivered</div>
+                            </div>
+                        </div>
+
+                        <div class="payment-method" data-payment="online" onclick="selectPayment('online')">
+                            <div class="payment-icon"><i class="fas fa-credit-card"></i></div>
+                            <div>
+                                <div style="font-weight:700">Online Payment</div>
+                                <div style="color:var(--muted);font-size:13px">Pay securely with cards, UPI or netbanking (Razorpay)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="checkout-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-shopping-bag"></i> Order Items (2 items)</h3>
+                    </div>
+                    <div class="section-content" id="itemsList">
+                        <!-- static item 1 -->
+                        <div class="checkout-item">
+                            <div class="item-image">
+                                <img src="https://via.placeholder.com/160x160.png?text=Product+1" alt="Sample product 1">
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Urban Sneakers</div>
+                                <div class="item-quantity">Quantity: 2</div>
+                                <div class="item-price">₹1,298</div>
+                            </div>
+                        </div>
+
+                        <!-- static item 2 -->
+                        <div class="checkout-item">
+                            <div class="item-image">
+                                <img src="https://via.placeholder.com/160x160.png?text=Product+2" alt="Sample product 2">
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Classic Polo Shirt</div>
+                                <div class="item-quantity">Quantity: 1</div>
+                                <div class="item-price">₹699</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Order summary -->
+            <div class="order-summary">
+                <h3 style="margin-top:0;margin-bottom:12px">Order Summary</h3>
+
+                <!-- Coupon area -->
+                <div class="coupon-section" id="couponSection">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                        <div style="font-weight:700; display:flex; gap:8px; align-items:center;"><i class="fas fa-ticket-alt"></i> Apply Coupon</div>
+                        <input id="couponInput" type="text" placeholder="Enter code" style="padding:8px;border-radius:6px;border:1px solid #e9ecef" />
+                    </div>
+
+                    <div id="couponList">
+                        <div class="coupon-item" onclick="applyCouponCode('SAVE20')">
+                            <div>
+                                <div class="coupon-code">SAVE20</div>
+                                <div style="font-size:13px;color:var(--muted)">20% off on orders above ₹1000 (max ₹300)</div>
+                            </div>
+                            <div style="text-align:right"><button class="btn btn-primary" onclick="applyCouponCode('SAVE20', event)">Apply</button></div>
+                        </div>
+
+                        <div class="coupon-item" onclick="applyCouponCode('NEWUSER10')">
+                            <div>
+                                <div class="coupon-code">NEWUSER10</div>
+                                <div style="font-size:13px;color:var(--muted)">10% off for new users (max ₹150)</div>
+                            </div>
+                            <div><button class="btn btn-primary" onclick="applyCouponCode('NEWUSER10', event)">Apply</button></div>
+                        </div>
+                    </div>
+
+                    <div id="appliedCouponArea" style="display:none;margin-top:10px">
+                        <div class="coupon-item applied" style="justify-content:space-between">
+                            <div>
+                                <div class="coupon-code" id="appliedCouponCode">CODE</div>
+                                <div style="font-size:13px;color:#155724" id="appliedCouponText">You saved ₹0</div>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline" onclick="removeCoupon()">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary rows -->
+                <div class="summary-row"><span>Subtotal (2 items)</span><span id="subtotalView">₹1,997</span></div>
+                <div class="summary-row"><span>Product Discount</span><span id="productDiscountView">-₹0</span></div>
+                <div class="summary-row"><span>Coupon Discount</span><span id="couponDiscountView">-₹0</span></div>
+                <div class="summary-row"><span>Shipping</span><span id="shippingView" style="color:#28a745">Free</span></div>
+                <div class="summary-row total"><span>Total Amount</span><span id="totalView">₹1,997</span></div>
+
+                <button id="placeOrderBtn" class="place-order-btn" onclick="placeOrder()"><i class="fas fa-lock" style="margin-right:8px"></i> Place Order</button>
+
+                <div style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--muted);font-size:14px">
+                    <i class="fas fa-shield-alt" style="color:#28a745"></i>
+                    <div>Your order information is secure and encrypted</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep your footer include --> 
+
+    <script>
+        /* ------------------------------
+           Static mockup client-side logic
+           - no network requests, safe when server sends no data
+        -------------------------------*/
+
+        // initial mock data (reflects the static HTML above)
+        const mock = {
+            addresses: [
+                { id: 'addr_1', title: 'John Doe (Home)', phone: '+91 98765 43210', lines: 'No. 12, MG Road, Chennai, Tamil Nadu - 600001, India', isDefault: true },
+                { id: 'addr_2', title: 'Jane Smith (Office)', phone: '+91 91234 56789', lines: 'Plot 8, Business Park, Bangalore, Karnataka - 560001, India' }
+            ],
+            items: [
+                { id: 'p1', name: 'Urban Sneakers', qty: 2, price: 649 }, // total 1298
+                { id: 'p2', name: 'Classic Polo Shirt', qty: 1, price: 699 } // total 699
+            ],
+            shipping: 0
+        };
+
+        // computed state
+        let state = {
+            selectedAddress: 'addr_1',
+            selectedPayment: 'cod',
+            appliedCoupon: null,
+            couponDiscount: 0,
+            productDiscount: 0
+        };
+
+        // utility to format rupee
+        function rupee(n) { return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+
+        function computeTotals() {
+            const subtotal = mock.items.reduce((s, it) => s + it.qty * it.price, 0);
+            // productDiscount (mock) - we keep 0 for this mock
+            const productDiscount = state.productDiscount || 0;
+            const couponDiscount = state.couponDiscount || 0;
+            const shipping = mock.shipping || 0;
+            const total = subtotal - productDiscount - couponDiscount + shipping;
+            // update UI
+            document.getElementById('subtotalView').innerText = rupee(subtotal);
+            document.getElementById('productDiscountView').innerText = '-' + rupee(productDiscount);
+            document.getElementById('couponDiscountView').innerText = '-' + rupee(couponDiscount);
+            document.getElementById('shippingView').innerText = shipping === 0 ? 'Free' : rupee(shipping);
+            document.getElementById('totalView').innerText = rupee(total);
+            return { subtotal, productDiscount, couponDiscount, shipping, total };
+        }
+
+        // initial compute
+        computeTotals();
+
+        // address select
+        function selectAddress(addressId) {
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+            const el = document.querySelector(`.address-card[data-address-id="${addressId}"]`);
+            if (el) el.classList.add('selected');
+            state.selectedAddress = addressId;
+        }
+
+        // payment select
+        function selectPayment(method) {
+            document.querySelectorAll('.payment-method').forEach(c => c.classList.remove('selected'));
+            const el = document.querySelector(`.payment-method[data-payment="${method}"]`);
+            if (el) el.classList.add('selected');
+            state.selectedPayment = method;
+        }
+
+        function openAddressModal() {
+            swal("Add Address", "This mock opens your add-address page in the real app.", "info");
+        }
+
+        function editAddress(addressId, e) {
+            e.stopPropagation();
+            swal("Edit Address", "This mock navigates to edit form in the real app.\nID: " + addressId, "info");
+        }
+
+        function deleteAddress(addressId, e) {
+            e.stopPropagation();
+            swal({
+                title: "Delete address?",
+                text: "This will remove the address in your real app.",
+                icon: "warning",
+                buttons: ["Cancel", "Delete"],
+                dangerMode: true
+            }).then(confirmed => {
+                if (confirmed) {
+                    // purely UI mock: remove card
+                    const card = document.querySelector(`.address-card[data-address-id="${addressId}"]`);
+                    if (card) card.remove();
+                    swal("Deleted", "Address removed (mock).", "success");
+                    // pick another address if selected was removed
+                    if (state.selectedAddress === addressId) {
+                        const remaining = document.querySelector('.address-card');
+                        if (remaining) {
+                            const newId = remaining.getAttribute('data-address-id');
+                            selectAddress(newId);
+                        } else {
+                            state.selectedAddress = null;
+                        }
+                    }
+                }
+            });
+        }
+
+        // coupon apply logic (mock)
+        function applyCouponCode(code, evt) {
+            if (evt) evt.stopPropagation();
+            const subtotal = mock.items.reduce((s, it) => s + it.qty * it.price, 0);
+
+            // simple mock rules:
+            // SAVE20 -> 20% off if subtotal >= 1000, cap 300
+            // NEWUSER10 -> 10% off, cap 150
+            let discount = 0;
+            if (code === 'SAVE20') {
+                if (subtotal >= 1000) discount = Math.min(Math.round(subtotal * 0.20), 300);
+                else { swal("Not eligible", "SAVE20 requires a minimum purchase of ₹1000", "warning"); return; }
+            } else if (code === 'NEWUSER10') {
+                discount = Math.min(Math.round(subtotal * 0.10), 150);
+            } else {
+                swal("Invalid", "Coupon code is not recognized (mock)", "error");
+                return;
+            }
+
+            state.appliedCoupon = code;
+            state.couponDiscount = discount;
+
+            // update UI
+            document.getElementById('appliedCouponCode').innerText = code;
+            document.getElementById('appliedCouponText').innerText = `You saved ${rupee(discount)} (mock)`;
+            document.getElementById('appliedCouponArea').style.display = 'block';
+            // hide coupon list to emphasize applied state
+            document.getElementById('couponList').style.display = 'none';
+            computeTotals();
+            swal("Coupon Applied", `Applied ${code}. You saved ${rupee(discount)} (mock).`, "success");
+        }
+
+        function applyCouponFromInput() {
+            const code = document.getElementById('couponInput').value.trim();
+            if (!code) { swal("Enter code", "Please enter a coupon code", "warning"); return; }
+            applyCouponCode(code);
+        }
+
+        // remove coupon
+        function removeCoupon() {
+            state.appliedCoupon = null;
+            state.couponDiscount = 0;
+            document.getElementById('appliedCouponArea').style.display = 'none';
+            document.getElementById('couponList').style.display = 'block';
+            document.getElementById('couponInput').value = '';
+            computeTotals();
+            swal("Removed", "Coupon removed (mock).", "success");
+        }
+
+        // handle Enter on coupon input
+        document.getElementById('couponInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                applyCouponFromInput();
+            }
+        });
+
+        // place order (mock)
+        function placeOrder() {
+            const totals = computeTotals();
+            if (!state.selectedAddress) {
+                swal("Missing address", "Please select a shipping address (mock)", "error");
+                return;
+            }
+            if (!state.selectedPayment) {
+                swal("Payment", "Please select a payment method (mock)", "error");
+                return;
+            }
+
+            // COD restriction mock: disallow cod above ₹2000
+            if (state.selectedPayment === 'cod' && totals.total > 2000) {
+                swal("COD Not Allowed", "Cash on Delivery not allowed for orders above ₹2,000 (mock rule).", "error");
+                return;
+            }
+
+            const btn = document.getElementById('placeOrderBtn');
+            btn.disabled = true;
+            btn.innerText = 'Processing...';
+
+            // simulate processing
+            setTimeout(() => {
+                btn.innerText = 'Place Order';
+                btn.disabled = false;
+
+                if (state.selectedPayment === 'cod') {
+                    swal("Order placed (mock)", `Your order mock-id: MOCK${Math.floor(Math.random()*90000)+10000}`, "success")
+                    .then(() => {
+                        // in real app redirect, here we just reset mock state
+                        removeCoupon();
+                    });
+                } else {
+                    swal("Online Payment (mock)", "This mock would open Razorpay in the real app.", "info");
+                }
+            }, 900);
+        }
+
+        // make coupon apply buttons work when clicked
+        document.querySelectorAll('.coupon-item button').forEach(btn => {
+            btn.addEventListener('click', function(e){
+                const parent = e.target.closest('.coupon-item');
+                const codeEl = parent.querySelector('.coupon-code');
+                const code = codeEl ? codeEl.innerText.trim() : '';
+                applyCouponCode(code, e);
+            });
+        });
+
+        // init selected states visually
+        selectAddress(state.selectedAddress);
+        selectPayment(state.selectedPayment);
+    </script>
+
+<!-- test2 -->
+ 
+<style>
+    body { font-family: Arial; background:#f4f4f4; padding:20px; }
+    .order-card { background:white; padding:15px; margin-bottom:15px; border-radius:6px; border:1px solid #ddd; }
+    .order-id { font-weight:bold; }
+    .order-status { padding:4px 8px; border-radius:4px; font-size:12px; }
+    .status-delivered { background:#d4edda; color:#155724; }
+    .status-pending { background:#fff3cd; color:#856404; }
+    .status-cancelled { background:#f8d7da; color:#721c24; }
+    .filter-btn { padding:6px 12px; border:1px solid #ccc; border-radius:4px; cursor:pointer; margin-right:5px; }
+    .filter-btn.active { background:black; color:white; }
+    .hidden { display:none; }
+</style>
+<h2>Mock Order Management</h2>
+
+<!-- Filter Buttons -->
+<div>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="delivered">Delivered</button>
+    <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+</div>
+
+<br>
+
+<!-- Search Input -->
+<input type="text" id="searchInput" placeholder="Search Orders..." style="padding:8px; width:250px">
+
+<br><br>
+
+<!-- ORDERS -->
+<div id="ordersList">
+
+    <div class="order-card"
+         data-order-id="ORD001"
+         data-status="delivered">
+        <div class="order-id">Order: ORD001</div>
+        <div class="order-status status-delivered">Delivered</div>
+    </div>
+
+    <div class="order-card"
+         data-order-id="ORD002"
+         data-status="pending">
+        <div class="order-id">Order: ORD002</div>
+        <div class="order-status status-pending">Pending</div>
+    </div>
+
+    <div class="order-card"
+         data-order-id="ORD003"
+         data-status="cancelled">
+        <div class="order-id">Order: ORD003</div>
+        <div class="order-status status-cancelled">Cancelled</div>
+    </div>
+
+</div>
+
+
+<script>
+// 🧩 STATUS FILTERING
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        
+        document.querySelectorAll('.filter-btn')
+            .forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        const cards = document.querySelectorAll('.order-card');
+
+        cards.forEach(card => {
+            if (filter === "all" || card.dataset.status === filter) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    });
+});
+
+
+// 🔍 SEARCH BY ORDER ID
+document.getElementById("searchInput").addEventListener("input", () => {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const cards = document.querySelectorAll('.order-card');
+
+    cards.forEach(card => {
+        const orderId = card.dataset.orderId.toLowerCase();
+        if (orderId.includes(search)) {
+            card.classList.remove("hidden");
+        } else {
+            card.classList.add("hidden");
+        }
+    });
+});
+</script>
+
+ 
+
+
+
+
+</body>
+
+<%- include("../../views/partials/user/footer") %>
+ 
+

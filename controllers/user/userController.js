@@ -14,11 +14,11 @@ const env = require("dotenv").config()
 
 const loadHomePage = async (req,res)=>{
     try {
-        const today = new Date().toISOString()
+        const now = new Date(); 
         const findBanner = await Banner.find({
-            startDate:{$lt:new Date(today)},
-            endDate:{$gt:new Date(today)},
-        })
+            startDate: { $lte: now },
+            endDate: { $gte: now },
+        });
         const user = req.session.user
         const categories =await Category.find({isListed:true})
         let productData  = await Product.find({

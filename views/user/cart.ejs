@@ -1,0 +1,387 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+        text-decoration: none; 
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+    .order-box {
+        padding: 7px; 
+    }
+    .order-card,.order-box {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    }
+     .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+     .section-header {
+            /* background: #f1f2f2; */
+            background: #faf9f9e7;
+            padding: 16px 18px;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 8px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+     .heading_s1 {
+            background: #d9f1e3;
+            padding: 16px 18px;
+            font-size: medium;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 8px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+        .btn { padding:8px 12px; font-weight:600; border-radius:6px; cursor:pointer; font-size:14px; border:none; }
+        .btn-outline { background:none; color:var(--brand); border:1px solid var(--brand); }
+        .btn-danger { background:none; color:#dc3545; border:1px solid #dc3545; }
+        .btn-danger:hover { background:#dc3545; color:#fcfcfc; border:1px solid #dc3545; }
+        .btn-orange{ background:none; color:#e6b75a; border:1px solid #e6b75a; }
+        .btn-orange:hover { background:#e6b75a;; color:#fcfcfc; border:1px solid #e6b75a; }
+        .btn-primary { background:var(--brand); color:white; }
+        .main-heading{background-color: #d5ffcb;
+            /* background-color: #f7f7f7; */
+            border: none;
+            margin: 2px 0 2px 0;
+        }
+
+</style>
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container d-flex align-items-center">
+            <div class="back-link">
+                <a href="/" class="back-link"></i>Home</a>
+                <a href="/shop" class="back-link"><i class="fas fa-angle-right"></i>Shop</a>
+                <a href="/cart" class="back-link"><i class="fas fa-angle-right"></i>cart</a>
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row order-box">
+                <div class="col-9 order-card">
+                    <div class="section-header">
+                        <h3><i class="fas fa-shopping-bag"></i>
+                            Cart Summary</h3>
+
+                        <!-- <div class="d-flex justify-content-center align-items-center">
+                            <button class="btn my-2"
+                            style="background-color:#79b6ef; border: none; "
+                            onmouseover="this.style.backgroundColor='#e6b75a '"
+                            onmouseout="this.style.backgroundColor='#79b6ef'"
+                             onclick="deleteCart()">Delete Cart</button>
+                        </div> -->
+                        <div class="d-flex justify-content-center align-items-center">
+                            <button class="btn btn-danger btn-sm my-2 " 
+                             onclick="deleteCart()">Delete Cart</button>
+                        </div>
+
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table shopping-summery text-center clean">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col">Image</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                <% if (data.items.length> 0) { %>
+                                    <% var x=0 %>
+                                        <% for (let i=0; i < data.items.length;i++) { %>
+
+                                            <tr id="cart-row-<%= data.items[i].productId._id %>">
+                                                <td class="image product-thumbnail">
+                                                    <img  style="border-radius: 8px;" src="/uploads/product-image/<%= data.items[i].productId.productImage[0] %>"
+                                                        alt="#" />
+                                                </td>
+                                                <td class="product-des product-name">
+                                                    <h5 class="product-name">
+                                                        <a href="cart" style ="color: rgb(97, 97, 98);"> 
+                                                            <%= data.items[i].productId.productName %>
+                                                        </a>
+                                                    </h5>
+                                                    <p class="font-xs">
+                                                        <%= data.items[i].productId.category.name %><br />
+                                                            <%= data.items[i].productId.brand %>.
+                                                    </p>
+                                                </td>
+                                                <td class="price" data-title="Price">₹<span> <text
+                                                            id="subTotal<%= data.items[i].productId._id %>">
+                                                            <%= data.items[i].productId.salesPrice * data.items[i].quantity %>
+                                                        </text><br>
+                                                        <small class="text-muted text-nowrap">₹<span id="price">
+                                                                <%= data.items[i].productId.salesPrice %>
+
+                                                            </span>
+                                                            / per item </small>
+
+                                                </td>
+                                               
+
+                                                    <!-- <% x +=data.items[i].productId.salesPrice * data.items[i].quantity%> -->
+                                                     <!-- <%= grandTotal %> -->
+
+
+                                                        <td class="text-center" data-title="Stock">
+                                                            <div class="detail-qty   m-auto">
+                                                                <div class="quantity-control ">
+
+                                                                    
+                                                                    <button class="btn btn-sm"
+                                                                        style="background-color: #353434;color: #ffffff; border: none;width: 41px; font-weight:900 ;"
+                                                                        onclick="updateCart('<%= data.items[i].productId._id %>',1)">+</button> 
+
+                                                                    <input class="quantity-input d-flex"
+                                                                        id="cartProductQuantity<%= data.items[i].productId._id %>"
+                                                                        value="<%= data.items[i].quantity %>"
+                                                                        style="width: 41px;padding: 16px;" type="text" readonly
+                                                                        value="">
+                                                                    <button class="btn btn-sm"
+                                                                        style="background-color: #000000; color: #e0dddd; border: none;width: 41px; font-weight:900 ;"
+                                                                        onclick="updateCart('<%= data.items[i].productId._id %>',-1)">-</button>
+
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="action" data-title="Remove">
+                                                            <!-- <a class="btn btn-sm"
+                                                                 style="background-color: #e0dddd; color:#e6b75a; font-weight:900 ;border: none;"
+                                                                href="#" onclick="deleteItemCart('<%= data.items[i].productId._id %>')">
+                                                                <i class="fi-rs-trash"></i>
+                                                            </a> -->
+                                                            <a class="btn btn-sm btn-orange" 
+                                                                href="#" onclick="deleteItemCart('<%= data.items[i].productId._id %>')">
+                                                                <i class="fi-rs-trash"></i>
+                                                            </a>
+                                                        </td>
+
+                                                        <% } %>
+                                                       
+                                                            <% } else { %>
+                                            <tr>
+
+                                                <td colspan="2" class="text-center">
+                                                    <p class="lead mb-4">No item found in Cart</p>
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                                                    <input type="hidden" name="" id="totalabc" value="<%= grandTotal  %>">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-3 order-card">
+                    <div class="border p-md-4 p-30 border-radius cart-totals order-card "
+                    style="background-color: #fff9e5bc;">
+                        <div class="heading_s1 mb-3 ">
+                            <h4>Price Details</h4>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+
+                                    <tr>
+                                        <td class="cart_total_label">Shipping</td>
+                                        <td class="cart_total_amount"> <i class="ti-gift mr-5"></i> Free Shipping
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="cart_total_label">Total</td>
+                                        <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">₹
+                                                <text id="total">
+                                                    <%= grandTotal %>
+                                                </text>
+                                            </span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="/checkout/userId=<%= user._id %>" class="btn ms-4"> <i class="fi-rs-box-alt mr-10"></i>
+                            Proceed To CheckOut</a>
+                    </div>
+                    
+                </div>
+
+            </div>
+
+        
+    </section>
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+
+ 
+    
+    function confirmRemove(productId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/deleteItem?id=${productId}`;
+            }
+        })
+    }
+</script>
+
+
+<script>
+      function addToCart(productId){
+    fetch('add-to-cart',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json'
+      },
+      body:JSON.stringify({productId})
+    }).then((res)=>res.json())
+    .then(data=>{
+        if(data.status){
+            window.location.reload()
+        }else{
+        Swal.fire({
+          title:"Error",
+          text:'There was an error adding the product to your cart',
+          icon:"error",
+          timer:2000
+      })
+        }
+    }) 
+    .catch(error=>{
+      Swal.fire({
+          title:"Error",
+          text:'There was an error adding the product to your cart',
+          icon:"error",
+          timer:2000
+      })
+    })
+  }
+
+
+
+     function updateCart(productId,change){
+         fetch('product-update-cart',{
+            method:'PUT',
+            headers:{
+                'content-type':'application/json'
+            },
+            body:JSON.stringify({productId,change})
+        })
+        .then(res=>res.json())
+        .then(data=>{
+            if(!data.status){
+                Swal.fire("Error", data.message, "error");
+                return;
+            }
+            document.getElementById(`cartProductQuantity${productId}`).value = data.quantity
+            document.getElementById(`subTotal${productId}`).innerText = data.itemSubtotal
+            document.getElementById('total').innerText = data.grandTotal
+        })
+        .catch(err=>{
+            console.error(err);
+            Swal.fire("Error", "Something went wrong", "error");
+        })
+     }
+
+     function deleteItemCart(productId){
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (!result.isConfirmed)  return
+
+            fetch(`product-delete-cart/${productId}`,{
+            method:'DELETE', 
+            })
+            .then(res=>res.json())
+            .then(data=>{
+                if(!data.status){
+                    Swal.fire("Error", data.message, "error");
+                    return;
+                } 
+                    Swal.fire("Removed!", 'Item removed from cart', "success");
+                    document.getElementById(`cart-row-${productId}`).remove();
+                    document.getElementById("total").innerText = data.grandTotal;
+                
+            })
+            .catch(err=>{
+                console.error(err);
+                Swal.fire("Error", "Something went wrong", "error");
+            })
+        }) 
+        
+     }
+
+         function deleteCart(){
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Delete Cart!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, clear it!'
+        }).then((result) => {
+             if (!result.isConfirmed)   return
+
+             fetch(`/delete-cart`,{
+                method:'DELETE', 
+            })
+            .then(res=>res.json())
+            .then(data=>{
+                if(!data.status){
+                    Swal.fire("Error", data.message, "error");
+                    return;
+                }else{
+                  Swal.fire("Removed!", 'Cart Cleared', "success")
+                  .then(()=> window.location.href = '/cart')
+                }
+            })
+
+        })
+    }
+
+
+</script>
+<%- include("../../views/partials/user/footer") %>
+

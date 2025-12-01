@@ -13,63 +13,28 @@
    margin-bottom: 20px;
  }
 
+
  .search-form {
-  display: flex;
-  align-items: center;
-  background: #f5f7fa;
-  border: 1px solid #d6dce5;
-  border-radius: 8px;
-  padding: 6px 14px;
-  width: 260px;
-  transition: 0.3s ease;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
-}
-  .search-form:focus-within {
-  border-color: #1c72e3;
-  box-shadow: 0 4px 12px rgba(28,114,227,0.18);
-}
+   display: flex;
+   align-items: center;
+   background-color: #f1f1f1;
+   border-radius: 25px;
+   overflow: hidden;
+   max-width: 250px;
+   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+ }
 
 
-.search-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  flex: 1;
-  font-size: 14px;
-  padding: 6px;
-  color: #333;
-}
+ .search-input {
+   flex: 1;
+   padding: 8px 10px;
+   width: 190px;
+   font-size: 14px;
+   border: none;
+   outline: none;
+   background-color: transparent;
+ }
 
-.search-icon-btn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  display: flex;
-  align-items: center;
-}
-.search-icon-btn img {
-  width: 18px;
-  opacity: 0.7;
-  transition: 0.2s;
-}
-.search-icon-btn:hover img {
-  opacity: 1;
-  transform: scale(1.1);
-}
-.search-clear-btn {
-  cursor: pointer;
-  font-size: 16px;
-  color: #777;
-  margin-right: 8px;
-  transition: 0.2s;
-  text-decoration: none;
-}
-
-.search-clear-btn:hover {
-  color: #d2042d;
-  transform: scale(1.2);
-}
 
  .search-button {
    padding: 8px 15px;
@@ -101,11 +66,7 @@
 
  .filter-section {
    margin-bottom: 20px;
-   background-color: #f5f4f4;
-    border-radius: 9px;
-    padding: 10px 0 10px 0;
  }
- 
 
 
  .filter-title {
@@ -212,7 +173,7 @@
 
  .price-filter {
    padding: 10px;
-   background-color: #f5f4f4;
+   background-color: #f9f9f9;
    border-radius: 8px;
    margin-top: 20px;
  }
@@ -274,292 +235,6 @@
   font-weight: bold;
 }
 
-/* Main Container */
-.main-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* Topbar */
-.shop-topbar {
-  display: flex; 
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-/* Search Bar */
-.search-bar {
-  flex: 1;
-}
-.search-form {
-  display: flex;
-  align-items: center;
-  background: #ffffff; 
-  overflow: hidden;
-  min-width: 260px; 
-  width: auto;
-  max-width: 350px;
-  padding-left: 12px;
-  border: 1px solid #d5e3f0;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.07);
-}
-
-.search-input {
-  flex: 1;
-  padding: 8px 10px;
-  width: 190px;
-  font-size: 14px;
-  border: none;
-  outline: none;
-}
-
-button[type='submit'] {
-    font-size: 15px;
-    font-weight: 500;
-    padding: 12px 40px;
-    color: #0d6efd;
-    border: none;
-    background-color: #ffffff; 
-    border-radius: 5px;
-}
-button[type='submit']:hover {
-    font-size: 15px;
-    font-weight: 500;
-    padding: 12px 40px;
-    color: #ffffff;
-    border: none;
-    background-color: #0d6efd; 
-    border-radius: 5px;
-}
-
-.search-button {
-  padding: 8px 18px;
-  background-color: #1f8fa3;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s, transform 0.2s;
-  border-radius: 0 30px 30px 0;
-}
-
-.search-button:hover {
-  background: #176e7c;
-  transform: scale(1.05);
-}
-
-/* Sidebar */
-.sidebar {
-  padding: 20px;
-  border: 1px solid #e5e9f0;
-  background-color: #fdfdfd;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  width: 260px;
-}
-
-.filter-title {
-  font-weight: 600;
-  margin-bottom: 10px;
-  font-size: 17px;
-  color: #1c3e64;
-}
-
-/* Filter links */
-.filter-item a {
-  text-decoration: none;
-  display: block;
-  padding: 6px 10px;
-  border-radius: 20px;
-  color: #333;
-  transition: 0.3s;
-}
-
-.filter-item a:hover {
-  background: #e6f4ff;
-  color: #0b66c3;
-}
-
-/* Active filter */
-.filter-item a.active-filter {
-  background: #1f8fa3 !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-/* Price filter */
-.price-button {
-  padding: 12px 20px;
-  background-color: #eef5fa;
-  color: #333;
-  border: 1px solid #d0dce7;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: 0.3s;
-  font-size: 14px;
-}
-
-.price-button:hover {
-  background-color: #1f8fa3;
-  color: white;
-  transform: scale(1.05);
-}
-
-.price-options a.active-filter button {
-  background-color: #1f8fa3;
-  color: white;
-  font-weight: bold;
-}
-
-/* Product grid */
-.product-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  width: calc(100% - 280px);
-}
-
-/* Product Card */
-.product-card {
-  width: calc(33.333% - 20px);
-  border: 1px solid #e5e9f0;
-  padding: 15px;
-  border-radius: 12px;
-  text-align: center;
-  background: white;
-  transition: 0.25s ease;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.05);
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
-}
-
-/* Wishlist Button */
-.wishlist-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #ffffffd6;
-  color: #d2042d;
-  padding: 8px 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  transition: 0.3s;
-}
-
-.wishlist-btn:hover {
-  background: #ffe7eb;
-  transform: scale(1.1);
-}
-
-/* Add to cart */
-.add-to-cart-btn {
-  background-color: #1c72e3;
-  color: #fff;
-  padding: 10px;
-  width: 100%;
-  border-radius: 6px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.add-to-cart-btn:hover {
-  background-color: #155ec0;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 25px 0;
-}
-
-.pagination a {
-  padding: 8px 15px;
-  background: #eef5fa;
-  border-radius: 6px;
-  border: 1px solid #d0dce7;
-  color: #333;
-  transition: 0.25s;
-}
-
-.pagination a:hover {
-  background: #d9eaff;
-  border-color: #9cc6ff;
-}
-
-.pagination .active {
-  background-color: #1c72e3;
-  color: white;
-  border-color: #155ec0;
-}
-/* SORT DROPDOWN */
-.sort-dropdown select {
-  padding: 8px 14px;
-  border-radius: 25px;
-  background: #ffffff;
-  border: 1px solid #d5e3f0;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-  transition: 0.2s ease;
-  color: #1c3e64;
-}
-
-.sort-dropdown select:hover {
-  border-color: #1c72e3;
-  box-shadow: 0 4px 12px rgba(28,114,227,0.15);
-}
-
-.sort-dropdown select:focus {
-  outline: none;
-  border-color: #1c72e3;
-}
-
-/* Search bar smooth transition */
-.search-form {
-  transition: box-shadow 0.3s ease;
-}
-
-.search-form:focus-within {
-  box-shadow: 0px 5px 14px rgba(28,114,227,0.15);
-}
-
-/* Clear (X) button inside search bar */
-.search-form a {
-  padding: 4px 6px;
-  color: #666;
-  font-weight: bold;
-  margin-right: 5px;
-  font-size: 14px;
-  text-decoration: none;
-  transition: 0.2s;
-}
-
-.search-form a:hover {
-  color: #d2042d;
-}
-
-/* Combined Search + Sort container spacing */
-.shop-topbar {
-  gap: 15px;
-}
-
-/* Keep sort aligned on smaller screens */
-.sort-dropdown {
-  display: flex;
-  align-items: center;
-}
-
-
 </style>
 
 
@@ -568,23 +243,15 @@ button[type='submit']:hover {
  <section class="shop-page container">
    <div class="shop-topbar">
      <div class="search-bar">
-        <form action="/shop" method="GET" class="search-form"> 
-            <!-- Input -->
-            <input type="text" 
-                name="search" 
-                value="<%= searchQuery || '' %>" 
-                placeholder="Search items..."
-                class="search-input"> 
-            <!-- Show X only when searching -->
-            <% if (searchQuery) { %>
-                <a href="/shop" class="search-clear-btn">&times;</a>
-            <% } %>  
-            <button type="submit" class="search-icon-btn" >
-                Search
-            </button>
-        </form> 
-
-
+       <form action="/shop" method="GET" class="search-form">
+         <input type="text" name="search" value="<%= searchQuery ||'' %>"  placeholder="Search items..." class="search-input" />
+         <% if(searchQuery !=='') {%>
+          <a href="/shop" class="d-flex align-items-center p-1">X</a>
+          <button type="submit" class="search-button"><img src="\img\icon\search.png" alt=""></button>
+            <% }else{ %>
+            <button type="submit" class="search-button">Search</button>
+            <% } %>
+       </form>
      </div>
      <div class="sort-dropdown">
       <form id="sortForm" action="/shop" method="GET"> 
@@ -685,8 +352,8 @@ button[type='submit']:hover {
              <p>Brand:<%= products[i].brand %></p>
              <p>Price:₹<%= products[i].salesPrice.toLocaleString('en-IN') %> <span class="text-muted"><strike> ₹ <%= products[i].regularPrice.toLocaleString('en-IN') %></strike></span></p>
            </a>
-           <button style="background-color:#ff6b6b; ;"onmouseover="this.style.backgroundColor='#ee5353; '"
-  onmouseout="this.style.backgroundColor='#ff6b6b;'" class="add-to-cart-btn" onclick="addToCart('<%=products[i]._id%>')">Add to Cart</button>
+           <button style="background-color:#1c72e3 ;"onmouseover="this.style.backgroundColor='#1964c6 '"
+  onmouseout="this.style.backgroundColor='#1c72e3'" class="add-to-cart-btn" onclick="addToCart('<%=products[i]._id%>')">Add to Cart</button>
          </div>
          <% } %>
      </main>

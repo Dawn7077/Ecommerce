@@ -30,7 +30,7 @@ TABLE CONTENT
  Custom amine
 ***/
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,300;1,400;1,700;1,900&amp;display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Spartan:wght@300;400;500;600;700&amp;display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Spartan:wght@300;400;500;600;700&amp;display=swap"); */
 /*import vendors*/
 @import url(vendors/normalize.css);
 @import url(vendors/bootstrap.min.css);
@@ -128,11 +128,11 @@ input:focus::-moz-placeholder {
 }
 
 a {
-  color: #088178;
+  color: #dadada;
 }
 
 a:hover {
-  color: #046963;
+  color: #fffcfc;
 }
 
 /*--- Common Classes---------------------*/
@@ -813,7 +813,7 @@ h5.widget-title {
 /*COMPONENTS -> BUTTONS*/
 .btn-default {
   color: #fff;
-  background-color: #088178;
+  background-color: #0b5aad;
   border-radius: 50px;
   padding: 13px 28px;
 }
@@ -868,12 +868,12 @@ h5.widget-title {
 }
 
 .btn-shadow-brand:hover {
-  border: 1px solid #088178;
+  border: 1px solid #083a81;
 }
 
 .btn-brand {
-  background-color: #088178;
-  border-color: #088178;
+  background-color: #094e9c;
+  border-color: #083881;
 }
 
 button.submit, button[type='submit'] {
@@ -882,17 +882,17 @@ button.submit, button[type='submit'] {
   padding: 12px 40px;
   color: #ffffff;
   border: none;
-  background-color: #088178;
-  border: 1px solid #046963;
+  background-color: #007bff;
+  border: 1px solid #064a8f;
   border-radius: 5px;
 }
 
 button.submit:hover, button[type='submit']:hover {
-  background-color: #046963 !important;
+  background-color: #0656cf !important;
 }
 
 .btn-brand:hover {
-  background-color: #046963 !important;
+  background-color:#0d6efd !important;
 }
 
 .btn-login {
@@ -927,8 +927,8 @@ button.submit:hover, button[type='submit']:hover {
   padding: 12px 30px;
   border-radius: 4px;
   color: #fff;
-  border: 1px solid #046963;
-  background-color: #088178;
+  border: 1px solid #3399cc;;
+  background-color: #3399cc;
   cursor: pointer;
   -webkit-transition: all 300ms linear 0s;
   transition: all 300ms linear 0s;
@@ -936,7 +936,7 @@ button.submit:hover, button[type='submit']:hover {
 }
 
 .btn:hover, .button:hover {
-  background-color: #046963;
+  background-color: #1577b8;;
 }
 
 .btn.btn-sm, .button.btn-sm {
@@ -967,7 +967,7 @@ button.submit:hover, button[type='submit']:hover {
 
 .btn.btn-brush, .button.btn-brush {
   background-color: transparent;
-  color: #088178;
+  color: #1350b3;
   border: 0;
   padding: 14px 80px 14px 65px;
   background-repeat: no-repeat;
@@ -4375,6 +4375,7 @@ table .product-thumbnail img {
 }
 
 .detail-qty {
+  /* max-width: 160px; */
   max-width: 80px;
   padding: 9px 20px;
   position: relative;

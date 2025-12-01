@@ -40,6 +40,9 @@ const userAuth = async(req,res,next)=>{
         }
     } catch (error) {
         console.log('Error in user auth middleware',error);
+          if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({ success: false, message: "Server error" });
+        }
         return res.status(500).send('Internal server error')
     }
 

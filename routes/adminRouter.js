@@ -69,7 +69,20 @@ router.get('/banner', adminAuth, getBannerPage)
 router.get('/addBanner', adminAuth, getAddBannerPage)
 router.post('/addBanner', adminAuth, uploads.single('images'), addBanner)
 router.get('/deleteBanner', adminAuth, bannerDelete)
-
+//coupon management
+const {loadCoupon,createCoupon,getEditCoupon,editCoupon,deleteCoupon} =require('../controllers/admin/couponController')
+router.get('/coupon', adminAuth,loadCoupon)
+router.post('/createCoupon',adminAuth,createCoupon)
+router.get('/editCoupon/:id',adminAuth,getEditCoupon)
+router.post('/updateCoupon',adminAuth,editCoupon)
+router.delete('/deleteCoupon/:id',adminAuth,deleteCoupon)
+//order management
+const {getOrderList,getOrderDetails,changeOrderStatus,approveReturn,rejectReturn} = require('../controllers/admin/orderController')
+router.get('/orderList',adminAuth,getOrderList)
+router.get('/order-details',adminAuth,getOrderDetails)
+router.post('/order-change-status',adminAuth,changeOrderStatus)
+router.post('/approve-return',adminAuth,approveReturn)
+router.post('/reject-return',adminAuth,rejectReturn)
 
 
 module.exports = router

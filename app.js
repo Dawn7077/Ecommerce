@@ -41,6 +41,10 @@ app.use((req,res,next)=>{
 })
 
 app.use('/',userRouter)
+app.use('/1',(req,res)=>{
+    res.render('user/test')
+})
+
 app.use('/admin',adminRouter)
 
 app.listen(process.env.PORT,()=>{

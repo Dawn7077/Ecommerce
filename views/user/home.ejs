@@ -95,8 +95,7 @@
     background-color: #ff4c4c;
   }
 </style>
-
-<!-- Hero Section -->
+ 
 <section class="hero-slider position-relative pt-10 pb-10">
   <div class="swiper-container w-60 mx-auto">
     <div class="swiper-wrapper">
@@ -131,8 +130,7 @@
     <div class="swiper-button-prev"></div>
   </div>
 </section>
-
-<!-- Banner   -->
+ 
 <section class="banner-area pt-5 pb-5">
   <div class="container">
     <div class="row">
@@ -152,8 +150,7 @@
     </div>
   </div>
 </section>
-
-<!-- Product   -->
+ 
 <section class="product spad">
   <div class="container">
     <div class="row">
@@ -196,24 +193,37 @@
   </div>
 </section>
 
+ 
+
+
 <%- include("../../views/partials/user/footer") %>
 
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
-  var swiper = new Swiper(".swiper-container", {
-    slidesPerView: 1,
-    loop: true,
-    autoplay: {
-      delay: 3000,
-      disableOnInteraction: false,
-    },
-    pagination: {
-      el: ".swiper-pagination",
-      clickable: true,
-    },
-    navigation: {
-      nextEl: ".swiper-button-next",
-      prevEl: ".swiper-button-prev",
-    },
-  });
+
+  var totalSlides = document.querySelectorAll(".swiper-slide").length;
+
+
+var swiper = new Swiper(".swiper-container", {
+  slidesPerView: 1,
+  loop: totalSlides > 1, // ❗ SAFE LOOP
+  autoplay: totalSlides > 1 ? {
+    delay: 3000,
+    disableOnInteraction: false
+  } : false,
+  pagination: {
+    el: ".swiper-pagination",
+    clickable: true,
+  },
+  navigation: {
+    nextEl: ".swiper-button-next",
+    prevEl: ".swiper-button-prev",
+  },
+});
+
+console.log("Slides:", document.querySelectorAll(".swiper-slide").length);
+
+
+ 
+
 </script>

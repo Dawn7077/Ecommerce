@@ -28,16 +28,32 @@
     .breadcrumb span:before {
       content: "•";
     }
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+        text-decoration: none; 
+        font-size: 14px;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+    
  </style>
  
  <div class="page-header breadcrumb-wrap">
   <div class="container">
-    <div class="breadcrumb"> 
+    <div class="back-link"> 
       <% crumbs.forEach((item,index)=>{ %>
         <% if(index === crumbs.length-1){ %>
-            <a href="<%= item.url %>"> <%= item.label %>  </a>
+            <!-- <a class="back-link" href="<%= item.url %>"> <%= item.label %>  </a> -->
+                <a href="<%= item.url %>" class="back-link"><i class="fas fa-angle-right"></i> <%= item.label %> </a>
             <% }else{ %>
-                <a href="<%= item.url %>">  <%= item.label %> ></a>
+                <!-- <a class="back-link" href="<%= item.url %>">  <%= item.label %> ></a> -->
+                <a href="<%= item.url %>" class="back-link"> <%= item.label %> </a>
             <% } %>
         <% }) %>
     </div>

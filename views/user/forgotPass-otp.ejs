@@ -173,12 +173,15 @@
 
       .btn-primary {
         margin-top: 15px;
-        background-color: #ff7f50;
-        border: none;
+        background-color: #DB4444;
+        border: none; 
+        width: 90%;
+        transition: ease 0.3s;
       }
 
       .btn-primary:hover {
         background-color: #ff5722;
+        transform: translateY(-2px);
       }
 
       .resend-button {
@@ -230,14 +233,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 100px;
+    height: 35px;
+    border-radius: 10%;
     background-color: #f0f0f0;
     font-size: 14px;
-    color: black;
+    color: #343434;
     text-align: center;
-  }
+}
 
 
   .form-group {
@@ -254,167 +257,429 @@
   .resend-button {
     margin-top: 10px;
   }
+  .header {
+      background: #f6ffcf;
+  }
+  .header__top {
+    background: #b1b1b1;
+      border-bottom: 1px solid #eee;
+  }
+  .order-card, .order-box {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s 
+ease;
+}
   </style>
-  <body>
+
+ <body>
+
+     <!-- Page Preloder -->
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Offcanvas Menu Begin -->
+    <div class="offcanvas-menu-overlay"></div>
+    <div class="offcanvas-menu-wrapper">
+        <div class="offcanvas__option">
+            <div class="offcanvas__links">
+                <a href="#">Sign in</a>
+                <a href="#">FAQs</a>
+            </div>
+            <div class="offcanvas__top__hover">
+                <span>Usd <i class="arrow_carrot-down"></i></span>
+                <ul>
+                    <li>USD</li>
+                    <li>EUR</li>
+                    <li>USD</li>
+                </ul>
+            </div>
+        </div>
+        <div class="offcanvas__nav__option">
+            <a href="#" class="search-switch"><img src="/img/icon/search.png" alt=""></a>
+            <a href="#"><img src="/img/icon/heart.png" alt=""></a>
+            <a href="#"><img src="/img/icon/cart.png" alt=""> <span>0</span></a>
+            <div class="price">$0.00</div>
+        </div>
+        <div id="mobile-menu-wrap"></div>
+        <div class="offcanvas__text">
+            <p>Free shipping, 30-day return or refund guarantee.</p>
+        </div>
+    </div>
+    <!-- Offcanvas Menu End -->
+
+    <!-- Header Section Begin -->
+    <header class="header">
+        <div class="header__top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-md-7">
+                        <div class="header__top__left">
+                            <p>Free shipping, 30-day return or refund guarantee.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-5">
+                        <div class="header__top__right">
+                            <div class="header__top__links">
+                                <% if(locals.user){ %>
+                                    <div class="dropdown">
+                                        <a href="#" class="sign-in-link"><%=locals.user.name %></a>
+                                        <div class="dropdown-content">
+                                            <a href="/user-profile">Profile</a>
+                                            <a href="/logout">Logout</a>
+                                        </div>
+                                    </div>
+                                <% }else{ %>                                
+                                <a href="/signup">Sign in</a>
+                                <a href="/login">Log in</a>
+                                <% } %>
+
+                                <a href="#">FAQs</a>
+                            </div>
+                            <div class="header__top__hover">
+                                <span>Usd <i class="arrow_carrot-down"></i></span>
+                                <ul>
+                                    <li>USD</li>
+                                    <li>EUR</li>
+                                    <li>USD</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-3">
+                    <div class="header__logo">
+                        <a href="./index.html"><img src="/img/logo1.png" alt=""></a>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6">
+                    <nav class="header__menu mobile-menu">
+                        <ul>
+                            <li class="active"><a href="/">Home</a></li>
+                            <li><a href="/shop">Shop</a></li>
+                            <li><a href="/page">Pages</a>
+                                <ul class="dropdown">
+                                    <li><a href="">About Us</a></li>
+                                    <li><a href="/shop">Shop Details</a></li>
+                                    <li><a href="./shopping-cart.html">Shopping Cart</a></li>
+                                    <li><a href="./checkout.html">Check Out</a></li>
+                                    <li><a href="./blog-details.html">Blog Details</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="./blog.html">Blog</a></li>
+                            <li><a href="./contact.html">Contacts</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="col-lg-3 col-md-3">
+                    <div class="header__nav__option">
+                        <a href="#" class="search-switch"><img src="/img/icon/search.png" alt=""></a>
+                        <a href="/wishlist"><img src="/img/icon/heart.png" alt=""></a>
+                        <a href="/cart"><img src="/img/icon/cart.png" alt="">  </a>
+                        <a href="/order"><img style="width: 19px;" src="/img/icon/checkout.png" alt="">  </a>
+                         
+                    </div>
+                </div>
+            </div>
+            <div class="canvas__open"><i class="fa fa-bars"></i></div>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const currentPath = window.location.pathname;
+                const menuItems = document.querySelectorAll(".header__menu ul li a");
+
+                menuItems.forEach(link => {
+                    // Remove any previous 'active'
+                    link.parentElement.classList.remove("active");
+
+                    // Match exact path
+                    if (link.getAttribute("href") === currentPath) {
+                        link.parentElement.classList.add("active");
+                    }
+
+                    // Special rule: mark Home active for '/'
+                    if (currentPath === "/" && link.getAttribute("href") === "/") {
+                        link.parentElement.classList.add("active");
+                    }
+                });
+            });
+        </script>
+
+    </header>
+    <!--         Header Section End      -->
 
 
-<div class="container col-4 login_wrap widget-taber-content p-30 background-white border-radius-5 mt-30">
- <div class="padding_eight_all bg-white">
-   <div class="heading_s1">
-     <h3 class="mb-30 text-center">Email Verification</h3>
-   </div>
-   <div class="otp-container">
-     <form onsubmit="return validateOtpFrom()">
-       <div class="form-group">
-         <label for="otp">Enter OTP:</label>
-         <input type="text" id="otp" name="otp" class="form-control" required>
-       </div>
-       <div class="form-group">
-         <button type="submit" class="btn btn-primary">Verify OTP</button>
-       </div>
-     </form>
-     <div class="form-group otp-timer-wrapper">
-       <div class="otp-timer" id="otpTimer"></div>
-     </div>
-     <div class="form-group">
-       <button type="button" class="btn btn-link resend-button" onclick="resendOtp()">Resend OTP</button>
-     </div>
-     <% if(locals.message &&  message.length>0) {%>
-       <div class="alert alert-danger mt-3">
-        <%= message %>
-       </div>
-       <% } %>
-   </div>
-   <div class="text-muted text-center pt-25">
-     Already verified? <a href="/login">Login now</a>
-   </div>
- </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-  let otpTimerInterval;
-  let timer = 60
 
-  function initializeOtpTimer(){
-    clearInterval(otpTimerInterval)
-    timer =60
-    startOtpTimer()
 
-  }
 
-  function updateTimerColor(percentage){
-    const timerElement = document.getElementById('otpTimer')
-    if(percentage>50){timerElement.style.backgroundColor = '#28a745'}
-    else if(percentage>25){timerElement.style.backgroundColor = '#ffc107'}
-    else{timerElement.style.backgroundColor = '#dc3545'}
-  }
+    <div class="container col-4 login_wrap widget-taber-content p-30 background-white border-radius-5 mt-30">
+    <div class="padding_eight_all my-5 order-card">
+      <div class="heading_s1">
+        <h3 class="mb-30 text-center">Email Verification</h3>
+      </div>
+      <div class="otp-container">
+        <form onsubmit="return validateOtpFrom()">
+          <div class="form-group">
+            <label for="otp">Enter OTP:</label>
+            <input type="text" id="otp" name="otp" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Verify OTP</button>
+          </div>
+        </form>
+        <div class="form-group otp-timer-wrapper">
+          <div class="otp-timer" id="otpTimer"></div>
+        </div>
+        <div class="form-group">
+          <button type="button" class="btn btn-link resend-button" onclick="resendOtp()">Resend OTP</button>
+        </div>
+        <% if(locals.message &&  message.length>0) {%>
+          <div class="alert alert-danger mt-3">
+            <%= message %>
+          </div>
+          <% } %>
+      </div>
+      <div class="text-muted text-center pt-25">
+        Already verified? <a href="/login">Login now</a>
+      </div>
+    </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  function startOtpTimer(){
-    const timerElement = document.getElementById('otpTimer')
-    otpTimerInterval = setInterval(()=>{
-      const minutes = Math.floor(timer/60)
-      const seconds = timer % 60
-      timerElement.textContent = `${minutes}: ${seconds<10?'0':''}${seconds}`
-      updateTimerColor((timer/60)*100)
-      if(--timer<0){
+    <script>
+      let otpTimerInterval;
+      let timer = 60
+
+      function initializeOtpTimer(){
         clearInterval(otpTimerInterval)
-        timerElement.textContent = 'Expired'
-        timerElement.style.backgroundColor = 'red'
+        timer =60
+        startOtpTimer()
+
       }
-    },1000) 
-  }
 
-  initializeOtpTimer()
-
-
-  function validateOtpFrom(){
-    const otpInput = document.getElementById('otp').value
-    fetch('/verify-passforgot-otp',{
-      method:'POST',
-      headers:{
-        "content-type":"application/json"
-      },
-      body:JSON.stringify({
-        otp:otpInput
-      })
-    }) 
-    .then(response=>response.json())
-    .then(res=>{ 
-      if(res.success){
-        Swal.fire({
-          icon:'success',
-          title:"OTP verified successfully",
-          showConfirmButton:false,
-          timer:1500
-        })
-        setTimeout(()=>{
-          window.location.href = res.redirectUrl
-        },1500)
+      function updateTimerColor(percentage){
+        const timerElement = document.getElementById('otpTimer')
+        if(percentage>50){timerElement.style.backgroundColor = '#28a745'}
+        else if(percentage>25){timerElement.style.backgroundColor = '#ffc107'}
+        else{timerElement.style.backgroundColor = '#dc3545'}
       }
-      else{
-        Swal.fire({
-          icon:'error',
-          title:"Invalid OTP",
-          text:res.message
-        })
+
+      function startOtpTimer(){
+        const timerElement = document.getElementById('otpTimer')
+        otpTimerInterval = setInterval(()=>{
+          const minutes = Math.floor(timer/60)
+          const seconds = timer % 60
+          timerElement.textContent = `${minutes}: ${seconds<10?'0':''}${seconds}`
+          updateTimerColor((timer/60)*100)
+          if(--timer<0){
+            clearInterval(otpTimerInterval)
+            timerElement.textContent = 'Expired'
+            timerElement.style.backgroundColor = 'red'
+          }
+        },1000) 
       }
-    }) 
-    .catch(error=>{
-      Swal.fire({
-          icon:'error',
-          title:"Error",
-          text:'Failed to verify Otp, Please try again'
-        })
-      })
-      
-      return false
-  }
+
+      initializeOtpTimer()
 
 
-  function resendOtp(){
-    clearInterval(otpTimerInterval)
-    timer = 60
-    startOtpTimer()
-
-    fetch('/resend-passforgot-otp',{
-      method:'POST',
-      headers:{
-        "content-type":"application/json"
-      } 
-    })
-    .then(res=>res.json())
-    .then(data=>{
-      if(data.success){
-        Swal.fire({
-          icon:'success',
-          title:"OTP resend successfully",
-          showConfirmButton:false,
-          timer:1500
+      function validateOtpFrom(){
+        const otpInput = document.getElementById('otp').value
+        fetch('/verify-passforgot-otp',{
+          method:'POST',
+          headers:{
+            "content-type":"application/json"
+          },
+          body:JSON.stringify({
+            otp:otpInput
+          })
         }) 
-      }else{
-        Swal.fire({
-          icon:'error',
-          title:"Error",
-          text:'Failed to Resend Otp, Please try again'
-        })
+        .then(response=>response.json())
+        .then(res=>{ 
+          if(res.success){
+            Swal.fire({
+              icon:'success',
+              title:"OTP verified successfully",
+              showConfirmButton:false,
+              timer:1500
+            })
+            setTimeout(()=>{
+              window.location.href = res.redirectUrl
+            },1500)
+          }
+          else{
+            Swal.fire({
+              icon:'error',
+              title:"Invalid OTP",
+              text:res.message
+            })
+          }
+        }) 
+        .catch(error=>{
+          Swal.fire({
+              icon:'error',
+              title:"Error",
+              text:'Failed to verify Otp, Please try again'
+            })
+          })
+          
+          return false
       }
-    })
-    .catch(error=>{
-      Swal.fire({
-          icon:'error',
-          title:"Error",
-          text:'Failed to resend Otp, Please try again'
+
+
+      function resendOtp(){
+        clearInterval(otpTimerInterval)
+        timer = 60
+        startOtpTimer()
+
+        fetch('/resend-passforgot-otp',{
+          method:'POST',
+          headers:{
+            "content-type":"application/json"
+          } 
         })
-      })
-  }
+        .then(res=>res.json())
+        .then(data=>{
+          if(data.success){
+            Swal.fire({
+              icon:'success',
+              title:"OTP resend successfully",
+              showConfirmButton:false,
+              timer:1500
+            }) 
+          }else{
+            Swal.fire({
+              icon:'error',
+              title:"Error",
+              text:'Failed to Resend Otp, Please try again'
+            })
+          }
+        })
+        .catch(error=>{
+          Swal.fire({
+              icon:'error',
+              title:"Error",
+              text:'Failed to resend Otp, Please try again'
+            })
+          })
+      }
 
-</script>
+    </script>
 
-  </body>
+<!-- footer -->
+<footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <div class="footer__about">
+                        <div class="footer__logo">
+                            <a href="#"><img src="/img/logo2.png" alt=""></a>
+                        </div>
+                        <p>The customer is at the heart of our unique business model, which includes design.</p>
+                        <a href="#"><img src="/img/payment.png" alt=""></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 offset-lg-1 col-md-3 col-sm-6">
+                    <div class="footer__widget">
+                        <h6>Shopping</h6>
+                        <ul>
+                            <li><a href="#">Clothing Store</a></li>
+                            <li><a href="#">Trending Shoes</a></li>
+                            <li><a href="#">Accessories</a></li>
+                            <li><a href="#">Sale</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-sm-6">
+                    <div class="footer__widget">
+                        <h6>Shopping</h6>
+                        <ul>
+                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="#">Payment Methods</a></li>
+                            <li><a href="#">Delivary</a></li>
+                            <li><a href="#">Return & Exchanges</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-3 offset-lg-1 col-md-6 col-sm-6">
+                    <div class="footer__widget">
+                        <h6>NewLetter</h6>
+                        <div class="footer__newslatter">
+                            <p>Be the first to know about new arrivals, look books, sales & promos!</p>
+                            <form action="#">
+                                <input type="text" placeholder="Your email">
+                                <button type="submit"><span class="icon_mail_alt"></span></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="footer__copyright__text">
+                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                        <p>Copyright ©
+                            <script>
+                                document.write(new Date().getFullYear());
+                            </script>2020
+                            All rights reserved | This template is made with <i class="fa fa-heart-o"
+                            aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+                        </p>
+                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer Section End -->
 
-  </html>
+    <!-- Search Begin -->
+    <div class="search-model">
+        <div class="h-100 d-flex align-items-center justify-content-center">
+            <div class="search-close-switch">+</div>
+            <form class="search-model-form">
+                <input type="text" id="search-input" placeholder="Search here.....">
+            </form>
+        </div>
+    </div>
+    <!-- Search End -->
+
+    <!-- Js Plugins -->
+     <script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/jquery.nice-select.min.js"></script>
+<script src="/js/jquery.nicescroll.min.js"></script>
+<script src="/js/jquery.magnific-popup.min.js"></script>
+<script src="/js/jquery.countdown.min.js"></script>
+<script src="/js/jquery.slicknav.js"></script>
+<script src="/js/mixitup.min.js"></script>
+<script src="/js/owl.carousel.min.js"></script>
+<script src="/js/main.js"></script>
+
+<!-- External scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+
+<!-- checkout script --> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+ 
+</body>
+
+</html>
 
 
 

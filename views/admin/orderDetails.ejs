@@ -1,0 +1,397 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+    .card-box { 
+        background: white; 
+        border-radius: 10px; 
+        padding: 20px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #555;
+    }
+
+    .info-value {
+        color: #222;
+    }
+
+    .badge {
+        padding:5px 10px;
+        border-radius:6px; 
+        font-size:12px;
+    }
+
+    .badge-pending { background:#fff3cd; color:#b08900; }
+    .badge-shipped { background:#cfe2ff; color:#084298; }
+    .badge-delivered { background:#d1e7dd; color:#0f5132; }
+    .badge-cancelled { background:#f8d7da; color:#842029; }
+
+    .product-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .update-btn {
+        padding:8px 12px;
+        border:none;
+        border-radius:5px;
+        background:#3b82f6;
+        color:white;
+        width:100%;
+    }
+</style>
+
+<section class="content-main">
+
+    <div class="content-header">
+        <div>
+            <h2 class="content-title">Order Details</h2>
+            <p>Order ID: <b><%= order.orderId %></b></p>
+        </div>
+        <a href="/admin/orderList" class="btn btn-secondary">← Back</a>
+    </div>
+
+    <div class="row">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-8">
+
+            <!-- ORDER INFORMATION -->
+            <div class="card-box">
+                <h5>Order Information</h5>
+                <div class="info-row">
+                    <span class="info-label">Order Date:</span>
+                    <span class="info-value"><%= new Date(order.createdOn).toLocaleString() %></span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Payment Method:</span>
+                    <span class="info-value"><%= order.paymentMethod %></span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Order Status:</span>
+                    <span class="info-value">
+                        <% if(order.status === 'Pending'){ %>
+                            <span class="badge badge-pending">Pending</span>
+                        <% } else if(order.status === 'Shipped'){ %>
+                            <span class="badge badge-shipped">Shipped</span>
+                        <% } else if(order.status === 'Delivered'){ %>
+                            <span class="badge badge-delivered">Delivered</span>
+                        <% } else if(order.status === 'Cancelled'){ %>
+                            <span class="badge badge-cancelled">Cancelled</span>
+                        <% } %>
+                    </span>
+                </div>
+            </div>
+
+            <!-- CUSTOMER INFO -->
+            <div class="card-box">
+                <h5>Customer Information</h5>
+                <div class="info-row">
+                    <span class="info-label">Name:</span>
+                    <span class="info-value"><%= order.userId?.name %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value"><%= order.userId?.email %></span>
+                </div>
+            </div>
+
+            <!-- SHIPPING ADDRESS -->
+            <div class="card-box">
+                <h5>Shipping Address</h5>
+                <div class="info-row">
+                    <span class="info-label">Name:</span><br>
+                    <span class="info-value"><%= order.address.name %></span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Address:</span><br>
+                    <span class="info-value">
+                        <%= order.address.landMark %>
+                        <%= order.address.city %>
+                        <%= order.address.state %> - <%= order.address.pincode %>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span><br>
+                    <span class="info-value"><%= order.address.phone %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Alt Phone:</span><br>
+                    <span class="info-value"><%= order.address.altPhone %></span>
+                </div>
+            </div>
+
+            <!-- ORDER ITEMS -->
+            <div class="card-box">
+                <h5>Ordered Items</h5>
+
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% order.orderedItems.forEach(item => { %>
+                        <tr> 
+                             <!-- <td>
+                                <img src="/uploads/product-image/<%= item.productImage %>" class="product-img me-2">
+                                <%= item.product.productName %>
+
+                                <% if (item.status === 'Return Requested') { %>
+                                    <br>
+                                    <span class="badge bg-warning text-dark mt-2">Return Requested</span><br>
+                                    <small><b>Reason:</b> <%= item.returnReason %></small><br>
+                                    <small><b>Requested On:</b> <%= new Date(item.returnRequestDate).toLocaleString() %></small><br>
+
+                                    <button 
+                                        class="btn btn-success btn-sm mt-2"
+                                        onclick="approveReturn('<%= order._id %>', '<%= item._id %>')">
+                                        Approve
+                                    </button>
+
+                                    <button 
+                                        class="btn btn-danger btn-sm mt-2"
+                                        onclick="rejectReturn('<%= order._id %>', '<%= item._id %>')">
+                                        Reject
+                                    </button>
+                                <% } else if (item.status === 'Returned') { %>
+                                    <br>
+                                    <span class="badge bg-success mt-2">Returned</span><br>
+                                    <small class="text-success"><b>Return Approved</b></small><br>
+
+                                    <% if (item.statusHistory.length > 0) { %>
+                                        <small><b>Updated On:</b> 
+                                            <%= new Date(item.statusHistory[item.statusHistory.length - 1].date).toLocaleString() %>
+                                        </small><br>
+                                    <% } %>
+
+                                <% } else if (item.statusHistory.length> 0 &&
+                                    item.statusHistory[item.statusHistory.length-1].status === 'Return Rejected') 
+                                    { %>
+                                    <br>
+                                    <span class="badge bg-danger mt-2">Rejected</span><br>
+                                    <small class="text-success"><b>Return Rejected</b></small><br>
+
+                                    <% if (item.statusHistory.length > 0) { %>
+                                        <small><b>Updated On:</b> 
+                                            <%= new Date(item.statusHistory[item.statusHistory.length - 1].date).toLocaleString() %>
+                                        </small><br>
+                                    <% } %>
+
+
+                                <% } else if (item.status === 'Cancelled') { %>
+                                    <br>
+                                    <span class="badge bg-danger mt-2">Cancelled</span><br>
+                                <% } %>
+
+                            </td> -->
+                            <td>
+                                <img src="/uploads/product-image/<%= item.productImage %>" class="product-img me-2">
+                                <%= item.product.productName %>
+
+                                <% 
+                                const lastStatus = item.statusHistory.length 
+                                    ? item.statusHistory[item.statusHistory.length - 1].status 
+                                    : null;
+                                %>
+
+                                <!-- Return Requested -->
+                                <% if (item.status === 'Return Requested') { %>
+                                    <br>
+                                    <span class="badge bg-warning text-dark mt-2">Return Requested</span><br>
+                                    <small><b>Reason:</b> <%= item.returnReason %></small><br>
+                                    <small><b>Requested On:</b> <%= new Date(item.returnRequestDate).toLocaleString() %></small><br>
+
+                                    <button class="btn btn-success btn-sm mt-2"
+                                            onclick="approveReturn('<%= order._id %>', '<%= item._id %>')">
+                                        Approve
+                                    </button>
+
+                                    <button class="btn btn-danger btn-sm mt-2"
+                                            onclick="rejectReturn('<%= order._id %>', '<%= item._id %>')">
+                                        Reject
+                                    </button>
+
+                                <!-- Returned -->
+                                <% } else if (item.status === 'Returned') { %>
+                                    <br>
+                                    <span class="badge bg-success mt-2">Returned</span><br>
+                                    <small class="text-success"><b>Return Approved</b></small><br>
+                                    <small><b>Updated On:</b> <%= new Date(item.statusHistory[item.statusHistory.length - 1].date).toLocaleString() %></small>
+
+                                <!-- Return Rejected -->
+                                <% } else if (lastStatus === 'Return Rejected') { %>
+                                    <br>
+                                    <span class="badge bg-danger mt-2">Return Rejected</span><br>
+                                    <small><b>Updated On:</b> <%= new Date(item.statusHistory[item.statusHistory.length - 1].date).toLocaleString() %></small>
+
+                                <!-- Cancelled -->
+                                <% } else if (item.status === 'Cancelled') { %>
+                                    <br>
+                                    <span class="badge bg-danger mt-2">Cancelled</span><br>
+
+                                <% } %>
+                            </td>
+
+                            <td><%= item.quantity %></td>
+                            <td>$<%= item.price %></td>
+                            <td><b>$<%= item.price * item.quantity %></b></td>
+
+
+                             
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-lg-4">
+
+            <!-- UPDATE STATUS -->
+            <% if(order.status !== 'Delivered' && order.status !== 'Cancelled'){ %>
+            <div class="card-box">
+                <h5>Update Order Status</h5>
+
+                <select id="statusSelect" class="form-select mt-2">
+                    <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select> 
+                <button class="update-btn mt-3" onclick="updateStatus('<%= order._id %>')">Update</button>
+                
+            </div>
+            <% } %>
+
+            <!-- SUMMARY -->
+            <div class="card-box">
+                <h5>Order Summary</h5>
+                <div class="info-row">
+                    <span class="info-label">Total Price:</span>
+                    <span class="info-value">$<%= order.totalPrice %></span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function updateStatus(orderId) {
+        const status = document.getElementById("statusSelect").value;
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "Update order status to " + status + "?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, update",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("/admin/order-change-status", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ orderId, status })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status){
+                        Swal.fire("Updated!", "Order status updated.", "success")
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire("Error", "Failed to update status.", "error");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Something went wrong', 'error');
+                });
+            }
+        });
+    }
+</script>
+
+<script>
+function approveReturn(orderId,itemId){
+    Swal.fire({
+        title:'Approve Return?',
+        icon:'warning',
+        showCancelButton:true,
+        confirmButtonText:'Yes,approve'
+    })
+    .then(result=>{
+        if(result.isConfirmed){
+            fetch('/admin/approve-return',{
+                method:'POST',
+                headers:{'Content-Type': 'application/json'},
+                body:JSON.stringify({orderId,itemId})
+            })
+            .then(res=> res.json())
+            .then(data=>{
+                if(data.success){
+                    Swal.fire("Approved!", data.message, "success")
+                    .then(()=>location.reload())
+                }else{
+                    Swal.fire("Error", data.message, "error");
+                }
+            })
+        }
+    })
+}
+function rejectReturn(orderId,itemId){
+    Swal.fire({
+        title:'Reject Return?',
+        icon:'warning',
+        showCancelButton:true,
+        confirmButtonText:'Yes, reject'
+    })
+    .then(result=>{
+        if(result.isConfirmed){
+            fetch('/admin/reject-return',{
+                method:"POST", 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ orderId, itemId })
+            })
+            .then(res=> res.json())
+            .then(data=>{
+                if(data.success){
+                    Swal.fire("Rejected!", data.message, "success")
+                    .then(() => location.reload());
+                }else{
+                    Swal.fire("Error", data.message, "error"); 
+                }
+            })
+        }
+    })
+}
+
+</script>
+
+<%- include("../../views/partials/admin/footer") %>
