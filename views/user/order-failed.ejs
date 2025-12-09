@@ -1,0 +1,42 @@
+<%- include("../partials/user/header") %>
+<style>
+    .order-box {
+        padding: 7px; 
+    }
+    .order-card,.order-box {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    width: 650px;
+    height: 400px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    }
+     .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    body{
+        background: linear-gradient(135deg, #fff6f6 0%, #ffd5bc 100%);
+    }
+</style>
+<body >
+    
+
+
+<div class="container text-center order-card mt-3" style="padding: 60px 20px;">
+    <h2 class="text-danger mt-5">&#10060; Payment Failed</h2>
+
+    <% if(orderId){ %>
+        <p>Order ID: <%= orderId %></p>
+    <% } %>
+
+    <p>Reason: <%= reason %></p>
+
+    <a href="/checkout/userId=<%= user._id %>" class="btn btn-warning mt-3 ">Try Again</a>
+</div>
+</body>
+
+<%- include("../partials/user/footer") %>

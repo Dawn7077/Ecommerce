@@ -1,0 +1,437 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+    .offer-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .filter-tab {
+        padding: 10px 20px;
+        border: 2px solid #ddd;
+        color: #0c83d7;;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+    .filter-tab.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .filter-tab.active:hover {
+        background: #0c83d7;
+        color: white; 
+    }
+    .filter-tab:hover {
+        border-color: #0c83d7; 
+        color: #0c83d7;;
+    }
+    .offer-badge {
+        /* background: linear-gradient(135deg, #a3a3a3 0%, #7c7c7c 100%); */
+        background-color: #a7a7a7;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 11px;
+    }
+    .product-img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .action-btn-group {
+        display: flex;
+        gap: 5px;
+    }
+    .bg-secondary {
+        --bs-bg-opacity: 1;
+        background-color: #e76c60 !important;
+    }
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    .fa-3x {
+        font-size: 2em;
+    }
+    
+</style>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title">Offer Management</h2>
+            <p>Manage all product and category offers </p>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="/admin/offer-management?filterType=all"  style="text-decoration: none;"
+           class="filter-tab <%= filterType === 'all' ? 'active' : '' %>">
+            <i class="fas fa-list"></i> All Offers
+        </a>
+        <a href="/admin/offer-management?filterType=product" style="text-decoration: none;"
+           class="filter-tab <%= filterType === 'product' ? 'active' : '' %>">
+            <i class="fas fa-box"></i> Product Offers
+        </a>
+        <a href="/admin/offer-management?filterType=category" style="text-decoration: none;"
+           class="filter-tab <%= filterType === 'category' ? 'active' : '' %>">
+            <i class="fas fa-tags"></i> Category Offers
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="/admin/offer-management" method="GET" class="row g-3">
+                <input type="hidden" name="type" value="<%= filterType %>">
+                <div class="col-md-10">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        name="search" 
+                        placeholder="Search offers..." 
+                        value="<%= search %>">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Offers  -->
+    <% if (filterType === 'all' || filterType === 'category') { %>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-tags"></i> Category Offers
+                <span class="badge bg-primary ms-2 py-1"><%= categories.length %></span>
+            </h4>
+        </div>
+        <div class="card-body">
+            <% if (categories.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>Offer Percentage</th>
+                            <th>Status</th>
+                            <th >Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% categories.forEach(category => { %>
+                        <tr>
+                            <td><strong><%= category.name %></strong></td>
+                            <td><%= category.description.substring(0, 50) %>...</td>
+                            <td>
+                                <span class="offer-badge"><%= category.categoryOffer %>% OFF</span>
+                            </td>
+                            <td>
+                                <% if (category.isListed) { %>
+                                    <span class="badge bg-success">Active</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">Inactive</span>
+                                <% } %>
+                            </td>
+                            <td class="">
+                                <div class="action-btn-group">
+                                    <button 
+                                        class="btn btn-warning btn-sm" 
+                                        onclick="editCategoryOffer('<%= category._id %>', '<%= category.categoryOffer %>')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button 
+                                        class="btn btn-danger btn-sm" 
+                                        onclick="removeCategoryOffer('<%= category._id %>')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <% } else { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No category offers found</p>
+                    <a href="/admin/category" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Category Offer
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Product Offers Section -->
+    <% if (filterType === 'all' || filterType === 'product') { %>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="fas fa-box"></i> Product Offers
+                <span class="badge bg-primary ms-2"><%= products.length %></span>
+            </h4>
+        </div>
+        <div class="card-body">
+            <% if (products.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Regular Price</th>
+                            <th>Offer</th>
+                            <th>Sale Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% products.forEach(product => { %>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img 
+                                        src="/uploads/product-image/<%= product.productImage[0] %>" 
+                                        class="product-img me-2">
+                                    <strong><%= product.productName %></strong>
+                                </div>
+                            </td>
+                            <td><%= product.category[0].name %></td>
+                            <td>₹<%= product.regularPrice %></td>
+                            <td>
+                                <span class="offer-badge"><%= product.productOffer %>% OFF</span>
+                            </td>
+                            <td>
+                                <strong class="text-success">₹<%= product.salesPrice %></strong>
+                            </td>
+                            <td>
+                                <% if (!product.isBlocked && product.status === 'Available') { %>
+                                    <span class="badge bg-success">Active</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">Inactive</span>
+                                <% } %>
+                            </td>
+                            <td class="">
+                                <div class="action-btn-group">
+                                    <button 
+                                        class="btn btn-warning btn-sm" 
+                                        onclick="editProductOffer('<%= product._id %>',' <%= product.productOffer %>')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button 
+                                        class="btn btn-danger btn-sm" 
+                                        onclick="removeProductOffer('<%= product._id %>')">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+            <% } else { %>
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No product offers found</p>
+                    <a href="/admin/addProducts" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Product Offer
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+    <div class="pagination-area mt-3 mb-5">
+        <nav>
+            <ul class="pagination justify-content-center">
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                        <a class="page-link" href="?page=<%= i %>&type=<%= filterType %>&search=<%= search %>">
+                            <%= i %>
+                        </a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+    </div>
+    <% } %>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Edit Product Offer
+async function editProductOffer(productId, currentPercentage) {
+    const { value: amount } = await Swal.fire({
+        title: 'Edit Product Offer',
+        input: 'number',
+        inputLabel: 'Offer Percentage',
+        inputPlaceholder: 'Enter percentage (1-90)',
+        inputValue: currentPercentage,
+        showCancelButton: true,
+        inputValidator: (value) => {
+            if (!value || value < 1 || value > 90) {
+                return 'Please enter a valid percentage between 1 and 90';
+            }
+        }
+    });
+
+    if (amount) {
+        try {
+            const response = await fetch('/admin/edit-product-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, percentage: amount })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                await Swal.fire('Success', data.message, 'success');
+                location.reload();
+            } else {
+                await Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            await Swal.fire('Error', 'An unexpected error occurred', 'error');
+        }
+    }
+}
+
+// Remove Product Offer
+async function removeProductOffer(productId) {
+    const result = await Swal.fire({
+        title: 'Remove Product Offer?',
+        text: 'This will reset the product to its regular price',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch('/admin/remove-product-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                await Swal.fire('Removed', data.message, 'success');
+                location.reload();
+            } else {
+                await Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            await Swal.fire('Error', 'An unexpected error occurred', 'error');
+        }
+    }
+}
+
+// Edit Category Offer
+async function editCategoryOffer(categoryId, currentPercentage) {
+    const { value: amount } = await Swal.fire({
+        title: 'Edit Category Offer',
+        input: 'number',
+        inputLabel: 'Offer Percentage',
+        inputPlaceholder: 'Enter percentage (1-90)',
+        inputValue: currentPercentage,
+        showCancelButton: true,
+        inputValidator: (value) => {
+            if (!value || value < 1 || value > 90) {
+                return 'Please enter a valid percentage between 1 and 90';
+            }
+        }
+    });
+
+    if (amount) {
+        try {
+            const response = await fetch('/admin/edit-category-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryId, percentage: amount })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                await Swal.fire('Success', data.message, 'success');
+                location.reload();
+            } else {
+                await Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            await Swal.fire('Error', 'An unexpected error occurred', 'error');
+        }
+    }
+}
+
+// Remove Category Offer
+async function removeCategoryOffer(categoryId) {
+    const result = await Swal.fire({
+        title: 'Remove Category Offer?',
+        text: 'This will reset all products in this category to regular prices',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch('/admin/remove-category-offer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryId })
+            });
+
+            const data = await response.json();
+
+            if (data.status) {
+                await Swal.fire('Removed', data.message, 'success');
+                location.reload();
+            } else {
+                await Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            await Swal.fire('Error', 'An unexpected error occurred', 'error');
+        }
+    }
+}
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

@@ -1,0 +1,251 @@
+ <%- include("../../views/partials/admin/header") %>
+
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .stats-card h4 {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .stats-card h2 {
+        color: #333;
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+    }
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .btn-download {
+        margin-left: 10px;
+    }
+    .badge-success { background-color: #d1e7dd; color: #0f5132; }
+    .badge-warning { background-color: #fff3cd; color: #ffc107; }
+    .badge-info { background-color: #cff4fc; color: #055160; }
+</style>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title">Sales Report</h2>
+            <p></p>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+     <div class="row">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <h4>Total Orders</h4>
+                <h2><%= stats.totalOrders %></h2>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <h4>Total Order Amount</h4>
+                <h2><%= stats.totalOrderAmount %></h2>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <h4>Coupon Discountt</h4>
+                <h2 style="color: #dc3545;">-₹<%= stats.totalCouponDiscount %></h2>
+            </div>
+        </div>  
+     </div>
+
+     <div class="row">
+        <div class="col-lg-12">
+            <div class="stats-card" style="background: linear-gradient(135deg, #ea7866 0%, #ea6d5d 100%);">
+                <h4 style="color: rgba(255,255,255,0.8);">Net Sales</h4>
+                <h2 style="color: white; font-size: 36px;">₹<%= stats.totalSales %></h2>
+            </div>
+        </div>
+    </div>
+
+     <!-- Filter  -->
+    <div class="filter-card">
+        <form id="filterForm" action="/admin/sales-report/filter" method="POST">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Filter Type</label>
+                    <select class="form-select" name="filterType" id="filterType"  onchange="toggleCustomDate()">
+                        <option value="all" <%= filterType === 'all' ? 'selected' : '' %>>All Time</option>
+                        <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Today</option>
+                        <option value="weekly" <%= filterType === 'weekly' ? 'selected' : '' %>>This Week</option>
+                        <option value="monthly" <%= filterType === 'monthly' ? 'selected' : '' %>>This Month</option>
+                        <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>This Year</option>
+                        <option value="custom" <%= filterType === 'custom' ? 'selected' : '' %>>Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3" id="customFromDiv">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" name="customFrom" id="customFrom" value="<%=from %>">
+                </div>
+
+                <div class="col-md-3" id="customToDiv">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" name="customTo" id="customTo" value="<%= to %>">
+                </div>
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Apply Filter
+                    </button>
+                </div> 
+
+            </div>
+        </form>
+
+        <div class="mt-3">
+            <button class="btn btn-success" onclick="downloadExcel()">
+                <i class="fas fa-file-excel"></i> Download Excel
+            </button>
+            <button class="btn btn-danger btn-download" onclick="downloadPDF()">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- Orders table -->
+     <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Payment</th>
+                            <th>Items</th>
+                            <th>Discount</th>
+                            <th>Coupon</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead> 
+
+                    <tbody>
+                        <% if(orders.length>0) {%>
+                            <% orders.forEach(order=>{ %>
+                                <tr>
+                                    <td><b><%= order.orderId %></b></td>
+                                    <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                    <td><%= order.userId?order.userId.name : 'Guest'  %></td>
+                                    <td>
+                                        <% if(order.paymentMethod === 'cod') {%>
+                                            <span class="badge badge-warning">COD</span>
+                                        <% }else if(order.paymentMethod === 'Wallet') {%>
+                                            <span class="badge badge-info">Wallet</span>
+                                        <% }else {%>
+                                            <span class="badge badge-success"><%= order.paymentMethod %></span>
+                                        <% } %>
+                                    </td>
+                                    <td><%= order.orderedItems.length %></td>
+                                    <td class="text-danger">-₹ <%= order.discount || 0 %></td>
+                                    <td class="text-danger">
+                                        <% if(order.couponApplied) {%>
+                                            -₹ <%= order.couponDiscount || 0 %>
+                                        <% }else {%>
+                                            -
+                                        <% } %>
+                                    </td>
+                                    <td><b>₹ <%= order.finalAmount %></b></td>
+                                    <td>
+                                        <% if(order.status === 'Delivered') {%>
+                                            <span class="badge badge-success">Delivered</span>
+                                        <% }else if(order.status === 'Processing'){%>
+                                            <span class="badge badge-info">Delivered</span>
+                                        <% }else{%>
+                                            <span class="badge badge-warning"><%=order.status %></span>
+                                        <% } %>
+                                    </td> 
+                                </tr>  
+                            <% }) %>
+
+                        <% }else {%>
+                            <tr>
+                                <td colspan="9" class="text-center">No Orders found for the selected period</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+     </div>
+
+     <!-- pagination -->
+     <% if(totalPages>1) {%>
+      <div class="pagination-area mt-3 mb-5">
+        <nav>
+            <ul class="pagination justify-content-center">
+                <% for(let i=1; i<= totalPages; i++) {%>
+                    <li class="page-item <%= i ===currentPage? 'active':'' %>" >
+                        <a href="?page=<%=i %>" class="page-link"><%= i %></a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+      </div>  
+     <% } %>
+</section>
+
+<script>
+function toggleCustomDate() {
+    const filterType = document.getElementById('filterType').value
+    const customFromDiv = document.getElementById('customFromDiv')
+    const customToDiv = document.getElementById('customToDiv');
+
+    if(filterType === 'custom'){
+        customFromDiv.style.display = 'block'
+        customToDiv.style.display = 'block'
+    }else{
+        customFromDiv.style.display = 'none'
+        customToDiv.style.display = 'none'
+    }
+}
+
+function downloadExcel(){
+    const filterType = document.getElementById('filterType').value;
+    const customFrom = document.getElementById('customFrom').value;
+    const customTo = document.getElementById('customTo').value;
+
+    let url = `/admin/sales-report/download/excel?filterType=${filterType}`
+
+    if(filterType === 'custom'){
+        url+= `&customFrom=${customFrom}&customTo=${customTo}`
+    }
+
+    window.location.href = url
+}
+
+function downloadPDF() {
+    const filterType = document.getElementById('filterType').value
+    const customFrom = document.getElementById('customFrom').value
+    const customTo = document.getElementById('customTo').value
+
+    let url = `/admin/sales-report/download/pdf?filterType=${filterType}`
+    if(filterType === 'custom'){
+        url+= `&customFrom=${customFrom}&customTo=${customTo}`
+    }
+
+    window.open(url, '_blank')
+
+}
+</script>
+
+ <%- include("../../views/partials/admin/footer") %>

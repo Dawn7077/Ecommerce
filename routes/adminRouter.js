@@ -83,6 +83,19 @@ router.get('/order-details',adminAuth,getOrderDetails)
 router.post('/order-change-status',adminAuth,changeOrderStatus)
 router.post('/approve-return',adminAuth,approveReturn)
 router.post('/reject-return',adminAuth,rejectReturn)
+//sales Management
+const {loadSalesReport,filterSalesReport,downloadSalesExcel,downloadSalesPDF} = require('../controllers/admin/salesReportContoller')
+router.get('/sales-report',adminAuth,loadSalesReport)
+router.post('/sales-report/filter',adminAuth,filterSalesReport)
+router.get('/sales-report/download/excel',adminAuth,downloadSalesExcel)
+router.get('/sales-report/download/pdf',adminAuth,downloadSalesPDF)
+//offerManagement
+const {getOfferManagement,editProductOffer,editCategoryOffer,removeProductOfferPage,removeCategoryOfferPage}= require('../controllers/admin/offerController')
+router.get('/offer-management',adminAuth,getOfferManagement)
+router.post('/edit-product-offer',adminAuth,editProductOffer)
+router.post('/remove-product-offer',adminAuth,removeProductOfferPage)
+router.post('/edit-category-offer',adminAuth,editCategoryOffer)
+router.post('/remove-category-offer',adminAuth,removeCategoryOfferPage)
 
 
 module.exports = router

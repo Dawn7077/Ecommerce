@@ -38,7 +38,7 @@ const addProducts = async(req,res)=>{
             productName:{$regex:`^${products.productName}$`,$options:'i'},
         })
         if(!productExists){
-            const images = []
+            const images = []//adding imgs
             if(req.files && req.files.length>0){
                 for(let i=0; i<req.files.length; i++){
                     const originalImagePath = req.files[i].path
@@ -73,6 +73,37 @@ const addProducts = async(req,res)=>{
                 return res.status(400).json('Invalid category name')
             }
 
+            //adding variants
+            const colors =req.body.color
+            const sizes =req.body.size
+            const stocks =req.body.stock
+
+            const variants =[]
+
+            if(Array.isArray(colors)){
+              for(let i=0; i< colors.length; i++){
+                const color = colors[i]?.trim()
+                const size = sizes[i]?.trim()
+                const stockValue = Number(stocks[i])
+
+                if(!color && !size && !stock) continue 
+
+                if (!color || !size) {
+                  console.log("Skipped incomplete variant row");
+                  continue;
+                }
+
+                if(isNaN(stockValue || stockValue < 0 )){
+                  console.log("Invalid stock value:", stockValue);
+                  continue
+                }
+
+
+                variants.push({color,size,stock:stockValue})
+
+              }
+            }
+
             
 
             const newProduct = new Product({
@@ -82,12 +113,10 @@ const addProducts = async(req,res)=>{
                 category:categoryId._id,
                 regularPrice:products.regularPrice,
                 salesPrice:products.salePrice,
-                createdAt: new Date(),
-                quantity:products.quantity,
-                size:products.size,
-                color:products.color,
+                createdAt: new Date(),  
                 productImage:images,
                 highlights:highlights,
+                variants,
                 status:'Available'
  
             })
@@ -196,9 +225,16 @@ const getAllProducts = async(req,res)=>{
     }).sort({createdAt:-1})
     .limit((limit*1)).skip((page-1)*limit).populate('category').exec()
 
+    // totalStock 
+    productData.forEach(p=>{
+      p.totalStock = p.variants.reduce((sum,v)=> sum+(v.stock || 0 ),0)
+    })
+
+
     const noCategoryProducts = await Product.find({ category: { $size: 0 }});
     console.log(noCategoryProducts);
-
+ 
+    productData.status = productData.totalStock > 0 ? "Available" : "Out of Stock";
 
 
     const count = await Product.find({
@@ -339,6 +375,28 @@ const editProduct =async(req,res)=>{
       }
     }
 
+    // Handle variants
+    const colors = req.body.color;
+    const sizes = req.body.size;
+    const stocks = req.body.stock;
+
+    const variants = [];
+
+    if (Array.isArray(colors)) {
+        for (let i = 0; i < colors.length; i++) {
+            const color = colors[i]?.trim();
+            const size = sizes[i]?.trim();
+            const stockValue = Number(stocks[i]);
+
+            if (!color && !size && !stocks[i]) continue;
+            if (!color || !size) continue;
+            if (isNaN(stockValue) || stockValue < 0) continue;
+
+            variants.push({ color, size, stock: stockValue });
+        }
+    }
+
+
     const updateFields ={
       productName:data.productName,
       description:data.descriptionData,
@@ -346,9 +404,7 @@ const editProduct =async(req,res)=>{
       category:[data.category],
       regularPrice:data.regularPrice,
       salesPrice:data.salePrice,
-      quantity:data.quantity,
-      size:data.size,
-      color:data.color,
+      variants : variants,
       highlights:highlights
     }
     if(req.files &&req.files.length>0){

@@ -28,7 +28,7 @@ const loadCart =async(req,res)=>{
         //filtering the product
         const filteredItems = cart.items.filter(item=>{
             const product = item.productId
-            return( product && !product.isBlocked && product.quantity > 0);  
+            return( product && !product.isBlocked && product.totalStock > 0);  
         })
         if (filteredItems.length !== cart.items.length) {
             cart.items = filteredItems;
@@ -56,17 +56,20 @@ const loadCart =async(req,res)=>{
 
 const addToCart = async (req, res) => {
     try {
-        const productId = req.body.productId;
-        const userId = req.session.user._id;
-
+        const{ productId, color , size }= req.body;
+       
         if(!req.session.user){
             return res.json({
-            status: false,
-            message: "Please login first"
-        });
+                status: false,
+                message: "Please login first"
+            });
         }
 
+        const userId = req.session.user._id;
+
+
         const product = await Product.findById(productId).populate("category");
+        // console.log('cart request',product.totalStock)
 
         if (!product) {
             return res.json({ status: false, message: "Product not found" });
@@ -76,8 +79,18 @@ const addToCart = async (req, res) => {
             return res.json({ status: false, message: "Product is currently unavailable" });
         }
 
-        if (product.quantity <= 0) {
+        if (product.totalStock <= 0) {
             return res.json({ status: false, message: "Product out of stock" });
+        }
+
+        const variant = product.variants.find(v=>
+            v.color === color && v.size === size
+        )
+        if(!variant){ 
+            return res.json({ status: false, message: "Variant not found" });
+        }
+        if(variant.stock <= 0){
+            return res.json({ status: false, message: "Selected Variant out of stock" });
         }
 
         let cart = await Cart.findOne({ userId });
@@ -86,8 +99,10 @@ const addToCart = async (req, res) => {
             cart = new Cart({ userId, items: [] });
         }
  
-        const existingItem = cart.items.find(
-            item => item.productId.toString() === productId
+        const existingItem = cart.items.find(item => 
+            item.productId.toString() === productId &&
+            item.variant.color === color &&
+            item.variant.size === size 
         );
 
         if (existingItem) {
@@ -95,7 +110,7 @@ const addToCart = async (req, res) => {
             //     return res.json({ status: false, message: "Limit: Only 3 items allowed" });
             // }
 
-            if (existingItem.quantity + 1 > product.quantity) {
+            if (existingItem.quantity + 1 > variant.stock) {
                 return res.json({ status: false, message: "Not enough stock" });
             }
  
@@ -103,9 +118,11 @@ const addToCart = async (req, res) => {
             existingItem.price = product.salesPrice;
             existingItem.totalPrice = product.salesPrice * existingItem.quantity;
 
+
         } else { 
             cart.items.push({
                 productId,
+                variant:{ color,size },
                 quantity: 1,
                 price: product.salesPrice,
                 totalPrice: product.salesPrice
@@ -159,7 +176,16 @@ const updateCart = async (req, res) => {
 
         if(newQuantity < 1)  return res.json({ status: false, message: "Minimum 1 item required" }); // for when we minus the stock and not going below 1
 
-        if(newQuantity > product.quantity)  return res.json({ status: false, message: "Not enough stock" });
+        
+        const selectedVariant = product.variants.find(v=>
+            v.color === item.variant.color && 
+            v.size === item.variant.size 
+            
+        )
+        if(!selectedVariant) return res.json({status:false, message:"Variant not found"});
+
+        if(newQuantity > selectedVariant.stock)  return res.json({ status: false, message: "Not enough stock for selected variant" });
+
 
         item.quantity = newQuantity
         item.price = product.salesPrice
@@ -228,6 +254,15 @@ const deleteCart= async(req,res)=>{
         
     }
 }
+const variantData = async(req,res)=>{
+    try {
+        const product = await Product.findById(req.params.id)
+        res.json({ variants:product.variants })
+    } catch (error) {
+        console.log("Variant data error:", error);
+        res.json({ status: false, message: "Server error" });
+    }
+}
 
 
 module.exports = {
@@ -235,5 +270,6 @@ module.exports = {
     addToCart,
     updateCart,
     deleteItemCart,
-    deleteCart
+    deleteCart,
+    variantData,
 }

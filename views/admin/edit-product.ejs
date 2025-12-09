@@ -128,7 +128,7 @@
                            </div>
                         </div>
                         
-                        <div class="row">
+                        <div class="row px-4">
                             <div class="col-lg-4">
                                 <div class="mb-4">
                                     <label class="form-label">Regular price</label>
@@ -145,26 +145,100 @@
                                     <div id="salePrice-error" class="error-message"></div>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
-                                <div class="mb-4">
-                                    <label class="form-label">Quantity</label>
-                                    <input name="quantity" type="text" value="<%= product.quantity %>"
-                                        class="form-control border">
-                                    <div id="quantity-error" class="error-message"></div>
-                                </div>
-                            </div>
+
+                            
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="mb-4">
-                                    <label class="form-label">Color</label>
-                                    <input name="color" type="text" value="<%=product.color %>"
-                                        class="form-control border">
-                                    <div id="color-error" class="error-message"></div>
-                                </div>
+
+
+                        <!-- color / qantity divs replaced by variants -->
+
+                        <div class="card mb-4 p-4">
+                            <div class=" card-headerd-flex justify-content-between">
+                                <h4>Product Variants</h4>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="addVariantRow()">+Add Variant</button>
                             </div>
-                            <div class="col-lg-6">
+
+                            <div class="card-body" id="variantContainer">
+                                
+
+                                <% if(product.variants && product.variants.length > 0) {%>
+                                    <% product.variants.forEach((v,index)=>{ %>
+
+                                        <div class="row mb-3 variant-row">
+                                            <div class="col-md-4">
+                                                <label >Color</label>
+                                                <input type="text" name="color[]" class="form-control" value="<%= v.color %>">
+                                            </div>
+                                            
+
+                                            <div class="col-md-4">
+                                                <label>Size</label>
+                                                <input type="text" name="size[]" class="form-control" value="<%= v.size %>">
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label >Stock</label>
+                                                <input type="text" name="stock[]" class="form-control" value="<%= v.stock %>">
+                                            </div> 
+                                        
+
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger" onclick="this.closest('.variant-row').remove()">X</button>
+                                            </div>
+
+                                        </div>
+
+
+                                    <% }) %>
+                                <% }else {%>
+                                    <p class="text-muted">No variants found</p>
+                                <% } %>
+                            </div>
+
+                            <div id="variant-error" class="error-message"></div>
+
+
+                        </div>
+
+
+                        <script>
+                            function addVariantRow(){
+                                const container = document.getElementById('variantContainer')
+
+                                const div = document.createElement('div')
+                                div.classList.add('row','mb-3','variant-row')
+
+                                div.innerHTML=`
+                                     <div class="col-md-4">
+                                                <label >Color</label>
+                                                <input type="text" name="color[]" class="form-control"  >
+                                            </div>
+                                            
+
+                                            <div class="col-md-4">
+                                                <label>Size</label>
+                                                <input type="text" name="size[]" class="form-control"  >
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label >Stock</label>
+                                                <input type="text" name="stock[]" class="form-control" >
+                                            </div> 
+                                        
+
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger" onclick="this.closest('.variant-row').remove()">X</button>
+                                            </div>
+                                `;
+                                
+                                container.appendChild(div)
+                            }
+                        </script>
+
+
+
+
+                            <div class="col-lg-6 p-4 card-body">
                                 <div class="mb-4">
                                     <label class="form-label">Category</label>
                                     <select class="form-select border" name="category">
@@ -511,9 +585,7 @@ function validateForm() {
 
     const brand = document.getElementsByName('brand')[0].value;
     const price = parseFloat(document.getElementsByName('regularPrice')[0].value);
-    const saleprice = parseFloat(document.getElementsByName('salePrice')[0].value);
-    const quantity = parseInt(document.getElementsByName('quantity')[0].value);
-    const color = document.getElementsByName('color')[0].value.trim();
+    const saleprice = parseFloat(document.getElementsByName('salePrice')[0].value); 
     const category = document.getElementsByName('category')[0].value;
     
     const hasExistingImages = document.querySelectorAll('.existing-image-data').length > 0;
@@ -534,12 +606,33 @@ function validateForm() {
     if (!name) { displayErrorMessage('productName-error', 'Please enter a product name'); isValid = false; }
     if (!description) { displayErrorMessage('description-error', 'Please enter a description'); isValid = false; }
     if (!brand) { displayErrorMessage('brand-error', 'Please select a brand'); isValid = false; }
-    if (!category) { displayErrorMessage('category-error', 'Please select a category'); isValid = false; }
-    if (isNaN(quantity) || quantity < 0) { displayErrorMessage('quantity-error', 'Enter valid quantity'); isValid = false; }
+    if (!category) { displayErrorMessage('category-error', 'Please select a category'); isValid = false; } 
     if (isNaN(price) || price <= 0) { displayErrorMessage('regularPrice-error', 'Enter valid price'); isValid = false; }
     if (isNaN(saleprice) || saleprice < 0) { displayErrorMessage('salePrice-error', 'Enter valid sale price'); isValid = false; }
-    if (!isNaN(price) && !isNaN(saleprice) && price <= saleprice) { displayErrorMessage('salePrice-error', 'Sale price must be lower'); isValid = false; }
-    if (!color) { displayErrorMessage('color-error', 'Please enter a color'); isValid = false; }
+    if (!isNaN(price) && !isNaN(saleprice) && price < saleprice) { displayErrorMessage('salePrice-error', 'Sale price must be lower'); isValid = false; } 
+    //variant validation
+    const variantRow = document.querySelectorAll('#variantContainer .variant-row')
+    let variantError = false
+
+    variantRow.forEach(row=>{
+        const color = document.querySelector('[name="color[]"]').value.trim()
+        const size = document.querySelector('[name="size[]"]').value.trim()
+        const stock = document.querySelector('[name="stock[]"]').value.trim()
+
+        if(color || size || stock){
+         if (!color || !size || !stock || isNaN(stock) || stock < 0) {
+                variantError = true;
+            }
+        }
+    })
+
+    if(variantError){
+        displayErrorMessage("variant-error",'Each variant row must have Color, Size, and Stock (valid number).')
+        isValid=false
+    } 
+  
+    //imagevalidation
+
     // if (!hasExistingImages && !hasNewImages) { displayErrorMessage('images-error', 'Product must have at least one image'); isValid = false; }
     if (totalImages< 3 ) { displayErrorMessage('images-error', 'Product must have at least three image'); isValid = false; }
     if(totalImages>MaxImages){

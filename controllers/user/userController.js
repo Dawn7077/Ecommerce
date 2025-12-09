@@ -24,7 +24,8 @@ const loadHomePage = async (req,res)=>{
         let productData  = await Product.find({
             isBlocked:false,
             category:{$in:categories.map(category=>category._id)},
-            quantity:{$gt:0}
+            // quantity:{$gt:0}
+            variants: { $elemMatch: { stock: { $gt: 0 } } }
         })
 
 
@@ -76,6 +77,12 @@ const loadSignUp = async(req,res)=>{
         
 //     }
 // }
+
+function generateReferralCode(name){
+    const prefix = name.split(" ")[0].substring(0, 4).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}-${random}`;
+}
 
 function generateOtp(){
     return Math.floor(100000 + Math.random()*900000).toString()
@@ -161,16 +168,21 @@ const verifyOtp = async(req,res)=>{
                 }
                 return res.json({success:true,redirectUrl:'/'})
             }
-
-
-
-
             const passwordHash = await securePassword(user.password)
+            
+            
+            let referralCode = generateReferralCode(user.name);
+            while (await User.findOne({ referalCode: referralCode })) {
+                referralCode = generateReferralCode(user.name);
+            }
+
+
             const saveUserData = new User({
                 name:user.name,
                 email:user.email,
                 phone:user.phone,
                 password: passwordHash,
+                referalCode: referralCode
             })
             await saveUserData.save()
             req.session.user={
@@ -312,7 +324,8 @@ const loadShoppingPage = async(req,res)=>{
         const products = await Product.find({
             isBlocked:false,
             category:{$in:categoryIds},
-            quantity:{$gt:0},
+            // quantity:{$gt:0},
+            variants: { $elemMatch: { stock: { $gt: 0 } } }
 
         })
         .collation({ locale: "en", strength: 2 }) 
@@ -321,7 +334,8 @@ const loadShoppingPage = async(req,res)=>{
         const totalProducts = await Product.countDocuments({
             isBlocked:false,
             category:{$in:categoryIds},
-            quantity:{$gt:0},
+            // quantity:{$gt:0},
+            variants: { $elemMatch: { stock: { $gt: 0 } } }
         })
 
         const totalPages = Math.ceil(totalProducts/limit)
@@ -363,7 +377,8 @@ const filterProduct = async(req,res)=>{
         const brands = await Brand.find({}).lean()
         const query = {
             isBlocked:false,
-            quantity:{$gt:0},
+            // quantity:{$gt:0},
+            variants: { $elemMatch: { stock: { $gt: 0 } } }
         }
 
         if(findCategory){
@@ -438,7 +453,8 @@ const filterByPrice = async(req,res)=>{
         let findProducts = await Product.find({
             salesPrice:{$gt:gt,$lt:lt},
             isBlocked:false,
-            quantity:{$gt:0},
+            // quantity:{$gt:0},
+            variants: { $elemMatch: { stock: { $gt: 0 } } }
 
         }).lean()
 
@@ -493,7 +509,8 @@ const searchProducts = async(req,res)=>{
             searchResult = await Product.find({
                 productName:{$regex:'.*'+search+'.*',$options:'i'},
                 isBlocked:false,
-                quantity:{$gt:0},
+                // quantity:{$gt:0},
+                variants: { $elemMatch: { stock: { $gt: 0 } } },
                 category:{$in:categoryIds}
             })
         }
@@ -552,7 +569,8 @@ const loadShop = async(req,res)=>{
 
         let query = {
             isBlocked:false,
-            quantity:{$gt:0},
+            // quantity:{$gt:0},
+            variants: { $elemMatch: { stock: { $gt: 0 } } },
         }
 
         if(category){

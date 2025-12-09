@@ -200,6 +200,21 @@
         color: var(--brand);
         font-weight: 700;
     }
+
+
+    .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .is-invalid {
+        border-color: red !important;
+    }
+
+
+
+
         </style>
  
 
@@ -305,7 +320,7 @@
                             <div onclick="event.stopPropagation()">
                                 <select id="myDropdown" name="mySelection" class="form-select-sm btn-sm">
                                     <option value="Creditcard">Creditcard</option>
-                                    <option value="RazerPay">RazerPay</option>
+                                    <option value="Stripe">Stripe</option>
                                     <option value="Wallet">Wallet</option>
                                 </select>
                             </div>
@@ -425,31 +440,31 @@
     <form id="modalAddressForm" >
       <div class="form-group">
         <label for="addressType">Address Type:</label>
-        <input type="text" id="addressType" name="addressType" required>
+        <input type="text" id="addressType" name="addressType"  >
       </div>
       <div class="form-group">
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="name" name="name"  >
       </div>
       <div class="form-group">
         <label for="city">City:</label>
-        <input type="text" id="city" name="city" required>
+        <input type="text" id="city" name="city"  >
       </div>
       <div class="form-group">
         <label for="landMark">Landmark:</label>
-        <input type="text" id="landMark" name="landMark" required>
+        <input type="text" id="landMark" name="landMark"  >
       </div>
       <div class="form-group">
         <label for="state">State:</label>
-        <input type="text" id="state" name="state" required>
+        <input type="text" id="state" name="state"  >
       </div>
       <div class="form-group">
         <label for="pincode">Pincode:</label>
-        <input type="number" id="pincode" name="pincode" required>
+        <input type="number" id="pincode" name="pincode"  >
       </div>
       <div class="form-group">
         <label for="phone">Phone:</label>
-        <input type="number" id="phone" name="phone" required>
+        <input type="number" id="phone" name="phone"  >
       </div>
       <div class="form-group">
         <label for="altPhone">Alternate Phone:</label>
@@ -459,6 +474,72 @@
     </form>
   </div>
 </div> 
+<!-- validate address add modal -->
+<script>
+    document.getElementById("addressModal").addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (validateAddressForm()) {
+            this.submit();
+        }
+    });
+
+    function validateAddressForm() {
+        const fields = [
+            { id: "addressType", name: "Address Type" },
+            { id: "name", name: "Name" },
+            { id: "city", name: "City" },
+            { id: "landMark", name: "Landmark" },
+            { id: "state", name: "State" },
+            { id: "pincode", name: "Pincode" },
+            { id: "phone", name: "Phone" },
+        ];
+
+        let isValid = true;
+    
+        document.querySelectorAll(".error-message").forEach(el => el.innerHTML = "");
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const value = input.value.trim();
+            const errorDiv = getErrorDiv(input);
+
+            input.classList.remove("is-invalid");
+
+            if (value === "") {
+                errorDiv.innerHTML = `${field.name} is required`;
+                input.classList.add("is-invalid");
+                isValid = false;
+            }
+        });
+    
+        const pincode = document.getElementById("pincode");
+        if (pincode.value && !/^[1-9][0-9]{5}$/.test(pincode.value)) {
+            getErrorDiv(pincode).innerHTML = "Enter a valid 6-digit pincode";
+            pincode.classList.add("is-invalid");
+            isValid = false;
+        }
+    
+        const phone = document.getElementById("phone");
+        if (phone.value && !/^[6-9]\d{9}$/.test(phone.value)) {
+            getErrorDiv(phone).innerHTML = "Enter a valid 10-digit phone number";
+            phone.classList.add("is-invalid");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+    
+    function getErrorDiv(input) {
+        let errorDiv = input.parentElement.querySelector(".error-message");
+        if (!errorDiv) {
+            errorDiv = document.createElement("div");
+            errorDiv.className = "error-message";
+            input.parentElement.appendChild(errorDiv);
+        }
+        return errorDiv;
+    }
+</script>
+
 
 <!-- edit Address Modal -->
 <div class="modal" id="editAddressModal">
@@ -470,31 +551,31 @@
 
             <div class="form-group">
                 <label for="editAddressType">Address Type</label>
-                <input type="text" name="editAddressType" id="editAddressType" required>
+                <input type="text" name="editAddressType" id="editAddressType"  >
             </div>
             <div class="form-group">
                 <label for="editName">Name</label>
-                <input type="text" name="editName" id="editName" required>
+                <input type="text" name="editName" id="editName"  >
             </div>
             <div class="form-group">
                 <label for="editCity">City</label>
-                <input type="text" name="editCity" id="editCity" required>
+                <input type="text" name="editCity" id="editCity"  >
             </div>
             <div class="form-group">
                 <label for="editLandMark">Landmark</label>
-                <input type="text" name="editLandMark" id="editLandMark" required>
+                <input type="text" name="editLandMark" id="editLandMark"  >
             </div>
             <div class="form-group">
                 <label for="editState">State</label>
-                <input type="text" name="editState" id="editState" required>
+                <input type="text" name="editState" id="editState"  >
             </div>
             <div class="form-group">
                 <label for="editPincode">Pincode</label>
-                <input type="number" name="editPincode" id="editPincode" required>
+                <input type="number" name="editPincode" id="editPincode"  >
             </div>
             <div class="form-group">
                 <label for="editPhone">Phone</label>
-                <input type="number" name="editPhone" id="editPhone" required>
+                <input type="number" name="editPhone" id="editPhone"  >
             </div>
             <div class="form-group">
                 <label for="editAltPhone">Alternate Phone</label>
@@ -504,6 +585,64 @@
         </form>
     </div>
 </div>
+<!-- validate address edit modal -->
+<script>
+    document.getElementById("editAddressModal").addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (validateEditAddressForm()) {
+            this.submit();
+        }
+    });
+
+    function validateEditAddressForm() {
+        const fields = [
+            { id: "editAddressType", name: "Address Type" },
+            { id: "editName", name: "Name" },
+            { id: "editCity", name: "City" },
+            { id: "editLandMark", name: "Landmark" },
+            { id: "editState", name: "State" },
+            { id: "editPincode", name: "Pincode" },
+            { id: "editPhone", name: "Phone" },
+        ];
+
+        let isValid = true;
+
+        document.querySelectorAll(".error-message").forEach(el => el.innerHTML = "");
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const value = input.value.trim();
+            const errorDiv = getErrorDiv(input);
+
+            input.classList.remove("is-invalid");
+
+            if (value === "") {
+                errorDiv.innerHTML = `${field.name} is required`;
+                input.classList.add("is-invalid");
+                isValid = false;
+            }
+        });
+
+        // Edit pincode
+        const pincode = document.getElementById("editPincode");
+        if (pincode.value && !/^[1-9][0-9]{5}$/.test(pincode.value)) {
+            getErrorDiv(pincode).innerHTML = "Enter a valid 6-digit pincode";
+            pincode.classList.add("is-invalid");
+            isValid = false;
+        }
+
+        // Edit phone
+        const phone = document.getElementById("editPhone");
+        if (phone.value && !/^[6-9]\d{9}$/.test(phone.value)) {
+            getErrorDiv(phone).innerHTML = "Enter a valid 10-digit phone number";
+            phone.classList.add("is-invalid");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+</script>
+
 
 
 <script>
@@ -518,6 +657,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const defaultPayment = document.querySelector('.payment-method.selected')
     if(defaultPayment){
         selectedPayment = defaultPayment.getAttribute('data-payment')
+    }
+
+    const dropdown = document.getElementById('myDropdown');
+    if (dropdown) {
+        dropdown.addEventListener('change', function() {
+            selectedPayment = this.value;
+            console.log('Payment method changed to:', selectedPayment);
+        });
     }
 });
 
@@ -541,14 +688,7 @@ function selectAddress(id) {
     document.querySelectorAll(".address-card").forEach(c => c.classList.remove("selected"));
     document.querySelector(`[data-address-id="${id}"]`)?.classList.add("selected");
 }
-
-function placeOrder1() {
-    if (!selectedAddress || !selectedPayment) {
-        return swal("No address selected", "Please choose a shipping address.", "warning");
-    }
-
-    swal("Order Placed!", "Proceeding to Razorpay / COD.", "success");
-}
+ 
 // open form add addrees
 function openModal() {
   document.getElementById("addressModal").style.display = "block";
@@ -557,13 +697,15 @@ function openModal() {
 function closeModal() {
   document.getElementById("addressModal").style.display = "none";
 }
-// open form add addrees
+// open form edit addrees
 function openEditModal(addressId){
     document.getElementById('editAddressModal').style.display = 'block'
 }
 function closeEditModal(addressId){
     document.getElementById('editAddressModal').style.display = 'none'
 }
+
+//validating add and edit addrees modal
 
 function editAddress(addressId){
     const addressCard = document.querySelector(`[data-address-id="${addressId}"]`)
@@ -750,7 +892,11 @@ document.getElementById('modalEditAddressForm').addEventListener('submit',async 
 
             if(data.success){
                 swal('Success',data.message, 'success')
-                .then(() => location.reload()) 
+                .then(() =>{
+                     location.reload()
+                    // redirect to checkout page
+                // window.location.href = '/checkout';
+                    }) 
             }else{
                 swal('Error',data.message, 'error')
             }
@@ -791,7 +937,7 @@ document.getElementById('modalEditAddressForm').addEventListener('submit',async 
 </script>
 
 <script>
-    async function placeOrder() {
+    async function placeOrder2() {
         if(!selectedAddress){
             swal("Error", "Please select a shipping address", "error");
                 return;
@@ -816,14 +962,39 @@ document.getElementById('modalEditAddressForm').addEventListener('submit',async 
                     paymentMethod:selectedPayment
                 })
             })
+            //created a order
+
             const data = await response.json()
             if(data.success){
                 if(selectedPayment==='cod'){
                     swal('Order Placed',`Your order has been placed succefully. Order ID: ${data.orderId}`,'success')
                     .then(()=>location.href= data.redirect) 
-                }else {
-                    console.log(`💳 Online payment - initializing ${selectedPayment}`)
-                    location.reload()
+                } else  if(selectedPayment==='Stripe') {
+                    const stripeResponse = await fetch('/payment/stripe/create-session',{
+                        method:"POST", 
+                        headers: { "Content-Type": "application/json" },
+                        body:JSON.stringify({orderId:data.orderId})
+                    }) 
+                    const stripeData = await stripeResponse.json()
+
+                    if(stripeData){
+                        window.location.href = stripeData.url
+                    }else{
+                        swal("Payment Error", stripeData.message, "error");
+                    }
+
+                }else if (selectedPayment === 'Wallet') { 
+                    if (data.success) {
+                        swal(
+                            'Payment Successful',
+                            `Your order has been placed using wallet. Order ID: ${data.orderId}`,
+                            'success'
+                        ).then(() => location.href = '/order')
+                    }
+                    else {
+                        swal('Insufficient Balance', data.message, 'error')
+                        .then(() => location.href = data.redirect || '/wallet');
+                    }
                 }
 
 
@@ -838,6 +1009,93 @@ document.getElementById('modalEditAddressForm').addEventListener('submit',async 
             swal("Error", "Failed to place order. Please try again.", "error");
         }
     }
+</script>
+
+<script>
+    async function placeOrder() {
+    if (!selectedAddress) {
+        swal("Error", "Please select a shipping address", "error");
+        return;
+    }
+    if (!selectedPayment) {
+        swal("Error", "Please select a payment method", "error");
+        return;
+    }
+
+    const btn = document.getElementById('placeOrderBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/checkout-placeorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                addressId: selectedAddress,
+                paymentMethod: selectedPayment
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            // Handling errors
+            if (selectedPayment === 'Wallet' && data.redirect) {
+                swal("Insufficient Balance", data.message, "error")
+                    .then(() => location.href = data.redirect);
+            } else {
+                swal("Error", data.message, "error");
+            }
+            btn.disabled = false;
+            btn.innerHTML = "Place Order";
+            return;
+        }
+ 
+        if (selectedPayment === 'cod') {
+            swal(
+                'Order Placed',
+                `Your order has been placed successfully. Order ID: ${data.orderId}`,
+                'success'
+            ).then(() => location.href = data.redirect);
+            return;
+        }
+
+        if (selectedPayment === 'Wallet') {
+            swal(
+                'Payment Successful',
+                `Your order has been placed using wallet. Order ID: ${data.orderId}`,
+                'success'
+            ).then(() => location.href = data.redirect);
+            return;
+        }
+
+        if (selectedPayment === 'Stripe') { 
+            const stripeRes = await fetch('/payment/stripe/create-session', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderId: data.orderId })
+            });
+            
+            const stripeData = await stripeRes.json();
+            
+            if (stripeData.success && stripeData.url) {
+                // Redirect to Stripe checkout
+                window.location.href = stripeData.url;
+            } else {
+                swal("Payment Error", stripeData.message || "Failed to create payment session", "error");
+                btn.disabled = false;
+                btn.innerHTML = "Place Order";
+            }
+            return;
+        }
+
+    } catch (error) {
+        console.error("Error placing order:", error);
+        swal("Error", "Something went wrong!", "error");
+        btn.disabled = false;
+        btn.innerHTML = "Place Order";
+    }
+}
 </script>
 
 

@@ -69,7 +69,7 @@ const orderSchema1 = new Schema({
 const orderSchema = new mongoose.Schema({
     orderId:{
         type:String,
-        default:()=>uuidv4(),
+        // default:()=>uuidv4(),
         unique:true
     },
     userId: {
@@ -93,6 +93,10 @@ const orderSchema = new mongoose.Schema({
         },
         productName: String,
         productImage: String,
+        variant:{
+            color:String,
+            size:String,
+        },
         status: {
             type: String,
             enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested'],
@@ -140,17 +144,17 @@ const orderSchema = new mongoose.Schema({
 
     paymentMethod: {
         type: String,
-        enum: ['cod', 'online', 'Creditcard', 'RazerPay', 'Wallet'],
+        enum: ['cod', 'online', 'Creditcard', 'Stripe', 'Wallet'],
         required: true
     },
     paymentStatus: {
         type: String,
-        enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
+        enum: ['Pending', 'Completed', 'Failed', 'Refunded','Payment Pending','Paid'],
         default: 'Pending'
     },
     status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Returned'],
         default: 'Pending'
     },
     invoiceDate: {
@@ -169,6 +173,19 @@ const orderSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+orderSchema.pre('save',async function (next) {
+    if(this.orderId) return next()
+         
+    const lastOrder = await this.constructor.findOne().sort({createdAt:-1})
+
+    let nextId = 1
+    if(lastOrder && lastOrder.orderId){
+        const lastNumber = parseInt(lastOrder.orderId.split('-')[1])
+        nextId =lastNumber + 1
+    }
+    this.orderId = `ORD-${String(nextId).padStart(4, "0")}-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`
+    next()
+})  
 
 const Order =mongoose.model("Order",orderSchema)
 module.exports= Order

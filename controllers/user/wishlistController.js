@@ -83,6 +83,12 @@ const loadWishlist= async (req,res)=>{
 const addToWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
+        if(!req.session.user){
+            return res.status(401).json({
+                status: false,
+                message: "Please login first"
+            });
+        }
         const userId = req.session.user._id;
 
         const product = await Product.findById(productId);

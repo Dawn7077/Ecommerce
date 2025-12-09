@@ -1,6 +1,7 @@
 const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
+const Wallet = require('../../models/walletSchema')
 
 const getOrderList = async (req, res) => {
     try {
@@ -108,15 +109,35 @@ const changeOrderStatus = async (req, res) => {
         if (!order) {
             return res.status(404).json({ status: false, message: 'Order not found' });
         }
+
+
  
         if (status === 'Cancelled' && order.status !== 'Cancelled') {
             for (const item of order.orderedItems) {
-                await Product.updateOne(
-                    { _id: item.product },
-                    { $inc: { quantity: item.quantity } }
-                );
+                const product = await Product.findById(item.product)
+                if(!product)continue
+
+                const variant = product.variants.find(v=>
+                    v.color === item.variant.color &&
+                    v.size === item.variant.size
+                )
+
+                if(variant){
+                    variant.stock += item.quantity
+                }
+
+                const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+                product.status = totalStock > 0 ? "Available" : "out of stock";
+
+                await product.save(); 
+
             }
-            console.log(`Stock restored for Order ${orderId}`);
+
+            if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
+                await refundToWallet(order.userId, order.finalAmount, `Refund for cancelled order #${order.orderId}`)
+            }
+
+            console.log(`Variant stock restored for Cancelled Order ${orderId}`);
         }
         
         for (const item of order.orderedItems) {
@@ -154,30 +175,54 @@ const approveReturn  = async (req,res)=>{
              return res.json({ success: false, message: "Item is not in return-requested status" });
         }
 
+        
+
+        const product = await Product.findById(item.product)
+        if(product){
+
+            const variant = product.variants.find(v=>
+                v.color === item.variant.color &&
+                v.size === item.variant.size
+            )
+
+            if (variant) {
+                variant.stock += item.quantity;
+            }
+
+            const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+            product.status = totalStock > 0 ? "Available" : "out of stock";
+
+            await product.save();
+        }
+        
         item.status = "Returned";
-
-        await Product.updateOne(
-            {_id:item.product},
-            {$inc:{quantity:item.quantity}}
-        )
-
         item.statusHistory.push({
             status: "Returned",
             note: "Return approved by admin",
             date: new Date()
         })
 
+        if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
+            const refundAmount = item.price * item.quantity
+
+            await refundToWallet(
+                order.userId,
+                refundAmount,
+                `Refund for returned item: ${item.productName} (Order #${order.orderId})`
+            )
+        }
+   
         const allReturned = order.orderedItems.every(i=>["Cancelled", "Returned"].includes(i.status))
         
         if(allReturned)order.status = "Returned";
 
         await order.save()
 
-        res.json({ success: true, message: "Return approved successfully" });
+        res.json({ success: true, message: "Return approved and refunded to wallet" });
 
 
     } catch (error) {
-        console.error("Approve return error:", err);
+        console.error("Approve return error:", error);
         res.json({ success: false, message: "Internal server error" });
     }
 }
@@ -209,6 +254,39 @@ const rejectReturn  = async (req,res)=>{
     } catch (error) {
         console.error("Reject return error:", error);
         res.json({ success: false, message: "Internal server error" });
+    }
+}
+
+async function refundToWallet(userId, amount, reason) {
+    try {
+        let wallet = await Wallet.findOne({userId})
+
+        if(!wallet){
+            wallet = new Wallet({
+                userId,
+                balance:0,
+                transactions:[]
+            })
+        }
+
+        wallet.balance += amount
+
+        wallet.transactions.push({
+            date:new Date(),
+            type:'credit',
+            amount,
+            reason,
+        })
+
+        await wallet.save()
+
+        console.log(`✅ Refunded ₹${amount} to user ${userId} wallet`)
+        return true
+
+
+    } catch (error) {
+        console.error('Error refunding to wallet:',error)
+        return false
     }
 }
 

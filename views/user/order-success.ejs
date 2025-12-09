@@ -1,0 +1,40 @@
+<%- include("../partials/user/header") %>
+<style>
+    .order-box {
+        padding: 7px; 
+    }
+    .order-card,.order-box {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    width: 650px;
+    height: 350px;
+    transition: all 0.3s ease;
+    }
+     .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+    body{
+            background: linear-gradient(135deg, #f6f6f6 0%, #ceffbc 100%);
+    }
+</style>
+<body >
+
+<div class="container text-center order-card mt-3" style="padding: 60px 20px;">
+    <h2 class="text-success mt-5">🎉 Order Placed Successfully!</h2>
+    <p>Your order ID: <b><%= orderId %></b></p>
+
+    <div class="d-flex justify-content-center" >
+        <a href="/shop" class="btn btn-primary mt-3 mx-4">Shop more</a>
+        
+        <a href="/order" class="btn btn-primary mt-3 mx-4">View My Orders</a>
+    </div>
+</div>
+
+</body>
+
+<%- include("../partials/user/footer") %>

@@ -229,6 +229,11 @@
         object-fit: cover;
         background: #f8f9fa;
     }
+    .status-returned {
+        background: #fff3cd;
+        color: #856404;
+    }
+
 
     .item-details {
         flex: 1;
@@ -550,6 +555,8 @@
                     <div class="item-meta">
                         <span><i class="fas fa-shopping-cart"></i> Qty: <%= item.quantity %></span>
                         <span><i class="fas fa-tag"></i> ₹<%= item.price %> each</span>
+                        <span><i class="fas fa-tint"></i> Color-<%= item.variant.color %></span>
+                        <span><i class="fas fa-ruler"></i> Size-<%= item.variant.size %></span>
                     </div>
                     <div class="item-price">₹<%= (item.price * item.quantity).toFixed(2) %></div>
                     
@@ -590,7 +597,7 @@
         <% }) %>
     </div>
 
-    <!-- Order Timeline (if you want to show tracking) -->
+   <!--Order Timeline (if you want to show tracking)  -->
     <div class="card-section">
         <div class="section-title">
             <i class="fas fa-route"></i>
@@ -622,6 +629,7 @@
     
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+       
         <!-- Shipping Address -->
         <div class="card-section">
             <div class="section-title">

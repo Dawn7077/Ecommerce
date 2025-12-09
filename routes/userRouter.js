@@ -77,13 +77,13 @@ router.get('/logout',logout)
 //Error page
 router.get('/pageNotFound',pageNotFound)
 //profile management
+router.get('/user-profile',userAuth,userProfile)
 router.get('/forgot-password',getForgotPassPage)
 router.post('/forgot-email-password',forgotEmailValid)
 router.post('/verify-passforgot-otp',verifyForgotPassOtp)
 router.get('/reset-password',getResetPassPage)
 router.post('/resend-passforgot-otp',resendForgotOtp)
 router.post('/reset-password',postNewPassword)
-router.get('/user-profile',userAuth,userProfile)
 router.get('/change-email',userAuth,getChangeEmail)
 router.post('/change-email',userAuth,changeEmailValid)
 router.post('/verify-email-Otp',userAuth,verifyEmailOtp)
@@ -109,31 +109,50 @@ router.get('/remove-from-wishlist',userAuth,removeProduct)
 router.delete('/delete-wishlist',userAuth,deleteWishlist)
 
 
-const {loadCart,addToCart,updateCart,deleteItemCart,deleteCart} =require('../controllers/user/cartController')
+const {loadCart,addToCart,updateCart,deleteItemCart,deleteCart,variantData} =require('../controllers/user/cartController')
 //cart management
 router.get('/cart',userAuth,loadCart)
+router.get('/product-variants/:id',userAuth,variantData)
 router.post('/add-to-cart',userAuth,addToCart)
 router.put('/product-update-cart',userAuth,updateCart)
 router.delete('/product-delete-cart/:productId',userAuth,deleteItemCart)
 router.delete('/delete-cart',userAuth,deleteCart)
 
 //checkout management
-const {getCheckout,addNewAddress,updateAddress,deleteCheckoutAddress,applyCoupon,removeCoupon,placeorder} = require('../controllers/user/checkoutController')
+const {getCheckout,addNewAddress,updateAddress,deleteCheckoutAddress,applyCoupon,
+    removeCoupon,placeorder,createStripeSession,stripeSuccess,stripeCancel,orderSuccessPage,orderFailedPage
+} = require('../controllers/user/checkoutController')
+
 router.get('/checkout/:id',userAuth,getCheckout)
 router.post('/add-new-address',userAuth,addNewAddress)
 router.put('/edit-address/:id',userAuth,updateAddress)
 router.delete('/delete-address/:id',userAuth,deleteCheckoutAddress)
 router.post('/apply-coupon',userAuth,applyCoupon)
 router.post('/remove-coupon',userAuth,removeCoupon)
-router.post('/checkout-placeorder',userAuth,placeorder)
+router.post('/checkout-placeorder',userAuth,placeorder) 
 
+router.post('/payment/stripe/create-session',createStripeSession);
+router.get('/payment/stripe/success', stripeSuccess);
+router.get('/payment/stripe/cancel', stripeCancel);
+router.get('/order/success',userAuth,orderSuccessPage)
+router.get('/order/failed', userAuth, orderFailedPage);
+
+
+//soft delete
 //orders management
 const {loadOrderPage,getUserOrders,getOrderDetails,cancelOrder,requestReturn,generateOrderInvoice} =require('../controllers/user/orderController')
 router.get('/order',userAuth,getUserOrders)
 router.get('/order/:id',userAuth,getOrderDetails)
 router.post('/cancel-order/:id',userAuth,cancelOrder)
 router.post('/return-order/:id',userAuth,requestReturn)
-router.get('/order-invoice/:id', adminAuth, generateOrderInvoice);
+router.get('/order-invoice/:id', userAuth, generateOrderInvoice);
+
+//wallet management  
+const {getWallet,addWalletMoney,stripeWalletSuccess,stripeWalletCancel,} = require('../controllers/user/walletController')
+router.get('/wallet',userAuth,getWallet)
+router.post('/wallet/add-money',userAuth,addWalletMoney)
+router.get('/wallet/stripe-success',userAuth,stripeWalletSuccess)
+router.get('/wallet/stripe-cancel',userAuth,stripeWalletCancel)
 
 
 module.exports= router

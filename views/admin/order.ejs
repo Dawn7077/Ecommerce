@@ -125,7 +125,7 @@
                                         <% } %>
                                     </td>
                                     <td>
-                                        <% if (order.status !== 'Cancelled' && order.status !== 'Delivered') { %>
+                                        <% if (order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Returned') { %>
                                             <select class="form-select form-select-sm" style="width: 120px;" onchange="updateStatus('<%= order._id %>', this.value)">
                                                 <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                                                 <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>

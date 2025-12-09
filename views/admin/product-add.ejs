@@ -92,6 +92,20 @@
                                    </div>
                                    <div id="salePrice-error" class="error-message"></div>
                                </div>
+                               
+                           </div>
+                           <div class="row">
+                              
+                           <!-- Prvious color & quantity box
+
+                               <div class="col-lg-4">
+                                   <div class="mb-4">
+                                       <label class="form-label">Color</label>
+                                       <input  name="color" type="text" class="form-control border">
+                                   </div>
+                                   <div id="color-error" class="error-message"></div>
+                               </div> 
+
                                <div class="col-lg-4">
                                    <div class="mb-4">
                                        <label class="form-label">Quantity</label>
@@ -99,18 +113,30 @@
                                        <div id="quantity-error" class="error-message"></div>
                                    </div>
                                </div>
-                           </div>
-                           <div class="row">
-                              
-                               <div class="col-lg-4">
-                                   <div class="mb-4">
-                                       <label class="form-label">Color</label>
-                                       <input  name="color" type="text" class="form-control border">
-                                   </div>
-                                   <div id="color-error" class="error-message"></div>
-                               </div>
+
+                               -->
                             
                            </div>
+                           
+                           <!-- variant section -->
+                            <button type="button" onclick="addVariantRow()">Add Variant</button>
+                           <div id="variantContainer"></div>
+                           <script>
+                            function addVariantRow(){
+                              const div = document.createElement('div')
+                              div.classList.add('row','mb-2')
+                              div.innerHTML = `
+                                <div class="col-3"><input type="text" name="color[]" class="form-control" placeholder="Color"></div>
+                                <div class="col-3"><input type="text" name="size[]" class="form-control" placeholder="Size"></div>
+                                <div class="col-3"><input type="number" name="stock[]" class="form-control" placeholder="Stock"></div>
+                                <div class="col-3"><button type="button" class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Remove</button></div>
+                              `
+                              document.getElementById('variantContainer').appendChild(div)
+                            }
+                           </script>
+
+
+
                            <div class="card mb-4">
                                <div class="card-body">
                                    <div class="row gx-2">
@@ -228,10 +254,10 @@
     });
 
 
-     console.log("Cropper global check:", typeof Cropper); // should print "function"
-    let croppers = {}; // Store cropper instances globally
+     console.log("Cropper global check:", typeof Cropper);  
+    let croppers = {};  
 
-// Initialize cropper for each image input
+// Initialize cropper  
 function initCropper(event, index) {
   const file = event.target.files[0];
   if (!file) {
@@ -248,14 +274,14 @@ function initCropper(event, index) {
   const saveButton = document.getElementById('saveButton' + index);
   const input = document.getElementById('input' + index);
 
-  // Show preview image
+  //  preview image
   const previewURL = URL.createObjectURL(file);
   imgView.src = previewURL;
   imgView.style.maxWidth = '300px';
   imgView.style.maxHeight = '300px';
   imgView.style.display = 'block';
 
-  // Show crop container
+  // crop container
   cropContainer.style.display = 'flex';
   cropContainer.style.flexDirection = 'column';
   cropContainer.style.gap = '10px';
@@ -264,14 +290,14 @@ function initCropper(event, index) {
   cropImage.style.maxWidth = '100%';
   cropImage.style.maxHeight = '400px';
 
-  // Destroy existing cropper if any
+  // Destroy existing cropper  
   if (croppers[index]) {
     console.log('Destroying existing cropper for input' + index);
     croppers[index].destroy();
     delete croppers[index];
   }
 
-  // Wait for image to load before initializing Cropper
+  // waiting for image to load before initializing Cropper
   cropImage.onload = function() {
     console.log('Image loaded, creating cropper for input' + index);
     
@@ -399,10 +425,16 @@ function validateForm() {
     const brand = document.querySelector('[name="brand"]').value;
     const regularPrice = parseFloat(document.querySelector('[name="regularPrice"]').value);
     const salePrice = parseFloat(document.querySelector('[name="salePrice"]').value);
-    const quantity = parseInt(document.querySelector('[name="quantity"]').value);
-    const color = document.querySelector('[name="color"]').value.trim();
+    // const quantity = parseInt(document.querySelector('[name="quantity"]').value);
+    // const color = document.querySelector('[name="color"]').value.trim();
     const category = document.querySelector('[name="category"]').value;
     const images = document.getElementById('input1').files;
+
+    
+
+
+
+
 
     let valid = true;
 
@@ -443,16 +475,44 @@ function validateForm() {
         showError('regularPrice-error', 'Regular price must be greater than sale price');
         valid = false;
     }
-    
-    if (isNaN(quantity) || quantity < 0) {
-        showError('quantity-error', 'Enter a valid quantity (0 or greater)');
+
+    //variant
+    const variantRows = document.querySelectorAll('#variantContainer .row')
+    let variantError =false
+
+    variantRows.forEach(row=>{
+      const color = row.querySelector('[name="color[]"]').value.trim()
+      const size = row.querySelector('[name="size[]"]').value.trim();
+      const stock = row.querySelector('[name="stock[]"]').value.trim();
+
+      if(!color || !size || !stock){
+        variantError= true
         valid = false;
+      }
+
+    })
+
+    if (variantError) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Variant error',
+        text: 'All variant fields (color, size, stock) must be filled.',
+      });
+      return false;
     }
+
+
+
     
-    if (!color) {
-        showError('color-error', 'Please enter a color');
-        valid = false;
-    }
+    // if (isNaN(quantity) || quantity < 0) {
+    //     showError('quantity-error', 'Enter a valid quantity (0 or greater)');
+    //     valid = false;
+    // }
+    
+    // if (!color) {
+    //     showError('color-error', 'Please enter a color');
+    //     valid = false;
+    // }
     
     // if (images.length === 0) {
     //     showError('images-error', 'Please upload at least one image');
@@ -479,6 +539,12 @@ function validateForm() {
         console.log('✓ Form validation passed');
     } else {
         console.log('✗ Form validation failed');
+         Swal.fire({
+          icon: 'error',
+          title: 'Variant error',
+          text: 'All variant fields (color, size, stock) must be filled.',
+        });
+        return false;
     }
 
     return valid;
@@ -502,7 +568,7 @@ function clearErrorMessages() {
 async function validateAndSubmit() {
   console.log("/addProducts form submission triggered");
   
-  // Check if any croppers are still active
+  // checking if any croppers are still active
   const activeCroppers = Object.keys(croppers).length;
   if (activeCroppers > 0) {
     alert(`Please save all cropped images before submitting. ${activeCroppers} image(s) are still being edited.`);
@@ -550,7 +616,7 @@ async function validateAndSubmit() {
 
 function addHighlights(value=''){
   const container = document.getElementById('highlights-container');
-  const div = document.createElement('input');
+  const div = document.createElement('div');
   div.classList.add('d-flex','mb-2')
   div.innerHTML=`
   <input type="text" name="highlights" class="form-control border" value="${value}" placeholder="Enter highlight/spec" />

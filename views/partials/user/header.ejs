@@ -72,7 +72,7 @@
         .header{
             position: relative;
             z-index: 500;
-            background-color: rgb(184, 186, 246);
+            background-color: rgb(235 242 255);
         }
 
     </style>
@@ -159,8 +159,23 @@
             <div class="row">
                 <div class="col-lg-3 col-md-3">
                     <div class="header__logo">
-                        <a href="./index.html"><img src="/img/logo1.png" alt=""></a>
+                        <a  href="./index.html"><img id="site-logo" src="/img/logo2.png" alt=""></a> 
                     </div>
+                    <script>
+                        document.addEventListener("DOMContentLoaded",()=>{
+                            const a  = Math.floor((Math.random()*7)+1)
+                            document.getElementById('site-logo').src = `/img/logo${a}.png`
+                            if(a===2 || a === 6){
+                                document.getElementsByClassName('header')[0].style.backgroundColor = "rgb(69, 134, 255)";
+                            }
+                            if(a === 6){
+                                document.getElementsByClassName('header')[0].style.backgroundColor = "rgb(250 154 103);";
+                            }
+                            if(a===5){
+                                document.getElementsByClassName('header')[0].style.backgroundColor = "rgb(250 255 223)";
+                            }
+                        })
+                    </script>
                 </div>
                 <div class="col-lg-6 col-md-6">
                     <nav class="header__menu mobile-menu">

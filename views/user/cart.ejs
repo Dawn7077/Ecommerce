@@ -121,13 +121,14 @@
                                                 </td>
                                                 <td class="product-des product-name">
                                                     <h5 class="product-name">
-                                                        <a href="cart" style ="color: rgb(97, 97, 98);"> 
-                                                            <%= data.items[i].productId.productName %>
+                                                        <a href="/cart" style ="color: rgb(97, 97, 98);"> 
+                                                            <%= data.items[i].productId.productName %> 
                                                         </a>
                                                     </h5>
                                                     <p class="font-xs">
-                                                        <%= data.items[i].productId.category.name %><br />
-                                                            <%= data.items[i].productId.brand %>.
+                                                        <%= data.items[i].productId.brand %><br />
+                                                        color-<%= data.items[i].variant.color %><br />
+                                                        size-<%= data.items[i].variant.size %><br />
                                                     </p>
                                                 </td>
                                                 <td class="price" data-title="Price">₹<span> <text

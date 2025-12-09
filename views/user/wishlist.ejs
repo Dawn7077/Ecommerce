@@ -145,6 +145,103 @@
        </div>
    </section>
 </main>
+<!-- variant selection -->
+   <style>
+    /* --- AMAZON STYLE VARIANT POPUP --- */
+
+.variant-modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+.variant-modal {
+  width: 350px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  box-shadow: 0px 5px 20px rgba(0,0,0,0.25);
+}
+
+.variant-modal h3 {
+  margin-bottom: 15px;
+  text-align: center;
+  color: #1c3e64;
+}
+
+.variant-group {
+  margin-bottom: 15px;
+}
+
+.variant-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #d0dce7;
+  font-size: 15px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.modal-cancel {
+  background: #feedd5;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-confirm {
+  background: #1c72e3;
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-confirm:hover {
+  background: #155ec0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+   </style>
+   <div id="variantModal"  class="variant-modal-overlay" style="display: none;"> 
+    <div class="variant-modal">
+      
+      <h3>Select Variant</h3>
+
+      <div class="variant-group">
+        <label >Color:</label>
+        <select id="variantColor" class="variant-select" ></select>
+      </div> 
+
+      <div class="variant-group">
+        <label >Size:</label>
+        <select id="variantSize" class="variant-select" ></select>
+      </div>
+
+      <div class="modal-buttons">
+        <button onclick="closeVariantModal()" class="modal-cancel">Cancel</button>
+        <button onclick="confirmAddToCart()" class="modal-confirm">Add to Cart</button>
+      </div>
+
+    </div>
+   </div>
 <%- include("../../views/partials/user/footer") %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -166,7 +263,7 @@
         })
     }
 
-    function addToCart(productId){
+    function addToCart1(productId){
     fetch('add-to-cart',{
       method:'POST',
       headers:{
@@ -182,7 +279,8 @@
           text:'Prodcut has been added to cart',
           icon:"success",
           timer:2000
-      }).then(()=>{
+      })
+      .then(()=>{
         Swal.fire({
             title:'Added to cart! Remove from wishlist?',
             text:"Do you want remove from wishlist?",
@@ -246,6 +344,99 @@
 
         })
     }
+
+      
+  let selectedProductId =null
+
+  function addToCart(productId){ 
+    selectedProductId = productId;
+    fetch(`/product-variants/${productId}`)
+    .then(res=>res.json())
+    .then(data=>{
+      window.allVariants = data.variants
+
+      const colors = [... new Set(data.variants.map(v=>v.color))]
+      // const sizes = [... new Set(data.variants.map(v=>v.size))]
+
+      document.getElementById('variantColor').innerHTML=
+      colors.map(c=>`<option value="${c}">${c}</option>`).join('')
+
+      updateSizeDropDown()
+      document.getElementById('variantColor').onchange = updateSizeDropDown
+
+      // ----> removed becuase all the availabe size options are shown not related to color variant showing not a variant error
+      // document.getElementById('variantSize').innerHTML=
+      // sizes.map(s=>`<option value="${s}">${s}</option>`).join('')  
+
+      document.getElementById('variantModal').style.display = 'flex'
+    })
+  }
+
+  function updateSizeDropDown(){
+    const colorSelected = document.getElementById('variantColor').value
+
+    const validSizes = allVariants
+      .filter(v=> v.color === colorSelected)
+      .map(v => v.size)
+    
+    document.getElementById('variantSize').innerHTML = 
+      validSizes.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  }
+
+  function closeVariantModal(){
+    document.getElementById('variantModal').style.display = 'none'
+  }
+
+  function confirmAddToCart(){
+
+    const color = document.getElementById('variantColor').value
+    const size = document.getElementById('variantSize').value
+
+
+    fetch('/add-to-cart',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json'
+      },
+      body:JSON.stringify({
+        productId:selectedProductId,
+        color,
+        size
+      })
+    })
+    .then((res)=>res.json())
+    .then(data=>{
+
+      closeVariantModal()
+
+      if(data.status){
+        Swal.fire({
+          title:"Added to Cart",
+          // text:data.message,
+          text:'Prodcut has been added to cart',
+          icon:"success",
+          timer:2000
+      })
+      }else{
+        Swal.fire({
+          title:"Error",
+          text:data.message,
+          icon:"warning",
+          timer:2000
+      })
+      }
+    })
+    .catch(error=>{
+      Swal.fire({
+          title:"Error",
+          text:'There was an error adding the product to your cart',
+          icon:"error",
+          timer:2000
+      })
+      console.log(error)
+    })
+  }
 
 </script>
 

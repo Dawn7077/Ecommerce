@@ -108,6 +108,11 @@
         background: #f8d7da;
         color: #721c24;
     }
+    .status-returned {
+        background: #fff3cd;
+        color: #856404;
+    }
+
 
     .order-body {
         padding: 20px;
@@ -215,6 +220,33 @@
         text-decoration: none;
         display: inline-block;
     }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .page-btn {
+        padding: 6px 12px;
+        text-decoration: none;
+        border: 1px solid #ccc;
+        color: #333;
+        border-radius: 5px;
+        font-size: 14px;
+        background: #f8f8f8;
+    }
+
+    .page-btn:hover {
+        background: #eaeaea;
+    }
+
+    .page-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
 </style>
 
 <div class="orders-wrapper">
@@ -283,6 +315,22 @@
             </a>
         </div>
     <% } %>
+
+    <div class="pagination-container">
+        <% if (currentPage > 1) { %>
+            <a class="page-btn" href="?page=<%= currentPage - 1 %>">Prev</a>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPages; i++) { %>
+            <a class="page-btn <%= currentPage === i ? 'active' : '' %>" 
+            href="?page=<%= i %>"><%= i %></a>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+            <a class="page-btn" href="?page=<%= currentPage + 1 %>">Next</a>
+        <% } %>
+    </div>
+
 </div>
 
 <%- include("../partials/user/footer") %>

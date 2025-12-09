@@ -1,5 +1,6 @@
 const User =require('../../models/userSchema')
 const Address = require('../../models/addressSchema')
+const Wallet = require('../../models/walletSchema')
 const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const env = require('dotenv')
@@ -24,9 +25,7 @@ function generateOtp (){
     }
     return otp
 }
-
-
-
+ 
 const sendVerification = async(email,otp)=>{
     try { 
         const transporter = nodemailer.createTransport({
@@ -160,9 +159,24 @@ const userProfile = async(req,res)=>{
         const userId = req.session.user._id
         const userData = await User.findById(userId)
         const addressData = await Address.findOne({userId:userId})
+
+        let wallet = await Wallet.findOne({userId})
+
+        if(!wallet){
+            wallet = new Wallet ({
+                userId,
+                balance:0, 
+                transactions:[]
+            })
+
+            await wallet.save()
+        }
+
+
         res.render('user/profile',{
             user:userData,
-            userAddress:addressData
+            userAddress:addressData,
+            wallet,
         })
     } catch (error) {
         console.error('Error for retiving profile data',error);

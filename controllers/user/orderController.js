@@ -1,5 +1,5 @@
 const Order = require('../../models/orderSchema.js');
-const Product = require('../../models/productSchema.js');
+const Product = require('../../models/productSchema.js'); 
 
 const loadOrderPage = async(req,res)=>{
     try {
@@ -19,18 +19,31 @@ const loadOrderPage = async(req,res)=>{
     }
 }
 
+ 
+
 //  all user orders
 const getUserOrders = async (req, res) => {
     try {
         const userId = req.session.user._id;
+        const page = req.query.page || 1 
+        const limit = 5
+
         
         const orders = await Order.find({ userId })
             .populate('orderedItems.product')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip((page-1)*limit)
+            .limit(limit)
+        
+        const totalOrders = await Order.countDocuments({userId} )
+        const totalPages = Math.ceil(totalOrders/limit)
         
         res.render('user/orders', {
             orders,
-            user: req.session.user
+            user: req.session.user,
+            currentPage: Number(page),
+            totalPages
+
         });
         
     } catch (error) {
@@ -95,11 +108,18 @@ const cancelOrder = async (req,res)=>{
 
             const product = await Product.findById(item.product)
             if(product){
-                product.quantity += item.quantity
+                const variant = product.variants.find(v=>
+                    v.color === item.variant.color &&
+                    v.size === item.variant.size
+                )
 
-                if(product.status === 'out of stock' && product.quantity > 0){
-                    product.status = "Available"
+                if(variant){
+                    variant.stock += item.quantity
                 }
+
+                const total = product.variants.reduce((sum,v)=> sum + v.stock, 0)
+                product.status = total > 0 ? "Available" : 'out of stock'
+
                 await product.save()
             }
 
@@ -132,11 +152,16 @@ const cancelOrder = async (req,res)=>{
 
                 const product = await Product.findById(item.product);
                 if (product) {
-                    product.quantity += item.quantity;
+                    const variant = product.variants.find(v=>
+                        v.color === item.variant.color &&
+                        v.size === item.variant.size
+                    )
+
+                    if(variant) variant.stock += item.quantity
                     
-                    if (product.status === 'Out of Stock' && product.quantity > 0) {
-                        product.status = 'Available';
-                    } 
+                    const total = product.variants.reduce((sum,v)=> sum + v.stock, 0)
+                    product.status = total > 0 ? "Available" : 'out of stock' 
+
                     await product.save();
 
                 } 

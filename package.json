@@ -13,6 +13,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "mongoose": "^8.19.2",
@@ -23,6 +24,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pdfkit": "^0.17.2",
     "sharp": "^0.34.5",
+    "stripe": "^20.0.0",
     "uuid": "^13.0.0"
   }
 }

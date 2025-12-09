@@ -208,6 +208,10 @@
                             <td>
                                 <img src="/uploads/product-image/<%= item.productImage %>" class="product-img me-2">
                                 <%= item.product.productName %>
+                                <br/>
+                                <span class="text-muted">
+                                    Variant: <%= item.variant.color %> / <%= item.variant.size %>
+                                </span>
 
                                 <% 
                                 const lastStatus = item.statusHistory.length 
@@ -271,7 +275,7 @@
         <div class="col-lg-4">
 
             <!-- UPDATE STATUS -->
-            <% if(order.status !== 'Delivered' && order.status !== 'Cancelled'){ %>
+            <% if(order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Returned'){ %>
             <div class="card-box">
                 <h5>Update Order Status</h5>
 
