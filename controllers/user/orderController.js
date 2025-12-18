@@ -1,5 +1,6 @@
 const Order = require('../../models/orderSchema.js');
 const Product = require('../../models/productSchema.js'); 
+const Wallet = require('../../models/walletSchema.js')
 
 const loadOrderPage = async(req,res)=>{
     try {
@@ -62,6 +63,12 @@ const getOrderDetails = async (req, res) => {
         if (!order) {
             return res.status(404).send('Order not found');
         }
+        order.orderedItems.forEach(item=>{
+            console.log('===status=',item.status,'\n===previous status[-1]=',item.statusHistory[item.statusHistory.length-2])
+        })
+        // const currentStatus = order.orderedItems.status
+        // const previousStatus = 
+
         
         res.render('user/order-details', {
             order,
@@ -81,22 +88,43 @@ const cancelOrder = async (req,res)=>{
         const {itemId , reason}  = req.body
         console.log('cancel request:',orderId)
 
+        let refundAmount = 0
+
         const order = await Order.findOne({_id:orderId, userId})
 
         if(!order){
             return res.status(404).json({ success: false, message: 'Order not found' })
         }
-        if(itemId){
+        if (order.status === 'Cancelled') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Order is already cancelled' 
+            });
+        }
+
+        if(itemId){ // for single item cancel
             const item = order.orderedItems.id(itemId)
+            console.log(item)
+
             if(!item){
                 return res.status(404).json({ success: false, message: 'Item not found' });
             }
-            if(!['Pending','Processing'].includes(item.status)){
+            if(!['Pending','Processing',].includes(item.status)){
                  return res.status(400).json({ 
                     success: false, 
                     message: 'Item cannot be cancelled at this stage' 
                 });
             }
+
+            if (item.refunded || item.restocked) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Refund already processed for this item'
+                });
+            }
+
+
+
             item.status = 'Cancelled'
             item.cancellationReason = reason
             item.statusHistory.push({
@@ -105,7 +133,7 @@ const cancelOrder = async (req,res)=>{
                 note: reason
             })
 
-
+            //restocking
             const product = await Product.findById(item.product)
             if(product){
                 const variant = product.variants.find(v=>
@@ -114,7 +142,8 @@ const cancelOrder = async (req,res)=>{
                 )
 
                 if(variant){
-                    variant.stock += item.quantity
+                    variant.stock += item.quantity 
+                    item.restocked = true;
                 }
 
                 const total = product.variants.reduce((sum,v)=> sum + v.stock, 0)
@@ -123,16 +152,36 @@ const cancelOrder = async (req,res)=>{
                 await product.save()
             }
 
+             //wallet refund
+            if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
+                 
+                refundAmount = getItemPaidAmount(order, item)
 
+                await refundToWallet(
+                    order.userId,
+                    refundAmount,
+                    `Refunded on cancelling item:${item.productName} (Order #${order.orderId})`
+                )
+                item.refunded = true
+            } 
+                //refund
 
+            //if all items cancelled 
             const allCancelled = order.orderedItems.every(i=> i.status === 'Cancelled')
             if(allCancelled){
-                order.status ='Cancelled'
+                if (order.status !== 'Cancelled') {
+                    order.orderStatusHistory.push({  // order status history update
+                        status:'Cancelled',
+                        date:new Date()
+                    })
+                }
+               order.status ='Cancelled'
             }
 
 
 
         } else{
+
             if(!['Pending','Processing'].includes(order.status)){
                 return res.status(400).json({ 
                     success: false, 
@@ -141,6 +190,7 @@ const cancelOrder = async (req,res)=>{
             }
 
             order.status = 'Cancelled'
+            //for each items on the order list
             for(const item of order.orderedItems){
                 item.status = 'Cancelled';
                 item.cancellationReason = reason;
@@ -157,7 +207,14 @@ const cancelOrder = async (req,res)=>{
                         v.size === item.variant.size
                     )
 
-                    if(variant) variant.stock += item.quantity
+                    if(!item.restocked && variant) {
+                        variant.stock += item.quantity
+                        item.restocked = true
+                    }
+
+                    if (!item.refunded && (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')) {
+                        item.refunded = true
+                    }
                     
                     const total = product.variants.reduce((sum,v)=> sum + v.stock, 0)
                     product.status = total > 0 ? "Available" : 'out of stock' 
@@ -165,9 +222,47 @@ const cancelOrder = async (req,res)=>{
                     await product.save();
 
                 } 
+                
+                
+            
             }
         }
+            // refundAmount = order.finalAmount
+        //wallet refund
+            if((order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe') && !itemId){ 
+                            
+                    const refundableItems = order.orderedItems.filter(i => !i.refunded); 
+                    const itemsTotal = order.orderedItems.reduce(
+                        (sum, i) => sum + (i.price * i.quantity), // total price 
+                        0
+                    );
 
+                    let refundAmount = 0;
+
+                    for (const item of refundableItems) {
+                        const itemTotal = item.price * item.quantity; //per item total 
+
+                        const itemPaidAmount =
+                            Math.round((itemTotal / itemsTotal) * order.finalAmount);
+
+                        refundAmount += itemPaidAmount;
+                        item.refunded = true;
+                    }
+
+                    if (refundAmount > 0) {
+                        await refundToWallet(
+                            order.userId,
+                            refundAmount,
+                            `Refunded remaining items on cancellation (Order #${order.orderId})`
+                        );
+                    }
+            } 
+        //refund
+        order.orderStatusHistory.push({
+                status: 'Cancelled',
+                date: new Date()
+            });
+        
         await order.save()
 
         res.json({
@@ -181,6 +276,48 @@ const cancelOrder = async (req,res)=>{
         res.status(500).json({ success: false, message: 'Server error' });
     }
 }
+
+const getItemPaidAmount = (order, item) => {
+    const itemsTotal = order.orderedItems.reduce(
+        (sum, i) => sum + (i.price * i.quantity), 0 
+    );
+
+    const itemTotal = item.price * item.quantity;
+
+    return Math.round((itemTotal / itemsTotal) * order.finalAmount);
+};
+
+
+
+async function refundToWallet(userId, amount, reason) {
+    try {
+        let wallet = await Wallet.findOne({userId}) 
+        if(!wallet){
+            wallet = new Wallet({
+                userId,
+                balance:0,
+                transactions:[]
+            })
+        }
+        wallet.balance += amount
+
+        wallet.transactions.push({
+            date:new Date(),
+            type:'credit',
+            amount,
+            reason,
+        })
+
+        await wallet.save()
+
+        console.log(`Refunded ₹${amount} to user ${userId} wallet on cancel order`)
+        return true
+    } catch (error) {
+        console.error('Error refunding to wallet:',error)
+        return false
+    }
+}
+
 
 
 const requestReturn = async (req,res)=>{

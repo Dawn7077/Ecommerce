@@ -35,7 +35,7 @@
                    <h2 class="content-title">Add New Product</h2>
                </div>
            </div>
-           <div class="col-lg-6">
+           <div class="col-lg-12">
                <div class="card mb-4">
                    <div class="card-body">
                        <form method="post" action="/admin/addProducts" enctype="multipart/form-data"
@@ -119,7 +119,7 @@
                            </div>
                            
                            <!-- variant section -->
-                            <button type="button" onclick="addVariantRow()">Add Variant</button>
+                            <button type="button" class="btn btn-sm btn-primary mb-3" onclick="addVariantRow()">Add Variant</button>
                            <div id="variantContainer"></div>
                            <script>
                             function addVariantRow(){
@@ -127,8 +127,8 @@
                               div.classList.add('row','mb-2')
                               div.innerHTML = `
                                 <div class="col-3"><input type="text" name="color[]" class="form-control" placeholder="Color"></div>
-                                <div class="col-3"><input type="text" name="size[]" class="form-control" placeholder="Size"></div>
-                                <div class="col-3"><input type="number" name="stock[]" class="form-control" placeholder="Stock"></div>
+                                <div class="col-3"><input type="number" name="size[]" min=1 class="form-control" placeholder="Size"></div>
+                                <div class="col-3"><input type="number" name="stock[]" min=1  class="form-control" placeholder="Stock"></div>
                                 <div class="col-3"><button type="button" class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">Remove</button></div>
                               `
                               document.getElementById('variantContainer').appendChild(div)
@@ -142,7 +142,7 @@
                                    <div class="row gx-2">
                                        <div class="col-sm-6 mb-3">
                                            <label class="form-label">Category</label>
-                                           <select class="form-select border" style="width: 150px;" name="category">
+                                           <select class="form-select border" style="width: 200px;" name="category">
                                                 <% for(let i=0; i<cat.length;i++){ %>
 
                                                    <option value="<%=cat[i].name %>">
@@ -162,7 +162,7 @@
                                <div class="border row">
                                    <div id="addedImagesContainer" class="thumbnails-container"></div>
                                </div>
-                                                        <div class="row">
+                                                        <div class="col-6">
                                                                <div class="card-body align-items-center" style="margin-bottom: 20px;">
                                                                 <img src="" alt="" id="imgView1">
                                                                 <input class="form-control" type="file" name="images" id="input1"
@@ -178,7 +178,7 @@
 
                                                            </div>
                                                           
-                                                           <div class="row">
+                                                           <div class="col-6">
                                                                <div class="card-body align-items-center" style="margin-bottom: 20px;">
                                                                 <img src="" alt="" id="imgView2">
                                                                 <input class="form-control" type="file" name="images" id="input2"
@@ -194,7 +194,7 @@
 
                                                            </div>
                                                           
-                                                           <div class="row">
+                                                           <div class="col-6">
                                                                 <div class="card-body align-items-center" style="margin-bottom: 20px;">
                                                                     <img src="" alt="" id="imgView3">
                                                                     <input class="form-control" type="file" name="images" id="input3"
@@ -210,7 +210,7 @@
 
                                                            </div>
 
-                                                           <div class="row">
+                                                           <div class="col-6">
                                                                 <div class="card-body align-items-center" style="margin-bottom: 20px;">
                                                                     <img src="" alt="" id="imgView4">
                                                                     <input class="form-control" type="file" name="images" id="input4"
@@ -471,7 +471,7 @@ function validateForm() {
         valid = false;
     }
     
-    if (!isNaN(regularPrice) && !isNaN(salePrice) && regularPrice <= salePrice) {
+    if (!isNaN(regularPrice) && !isNaN(salePrice) && regularPrice < salePrice) {
         showError('regularPrice-error', 'Regular price must be greater than sale price');
         valid = false;
     }
@@ -479,6 +479,7 @@ function validateForm() {
     //variant
     const variantRows = document.querySelectorAll('#variantContainer .row')
     let variantError =false
+    let variantMsg =''
 
     variantRows.forEach(row=>{
       const color = row.querySelector('[name="color[]"]').value.trim()
@@ -489,6 +490,16 @@ function validateForm() {
         variantError= true
         valid = false;
       }
+      if(stock<=0 ){
+        variantError= true
+        valid = false;
+        variantMsg='Stock must be greater than 0'
+      }
+      if(size<=0 ){
+        variantError= true
+        valid = false;
+        variantMsg='size must be greater than 0'
+      }
 
     })
 
@@ -496,7 +507,7 @@ function validateForm() {
       Swal.fire({
         icon: 'error',
         title: 'Variant error',
-        text: 'All variant fields (color, size, stock) must be filled.',
+        text: variantMsg || 'All variant fields (color, size, stock) must be filled.',
       });
       return false;
     }

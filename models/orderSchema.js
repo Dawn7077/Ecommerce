@@ -112,8 +112,19 @@ const orderSchema = new mongoose.Schema({
         }],
         cancellationReason: String,
         returnReason: String,
-        returnRequestDate: Date
+        returnRequestDate: Date,
+        refunded:{
+            type:Boolean,
+            default:false
+        }, 
+        restocked: { 
+            type: Boolean, 
+            default: false
+        }
     }],
+    subtotal: {
+        type: Number, 
+    },
     totalPrice: {
         type: Number,
         required: true
@@ -125,12 +136,7 @@ const orderSchema = new mongoose.Schema({
     finalAmount: {
         type: Number,
         required: true
-    },
-    // address: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Address",
-    //     required: true
-    // },
+    }, 
     address: {
         addressType: String,
         name: String,
@@ -157,6 +163,13 @@ const orderSchema = new mongoose.Schema({
         enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Returned'],
         default: 'Pending'
     },
+    orderStatusHistory:[{
+         status: String,
+            date: {
+                type: Date,
+                default: Date.now
+            },
+    }],
     invoiceDate: {
         type: Date,
         default: Date.now

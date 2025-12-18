@@ -247,6 +247,31 @@
         border-color: #007bff;
     }
 
+    
+    .retry-section {
+        background: #fff3cd;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    
+    .retry-btn {
+        padding: 10px 24px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .retry-btn:hover {
+        background: #218838;
+        transform: scale(1.05);
+    }
+
 </style>
 
 <div class="orders-wrapper">
@@ -277,6 +302,19 @@
                 </div>
 
                 <div class="order-body">
+                    <% if(order.status === 'Cancelled') {%>
+                        <div class="retry-section">
+                            <p style="margin:0 0 8px; color: #856404; font-weight: 600;">
+                                <i class="fas fa-info-circle">This order was cancelled</i>
+                            </p>
+                            <button class="retry-btn" onclick="retryOrder('<%= order._id %>')">
+                                <i class="fas fa-redo"></i> Retry Order
+                            </button>
+                        </div>
+                    <% } %>
+
+
+
                     <div class="order-items-grid">
                         <% order.orderedItems.slice(0, 4).forEach(item => { %>
                             <img src="/uploads/product-image/<%= item.productImage %>" 
@@ -332,5 +370,152 @@
     </div>
 
 </div>
+<!-- retry modal  -->
+ <div id="retryModal" class="modal" style="display: none;">
+     <div class="modal-content" style="max-width: 450px; margin: 100px auto;">
+        <span class="close" onclick="closeRetryModal()">&times;</span>
+        <h3>Retry Order Payment</h3>
+        <p>Select Payment method to retry this order :</p>
 
+        <div id="orderSummary" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 16px 0;">
+
+        </div>
+        <div style="margin: 16px 0;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Payment Method:</label>
+            <select id="retryPaymentMethod" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
+                <option value="Wallet">Wallet</option>
+                <option value="Stripe">Stripe (Card Payment)</option>
+            </select>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="confirmRetry()">
+            Proceed to Payment
+        </button>
+     </div>
+ </div>
+
+ <style>
+    .modal {
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        position: relative;
+    }
+
+    .close {
+        position: absolute;
+        right: 16px;
+        top: 12px;
+        font-size: 28px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    let selectOrderId = null
+
+    async function retryOrder(orderId) {
+        selectOrderId = orderId
+        try {
+            const response = await fetch(`/retry-order-details/${orderId}`)
+            const data = await response.json()
+
+            if(!data.success){
+                swal("Error",data.message,'error')
+                return
+            }
+            const order = data.order
+            console.log(order)
+
+            document.getElementById('orderSummary').innerHTML = `
+                <div><strong>Order ID:</strong> ${order.orderId}</div>
+                <div><strong>Items:</strong> ${order.orderedItems.length} items</div>
+                <div><strong>Total Amount:</strong> ₹${order.finalAmount.toFixed(2)}</div>
+            `
+
+            document.getElementById('retryModal').style.display = 'block'
+        } catch (error) {
+            console.log('Error fetching order:',error)
+            swal('Error','Failed to load order details ','error')
+        }
+    }
+
+    function closeRetryModal(){ 
+            document.getElementById('retryModal').style.display = 'none'
+            selectOrderId =null
+    }
+
+    async function confirmRetry() {
+        const paymentMethod = document.getElementById('retryPaymentMethod').value
+
+        if(!selectOrderId || !paymentMethod){
+            swal("Error", 'Please select a payment method','warning')
+            return
+        }
+        try {
+            const response = await fetch('/retry-cancelled-order',{
+                method:'POST',
+                headers:{"Content-type":'application/json'},
+                body:JSON.stringify({
+                    orderId:selectOrderId,
+                    paymentMethod:paymentMethod
+                })
+            })
+            
+            const data = await response.json()
+
+            if(!data.success){
+                if(data.redirect){ 
+                    swal("Error", data.message, "error")
+                    .then(()=> window.location.href = data.redirect)
+                }else{
+                    swal("Error", data.message, "error")
+                }
+                return
+            }
+
+            if(paymentMethod === 'Wallet'){
+                swal("Success", "Order retried successfully with Wallet!", "success")
+                .then(()=> window.location.href =`/order/success?orderId=${data.orderId}`)
+            }else if(paymentMethod === 'Stripe'){  
+
+                const stripeRes = await fetch('/payment/stripe/create-session',{
+                    method:'POST',
+                    headers:{"Content-type":'application/json'},
+                    body:JSON.stringify({ orderId:data.orderId })
+                })
+
+                const stripeData = await stripeRes.json()
+
+                if(stripeData.success && stripeData.url){
+                    window.location.href = stripeData.url
+                }else{
+                    swal('Payment Error',stripeData.message || 'Failed to create a payment session','error')
+                }
+  
+            } 
+
+        } catch (error) { 
+            console.error('Retry error:', error);
+            swal("Error", "Failed to retry order", "error");
+        }
+    }
+
+    window.onclick = function(event){
+        const modal = document.getElementById('retryModal')
+        if(event.target === modal){
+            closeRetryModal()
+        }
+    }
+</script>
 <%- include("../partials/user/footer") %>

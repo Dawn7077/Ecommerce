@@ -80,7 +80,7 @@ const loadSalesReport = async(req,res)=>{
 
         const query = {
             paymentStatus: { $in: ['Paid', 'Completed'] },
-            status: { $nin: ['Cancelled'] }
+            status: { $nin: ['Cancelled','Returned'] }
         }
 
         const orders = await Order.find(query)
@@ -280,7 +280,7 @@ const downloadSalesPDF = async (req,res) => {
         );
 
         doc.pipe(res);
-        //title
+        //title for the pdf
         doc.fontSize(20).font('Helvetica-Bold').text('SALES REPORT', { align: 'center' });
         doc.moveDown();
 

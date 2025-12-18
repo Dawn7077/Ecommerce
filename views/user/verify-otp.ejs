@@ -243,10 +243,7 @@
         startTimer()
 
         fetch('/resend-otp',{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            }
+            method:"POST", 
         }).then(async(response)=>{
             const data = await response.json()
             if(response && data.success){

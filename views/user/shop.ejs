@@ -678,7 +678,10 @@ button[type='submit']:hover {
      <main class="product-grid">
         <% for(let i=0;i<products.length;i++){ %>
          <div class="product-card">
-           <span class="wishlist-btn" onclick="addToWishlist('<%=products[i]._id%>')">❤️</span>
+          <% const isWishlisted  = wishlist.some(p=>p.productId.toString() === products[i]._id.toString() ) %>
+             <span id="wishlist-btn-<%=products[i]._id%>" class="wishlist-btn" onclick="addToWishlist('<%=products[i]._id%>')">
+              <i class="<%= isWishlisted ? 'fas' : 'far' %> fa-heart" style="color: red;"></i></span>
+               
            <a href="/productDetails?id=<%=products[i]._id %>">
              <img src="/uploads/product-image/<%= products[i].productImage[0] %>" alt="<%= products[i].productName %>" />
              <h4><%= products[i].productName %></h4>
@@ -834,6 +837,8 @@ button[type='submit']:hover {
           icon:"success",
           timer:2000
       })
+      const btn = document.getElementById(`wishlist-btn-${productId}`)
+      btn.innerHTML = `<i class= "fas fa-heart" style="color: red;"></i>`
       }else{
         Swal.fire({
           title:"Already in Wishlist",

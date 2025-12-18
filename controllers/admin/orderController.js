@@ -100,7 +100,7 @@ const getOrderDetails = async (req, res) => {
         res.redirect('/admin/pageError');
     }
 };
-const changeOrderStatus = async (req, res) => {
+const changeOrderStatus1 = async (req, res) => {
     try {
         const { orderId, status } = req.body;
 
@@ -113,34 +113,46 @@ const changeOrderStatus = async (req, res) => {
 
  
         if (status === 'Cancelled' && order.status !== 'Cancelled') {
+            let refundAmount = 0;
+
             for (const item of order.orderedItems) {
-                const product = await Product.findById(item.product)
-                if(!product)continue
+                if (item.status === 'Cancelled') continue; //skip item
 
-                const variant = product.variants.find(v=>
-                    v.color === item.variant.color &&
-                    v.size === item.variant.size
-                )
-
-                if(variant){
-                    variant.stock += item.quantity
+                if(!item.restocked){
+                    const product = await Product.findById(item.product)
+                    if(!product)continue
+    
+                    const variant = product.variants.find(v=>
+                        v.color === item.variant.color &&
+                        v.size === item.variant.size
+                    )
+    
+                    if(variant){
+                        variant.stock += item.quantity
+                        item.restocked = true;
+                    }
+    
+                    const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+                    product.status = totalStock > 0 ? "Available" : "out of stock";
+    
+                    await product.save();  
                 }
-
-                const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-                product.status = totalStock > 0 ? "Available" : "out of stock";
-
-                await product.save(); 
 
             }
 
-            if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
+            if(!item.refunded && (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')){
                 await refundToWallet(order.userId, order.finalAmount, `Refund for cancelled order #${order.orderId}`)
+                item.refunded = true;
             }
 
             console.log(`Variant stock restored for Cancelled Order ${orderId}`);
         }
+
+        const activeStatuses = ['Pending', 'Processing', 'Shipped'];
         
         for (const item of order.orderedItems) {
+            if (!activeStatuses.includes(item.status)) continue; //skip if cancelled or return 
+
                 item.status =status
                 item.statusHistory.push({
                     status,
@@ -149,6 +161,12 @@ const changeOrderStatus = async (req, res) => {
                 })
             }
 
+        if(order.status!== status){
+            order.orderStatusHistory.push({
+                status,
+                date:new Date()
+            })
+        }
         order.status = status;
         console.log('=========>',order.status )
         await order.save();
@@ -161,6 +179,107 @@ const changeOrderStatus = async (req, res) => {
     }
 }; 
 
+const changeOrderStatus = async (req, res) => {
+    try {
+        const { orderId, status } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ status: false, message: 'Order not found' });
+        }
+
+        const terminalStatuses = ['Cancelled', 'Returned'];
+
+        // Handle order cancellation
+        if (status === 'Cancelled' && order.status !== 'Cancelled') {
+            let refundAmount = 0;
+
+            for (const item of order.orderedItems) {
+                if (item.status === 'Cancelled') continue; // skip already cancelled items
+
+                // Restock variant if not restocked yet
+                if (!item.restocked) {
+                    const product = await Product.findById(item.product);
+                    if (product) {
+                        const variant = product.variants.find(v =>
+                            v.color === item.variant.color && v.size === item.variant.size
+                        );
+                        if (variant) {
+                            variant.stock += item.quantity;
+                            item.restocked = true;
+                        }
+
+                        const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+                        product.status = totalStock > 0 ? "Available" : "out of stock";
+
+                        await product.save();
+                    }
+                }
+
+                // Refund only if not refunded and payment via wallet/stripe
+                if (!item.refunded && (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')) {
+                    refundAmount += getItemPaidAmount(order, item);
+                    item.refunded = true;
+                }
+
+                // Mark item as cancelled
+                item.status = 'Cancelled';
+                item.statusHistory.push({
+                    status: 'Cancelled',
+                    note: 'Cancelled by admin',
+                    date: new Date()
+                });
+            }
+
+            // Process refund for the cancelled items
+            if (refundAmount > 0) {
+                await refundToWallet(order.userId, refundAmount, `Refund for cancelled order #${order.orderId}`);
+            }
+        }
+
+        // Update item statuses (skip cancelled/returned items)
+        const activeStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+        for (const item of order.orderedItems) {
+            if (terminalStatuses.includes(item.status)) continue;
+
+            item.status = status;
+            item.statusHistory.push({
+                status,
+                note: `Status updated by admin to ${status}`,
+                date: new Date()
+            });
+        }
+
+        // Update order status based on items
+        if (order.orderedItems.every(i => i.status === 'Cancelled')) {
+            order.status = 'Cancelled';
+        } else if (order.orderedItems.every(i => i.status === 'Returned')) {
+            order.status = 'Returned';
+        } else if (order.orderedItems.every(i => i.status === 'Delivered')) {
+            order.status = 'Delivered';
+        } else {
+            order.status = status;
+        }
+
+        // Record in order status history if different
+        if (!order.orderStatusHistory.some(h => h.status === order.status)) {
+            order.orderStatusHistory.push({
+                status: order.status,
+                date: new Date()
+            });
+        }
+
+        await order.save();
+
+        res.json({ status: true, message: 'Order status updated successfully' });
+
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        res.status(500).json({ status: false, message: 'Internal Server Error' });
+    }
+};
+
+
 const approveReturn  = async (req,res)=>{
     try {
         const{orderId,itemId} = req.body
@@ -169,6 +288,7 @@ const approveReturn  = async (req,res)=>{
         if(!order) return res.json({ success: false, message: "Order not found" });
 
         const item = order.orderedItems.id(itemId)
+        
         if (!item) return res.json({ success: false, message: "Item not found" });
 
         if(item.status!== 'Return Requested'){
@@ -176,24 +296,28 @@ const approveReturn  = async (req,res)=>{
         }
 
         
-
-        const product = await Product.findById(item.product)
-        if(product){
-
-            const variant = product.variants.find(v=>
-                v.color === item.variant.color &&
-                v.size === item.variant.size
-            )
-
-            if (variant) {
-                variant.stock += item.quantity;
+        if(!item.restocked){
+            const product = await Product.findById(item.product)
+            if(product){
+    
+                const variant = product.variants.find(v=>
+                    v.color === item.variant.color &&
+                    v.size === item.variant.size
+                )
+                const checkCancell = item.statusHistory.some(h => h.status ==='Cancelled')
+    
+                if (variant) {
+                    variant.stock += item.quantity;
+                    item.restocked = true;
+                }
+    
+                const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+                product.status = totalStock > 0 ? "Available" : "out of stock";
+    
+                await product.save();
             }
-
-            const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-            product.status = totalStock > 0 ? "Available" : "out of stock";
-
-            await product.save();
         }
+
         
         item.status = "Returned";
         item.statusHistory.push({
@@ -202,14 +326,18 @@ const approveReturn  = async (req,res)=>{
             date: new Date()
         })
 
-        if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
-            const refundAmount = item.price * item.quantity
+        if((order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')&& !item.refunded){
+            
+            const totalItemsAmount = order.orderedItems.reduce((sum,i)=> sum + i.price * i.quantity ,0)
+            const itemCouponDis = (item.price * item.quantity / totalItemsAmount) * (order.couponDiscount||0)
 
+            const refundAmount = (item.price * item.quantity) - itemCouponDis 
             await refundToWallet(
                 order.userId,
                 refundAmount,
                 `Refund for returned item: ${item.productName} (Order #${order.orderId})`
             )
+            item.refunded = true
         }
    
         const allReturned = order.orderedItems.every(i=>["Cancelled", "Returned"].includes(i.status))
@@ -280,7 +408,7 @@ async function refundToWallet(userId, amount, reason) {
 
         await wallet.save()
 
-        console.log(`✅ Refunded ₹${amount} to user ${userId} wallet`)
+        console.log(`Refunded ₹${amount} to user ${userId} wallet`)
         return true
 
 
@@ -289,6 +417,16 @@ async function refundToWallet(userId, amount, reason) {
         return false
     }
 }
+
+const getItemPaidAmount = (order, item) => {
+    const itemsTotal = order.orderedItems.reduce(
+        (sum, i) => sum + (i.price * i.quantity), 0 
+    );
+
+    const itemTotal = item.price * item.quantity;
+
+    return Math.round((itemTotal / itemsTotal) * order.finalAmount);
+};
 
 
 

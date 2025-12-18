@@ -432,7 +432,8 @@
 
       function emailValidateCheck(e){
         const emailVal = emailId.value
-        const emailPattern = /^([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})$/
+        const emailPattern1 = /^([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})$/
+        const emailPattern= /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$/
         if(!emailPattern.test(emailVal)){
           error2.style.display ="block"
           error2.innerHTML= 'Invalid format'

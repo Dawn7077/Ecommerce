@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const{loadHomePage,loadSignUp,signup,verifyOtp,resendOtp,pageNotFound,
+const{loadHomePage,loadSignUp,signup,getVerifyOtp,verifyOtp,resendOtp,pageNotFound,
     loadlogin,login,logout ,loadShoppingPage,filterProduct,filterByPrice,searchProducts,loadShop
 } = require('../controllers/user/userController')
 const {getForgotPassPage, forgotEmailValid ,verifyForgotPassOtp,getResetPassPage,
@@ -32,6 +32,7 @@ router.get('/shop', loadShop)
 //signup 
 router.get('/signup',isloggedOut,loadSignUp)
 router.post("/signup",signup)
+router.get('/verify-otp',isloggedOut,getVerifyOtp)
 router.post('/verify-otp',verifyOtp)
 router.post('/resend-otp',resendOtp)
 router.get('/auth/google',isloggedOut,passport.authenticate('google',{scope:['profile','email']}))
@@ -120,7 +121,8 @@ router.delete('/delete-cart',userAuth,deleteCart)
 
 //checkout management
 const {getCheckout,addNewAddress,updateAddress,deleteCheckoutAddress,applyCoupon,
-    removeCoupon,placeorder,createStripeSession,stripeSuccess,stripeCancel,orderSuccessPage,orderFailedPage
+    removeCoupon,placeorder,createStripeSession,stripeSuccess,stripeCancel,orderSuccessPage,orderFailedPage,
+    retryCancelledOrder,getOrderDetailsForRetry
 } = require('../controllers/user/checkoutController')
 
 router.get('/checkout/:id',userAuth,getCheckout)
@@ -134,8 +136,12 @@ router.post('/checkout-placeorder',userAuth,placeorder)
 router.post('/payment/stripe/create-session',createStripeSession);
 router.get('/payment/stripe/success', stripeSuccess);
 router.get('/payment/stripe/cancel', stripeCancel);
+
 router.get('/order/success',userAuth,orderSuccessPage)
 router.get('/order/failed', userAuth, orderFailedPage);
+
+router.get('/retry-order-details/:id',userAuth,getOrderDetailsForRetry)
+router.post('/retry-cancelled-order',userAuth,retryCancelledOrder)
 
 
 //soft delete

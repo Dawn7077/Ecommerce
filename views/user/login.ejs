@@ -232,8 +232,10 @@
 
       function emailValidateChecking(e) {
         const emailval = emailid.value;
-        const emailpattern =
+        const emailpattern1 =
           /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+        const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$/
+
 
         if (!emailpattern.test(emailval)) {
           error1.style.display = "block";

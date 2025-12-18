@@ -6,6 +6,7 @@ const Category = require('../../models/categorySchema')
 const Product = require('../../models/productSchema')
 const Banner = require('../../models/bannerSchema')
 const Brand = require('../../models/brandSchema')
+const WishLish = require('../../models/wishlistSchema')
 const bcrypt = require('bcrypt')
 const { search } = require("../../routes/userRouter");
 const { productDetails } = require("./productController");
@@ -137,8 +138,9 @@ const signup = async(req,res)=>{
         req.session.userOtp = otp
         req.session.userData = {name,email,phone,password}
 
-        res.render("user/verify-otp")
         console.log('OTP sent',otp)
+        // res.render("user/verify-otp")
+        return res.redirect('/verify-otp')
 
     } catch (error) {
         console.error('user/signup error',error)
@@ -151,6 +153,14 @@ const securePassword = async(password)=>{
         return passwordHash
     } catch (error) {
         
+    }
+}
+const getVerifyOtp = async (req,res) => {
+    try {
+        res.render("user/verify-otp")
+    } catch (error) {
+        console.error('getVerifyOtp',error)
+        res.redirect('/pageNotFound')
     }
 }
 const verifyOtp = async(req,res)=>{
@@ -609,6 +619,9 @@ const loadShop = async(req,res)=>{
 
         const categories = await Category.find({isListed:true}).lean()
         const brands = await Brand.find({isBlocked:false}).lean()
+        let userId = user._id
+        const wishlist = await WishLish.findOne({userId})
+        console.log('==>',wishlist.products)
 
         res.render('user/shop',{
             user:userData,
@@ -618,7 +631,7 @@ const loadShop = async(req,res)=>{
             totalProducts,
             currentPage:parseInt(page),
             totalPages,
-
+            wishlist:wishlist.products,
             selectedBrand:brand||null,
             selectedCategory:category||null,
             selectedPrice:{gt,lt}||null,
@@ -645,6 +658,7 @@ module.exports = {
     loadHomePage,
     loadSignUp,
     signup,
+    getVerifyOtp,
     verifyOtp,
     resendOtp,
     loadlogin,

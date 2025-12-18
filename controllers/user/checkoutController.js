@@ -788,6 +788,19 @@ const placeorder = async (req, res) => {
     try {
         const { addressId, paymentMethod } = req.body;
         const userId = req.session.user._id;
+        //limit order per day 
+        const nowDate = new Date()
+        const startDate = new Date(nowDate.setHours(0,0,0,0))
+        const endOfDay = new Date(nowDate.setHours(23, 59, 59, 999))
+
+        const orderlist = await Order.find({userId,createdAt:{$gte:startDate,$lte:endOfDay}})
+        if(orderlist.length >= 10 ){
+            return res.status(400).json({
+                success: false,
+                message: 'User cannot order more than 2 '
+            });
+        }
+
 
         if (!addressId || !paymentMethod) {
             return res.status(400).json({
@@ -839,17 +852,134 @@ const placeorder = async (req, res) => {
             await product.save();
         }
 
-        // Calculate totals
-        let subtotal = 0;
-        let discount = 0;
+// ===================================
+
+        // let couponDiscount = 0;
+        // let appliedCoupon = false;
+        // let referralUserId = null;
+        // let subtotal = 0;
+        // let discount = 0;
+
+        // //   coupon/referral discount
+        // if (req.session.appliedCoupon) {
+        //     appliedCoupon = true;
+        //     const appliedData = req.session.appliedCoupon;
+
+        //     if (appliedData.type === 'referral') {
+        //         // Referral code
+        //         couponDiscount = Math.min(appliedData.discount, subtotal - discount);
+        //         referralUserId = appliedData.referredUserId;
+        //     } else if (appliedData.type === 'coupon') {
+        //         //   coupon code
+        //         const coupon = await Coupon.findById(appliedData.id);
+        //         if (coupon) {
+        //             couponDiscount = Math.min(coupon.offerPrice, subtotal - discount);
+        //         }
+        //     }
+        // }
+
+
+        // // Calculate totals
+        
+
+        // const orderItems = cart.items.map(item => {
+        //     const itemTotal = item.price * item.quantity;
+        //     subtotal += itemTotal;
+
+        //     //  
+        //     // item discount
+        //     let itemDiscount = (item.productId.regularPrice - item.productId.salesPrice) * item.quantity;
+
+        //     // prorate coupon
+        //     const totalItemsAmount = cart.items.reduce((sum, i) => i.price * i.quantity, 0);
+        //     let itemCouponDiscount = 0;
+        //     if(req.session.appliedCoupon){
+        //         itemCouponDiscount = (itemTotal / totalItemsAmount) * couponDiscount;
+        //     }
+
+        //     // final per item
+        //     const finalAmountPerItem = itemTotal - itemDiscount - itemCouponDiscount;
+
+        //     //
+
+        //     if (item.productId.salesPrice && item.productId.salesPrice <= item.productId.regularPrice) {
+        //         discount += (item.productId.regularPrice - item.productId.salesPrice) * item.quantity;
+        //     }
+
+        //     return {
+        //         product: item.productId._id,
+        //         quantity: item.quantity,
+        //         price: item.productId.salesPrice,
+        //         productName: item.productId.productName,
+        //         productImage: item.productId.productImage[0],
+        //         variant: {
+        //             color: item.variant.color,
+        //             size: item.variant.size,
+        //         },
+        //         totalPrice: itemTotal,
+        //         finalAmount: finalAmountPerItem,
+        //         address: selectedAddress._id,
+        //         status: "Pending",
+        //         statusHistory: [{
+        //             status: 'Pending',
+        //             date: new Date(),
+        //             note: 'Order placed'
+        //         }]
+        //     };
+        // });
+
+        
+// ===============
+        // subtotal and product offer/discount
+        let subtotal = 0
+        let discount = 0
+
+        cart.items.forEach(item => {
+            const regular = item.productId.regularPrice;
+            const sale = item.productId.salesPrice;
+            const qty = item.quantity;
+
+            subtotal +=  regular * qty
+
+            if(sale < regular) {
+                discount += (regular- sale) * qty
+            }
+
+        })
+
+        // applying coupon after subtotal
+        let couponDiscount = 0;
+        let appliedCoupon = false;
+        let referralUserId = null;
+
+        if(req.session.appliedCoupon){
+            appliedCoupon = true
+
+            const appliedData = req.session.appliedCoupon;
+
+            if (appliedData.type === 'referral') {
+                couponDiscount = Math.min(
+                    appliedData.discount,
+                    subtotal - discount
+                );
+                referralUserId = appliedData.referredUserId;
+            }
+
+            if (appliedData.type === 'coupon') {
+                const coupon = await Coupon.findById(appliedData.id);
+                if (coupon) {
+                    couponDiscount = Math.min(
+                        coupon.offerPrice,
+                        subtotal - discount
+                    );
+                }
+            }
+        }
+
+        // orderitems
 
         const orderItems = cart.items.map(item => {
-            const itemTotal = item.price * item.quantity;
-            subtotal += itemTotal;
-
-            if (item.productId.salesPrice && item.productId.salesPrice < item.productId.regularPrice) {
-                discount += (item.productId.regularPrice - item.productId.salesPrice) * item.quantity;
-            }
+            const itemTotal = item.productId.salesPrice * item.quantity;
 
             return {
                 product: item.productId._id,
@@ -857,12 +987,8 @@ const placeorder = async (req, res) => {
                 price: item.productId.salesPrice,
                 productName: item.productId.productName,
                 productImage: item.productId.productImage[0],
-                variant: {
-                    color: item.variant.color,
-                    size: item.variant.size,
-                },
+                variant: item.variant,
                 totalPrice: itemTotal,
-                finalAmount: itemTotal,
                 address: selectedAddress._id,
                 status: "Pending",
                 statusHistory: [{
@@ -873,35 +999,17 @@ const placeorder = async (req, res) => {
             };
         });
 
-        let couponDiscount = 0;
-        let appliedCoupon = false;
-        let referralUserId = null;
 
-        //   coupon/referral discount
-        if (req.session.appliedCoupon) {
-            appliedCoupon = true;
-            const appliedData = req.session.appliedCoupon;
+        //final amount calculation
 
-            if (appliedData.type === 'referral') {
-                // Referral code
-                couponDiscount = Math.min(appliedData.discount, subtotal - discount);
-                referralUserId = appliedData.referredUserId;
-            } else if (appliedData.type === 'coupon') {
-                //   coupon code
-                const coupon = await Coupon.findById(appliedData.id);
-                if (coupon) {
-                    couponDiscount = Math.min(coupon.offerPrice, subtotal - discount);
-                }
-            }
-        }
-
-        const shipping = subtotal > 1000 ? 0 : 100;
-        const total = subtotal - discount - couponDiscount + shipping;
+        const shipping = subtotal >= 1000 ? 0 : 100;
+        const totalPrice = subtotal - discount 
+        const finalAmount = totalPrice - couponDiscount + shipping;
 
         // Check wallet balance  
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
-            if (!wallet || wallet.balance < total) {
+            if (!wallet || wallet.balance < finalAmount) {
                 return res.status(400).json({
                     success: false,
                     message: "Insufficient wallet balance",
@@ -914,9 +1022,10 @@ const placeorder = async (req, res) => {
         const newOrder = new Order({
             userId,
             orderedItems: orderItems,
-            totalPrice: total,
+            subtotal,
+            totalPrice: totalPrice,
             discount,
-            finalAmount: total,
+            finalAmount: finalAmount,
             address: {
                 addressType: selectedAddress.addressType,
                 name: selectedAddress.name,
@@ -934,6 +1043,10 @@ const placeorder = async (req, res) => {
             couponApplied: appliedCoupon,
             couponDiscount: couponDiscount
         });
+        newOrder.orderStatusHistory.push({ // order history update 
+            status:'Pending',
+            date: new Date()
+        })
 
         await newOrder.save();
 
@@ -979,14 +1092,14 @@ const placeorder = async (req, res) => {
                 redirect: `/order/success?orderId=${newOrder._id}`
             });
         }
-
+        //wallet transaction
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
-            wallet.balance -= total;
+            wallet.balance -= finalAmount;
             wallet.transactions.push({
                 date: new Date(),
                 type: "debit",
-                amount: total,
+                amount: finalAmount,
                 reason: "Order Payment"
             });
             await wallet.save();
@@ -1008,7 +1121,7 @@ const placeorder = async (req, res) => {
             return res.json({
                 success: true,
                 orderId: newOrder._id,
-                amount: total
+                amount: finalAmount
             });
         }
 
@@ -1055,6 +1168,219 @@ async function finalizeOrder(order, cart, req) {
 }
 
 
+const retryCancelledOrder = async (req,res) =>{
+    try {
+        const {orderId,paymentMethod} = req.body
+        const userId = req.session.user._id
+
+        // validations
+        
+        if (!orderId || !paymentMethod) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and payment method required'
+            });
+        }
+        
+        if(!["Wallet",'Stripe'].includes(paymentMethod)){
+            return res.status(400).json({
+                success: false,
+                message: 'Only Wallet and Stripe allowed for retry'
+            });
+        }
+
+
+        const order = await Order.findOne({_id: orderId,userId})
+        
+        if(!order){
+            return res.status(404).json({
+                success:false,
+                message:'Order not found'
+            })
+        }
+
+        if(order.status !== 'Cancelled'){
+            return res.status(400).json({
+                success:false,
+                message:'Only Cancelled orders can be retried '
+            })
+        }
+
+        //stock availability 
+
+        for(const item of order.orderedItems){
+            const product = await Product.findById(item.product)
+
+            if(!product){
+                return res.status(400).json({
+                    success:false,
+                    message:`Product "${item.productName}" is no longer available`
+                })
+            }
+
+            const variant = product.variants.find(v=>
+                v.color === item.variant.color &&
+                v.size === item.variant.size
+            )
+
+            if(!variant){
+                return res.status(400).json({
+                    success:false,
+                    message:`Variant "${item.variants.color/item.variants.size}" not found for Product "${item.productName}" `
+                })
+            }
+            if(variant.stock < item.quantity){
+                return res.status(400).json({
+                    success:false,
+                    message:`Insufficient stock for "${item.variants.color/item.variants.size}", only  "${variant.stock}" available `
+                })
+            }
+
+            
+
+            //payment 
+            if(order.paymentMethod === 'Wallet'){
+                const wallet = await Wallet.findOne({userId})
+                if(!wallet || wallet.balance < order.finalAmount){
+                    
+                    return res.status(400).json({
+                        success:false,
+                        message:`Insufficient wallet balance `,
+                        redirect:'/wallet'
+                    })
+                }
+
+                wallet.balance -= order.finalAmount
+                wallet.transactions.push({
+                    date:new Date(),
+                    type:'debit',
+                    amount:order.finalAmount,
+                    reason:`Retry payment for Order#${order.orderId}`
+                })
+                await wallet.save()
+            }
+            //stock update
+            for(const item of order.orderedItems){
+                const product = await Product.findById(item.product)
+                const variant = product.variants.find(v=>
+                    v.color  === item.variant.color &&
+                    v.size  === item.variant.size
+                )
+
+                variant.stock -= item.quantity;
+
+                const totalStock = product.variants.reduce((sum,v)=> sum + v.stock,0)
+                product.status = totalStock > 0 ? "Available" : 'out of stock';
+
+                await product.save()
+            }
+
+            //reset order and history
+
+            order.status = paymentMethod === 'Wallet' ? 'Processing':'Pending'
+            order.paymentStatus = paymentMethod === 'Wallet'?'Paid':'Payment Pending'
+            order.paymentMethod = paymentMethod
+
+            //cleaning status history
+            if(paymentMethod === 'Wallet'){
+                order.orderStatusHistory =[{
+                    status:'Pending',
+                    date: new Date()
+                },
+                {
+                    status:'Processing',
+                    date: new Date()
+                }
+            ]
+            }else{
+                order.orderStatusHistory =[{
+                    status:'Pending',
+                    date: new Date()
+                }]
+            }
+            
+            
+            //reset item status in order
+            for(const item of order.orderedItems){
+                item.status = paymentMethod === 'Wallet' ? 'Processing':'Pending'
+                item.cancellationReason = undefined,
+                item.returnReason = undefined,
+                item.returnRequestDate = undefined,
+
+                item.statusHistory= [{
+                    status: paymentMethod === 'Wallet' ? 'Processing':'Pending',
+                    date: new Date(),
+                    note:'Order retried after cancellation'
+                }]
+
+            }
+
+            await order.save()
+
+
+            //payment === stripe forward to stripe session
+            if(paymentMethod === 'Stripe'){
+                return res.json({
+                    success:true,
+                    message:'Ready for stripe payment',
+                    orderId:order._id,
+                    stripeCheckout:true
+                });
+            }
+
+
+            //when wallet order is complete
+            res.json({
+                success:true,
+                message:'Order successfully retried',
+                OrderId:order._id, 
+            }) 
+        }
+
+
+    } catch (error) {
+        console.error('Retry order error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error' 
+        });
+    }
+} 
+
+const getOrderDetailsForRetry = async(req,res)=>{
+    try {
+        const orderId = req.params.id
+        const userId = req.session.user._id
+
+        const order = await Order.findOne({_id:orderId,userId})
+
+        if(!order){
+            return res.json({
+                success:false,
+                message:'Order not found'
+            })
+        }
+
+        res.json({
+            success:true,
+            order:{
+                _id:order._id,
+                orderId:order.orderId,
+                status:order.status,
+                finalAmount:order.finalAmount,
+                orderedItems:order.orderedItems
+            }
+        })
+    } catch (error) {
+        console.log('Error fetching order',error);
+         res.json({
+                success:false,
+                message:'Server error'
+            })
+        
+    }
+}
+
 
 
 
@@ -1063,7 +1389,7 @@ async function finalizeOrder(order, cart, req) {
 const createStripeSession = async (req,res)=>{
     try {
         const {orderId} = req.body
-        console.log('stripe requested payment')
+        console.log('stripe requested payment order:',orderId)
         
         const order = await Order.findById(orderId)
         if(!order) return  res.json({ success: false, message: "Order not found" });
@@ -1107,10 +1433,15 @@ const stripeSuccess = async (req,res)=>{
 
         const order = await Order.findById(orderId);
         if (!order) return res.redirect('/checkout');
+        // if (!order) return res.redirect('/order');
 
         // Update order status
         order.status = 'Processing';
         order.paymentStatus = 'Paid';
+        order.orderStatusHistory.push({
+            status:'Processing',
+            date:new Date()
+        })
         await order.save();
  
         const userId = order.userId;
@@ -1134,10 +1465,38 @@ const stripeCancel = async (req, res) => {
         const { orderId } = req.query;
 
         if (orderId) {
-            await Order.findByIdAndUpdate(orderId, {
-                status: "Payment Failed",
-                paymentStatus: "Failed"
-            });
+            // await Order.findByIdAndUpdate(orderId, {
+            //     status: "Payment Failed",
+            //     paymentStatus: "Failed"
+            // });
+
+            const order = await Order.findById(orderId)
+            
+            if(order && order.status === 'Pending'){
+                for(const item of order.orderItems){
+                    const product = await Product.findById(item.product)
+                    if(product){
+                        const variant  = product.variants.find(v=>
+                            v.color === item.variant.color &&
+                            v.size === item.variant.size
+                        )
+                        if(variant){
+                            variant.stock += item.quantity
+                            await product.save()
+                        }
+                    } 
+                }
+
+                order.status = 'Cancelled'
+                order.paymentStatus = 'Failed'
+                order.orderStatusHistory.push({
+                    status:'Cancelled',
+                    date:new Date()
+                })
+
+                await order.save()
+            }
+ 
         } 
 
         return res.redirect(`/order/failed?orderId=${orderId}&reason=payment_canceled`);
@@ -1193,6 +1552,7 @@ module.exports = {
     createStripeSession,
     stripeSuccess,stripeCancel,
     orderSuccessPage,
-    orderFailedPage
-
+    orderFailedPage,
+    retryCancelledOrder,
+    getOrderDetailsForRetry
 }

@@ -1,6 +1,7 @@
 
 const Product = require('../../models/productSchema')
 const Category = require('../../models/categorySchema')
+const Wishlist = require('../../models/wishlistSchema')
 const User = require('../../models/userSchema')
 
 
@@ -8,7 +9,7 @@ const User = require('../../models/userSchema')
 
 const productDetails=async(req,res)=>{
     try {
-        const userId = req.session.user
+        const userId = req.session.user._id
         const userData =await User.findById(userId)
         const productId =req.query.id
         const product =await Product.findById(productId).populate('category')
@@ -34,12 +35,15 @@ const productDetails=async(req,res)=>{
         console.log(findCategory)
         console.log(totalOffer)
 
+        const wishlist = await Wishlist.findOne({userId})
+
         res.render('user/product-details',{
             user:userData,
             product:product,
             quantity:product.quantity,
             totalOffer,
             category:findCategory,
+            wishlist:wishlist.products,
             recommendedProducts,
             crumbs: [
                     { label: "Home", url: "/" },

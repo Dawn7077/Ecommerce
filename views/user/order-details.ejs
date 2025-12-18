@@ -158,6 +158,7 @@
     .order-timeline {
         position: relative;
         padding-left: 40px;
+        margin-bottom: 30px;
     }
 
     .timeline-item {
@@ -205,6 +206,11 @@
         font-size: 13px;
         color: #888;
     }
+
+    .timeline-dot.active.cancelled {
+    background: red;
+    box-shadow: 0 0 0 2px #ff1818a3;
+}
 
     /* Items */
     .order-item {
@@ -569,12 +575,12 @@
 
 
                     <div class="item-actions">
-                        <% if (['Pending', 'Processing'].includes(item.status))  {%> 
+                        <% if (['Pending', 'Processing','Shipped'].includes(item.status))  {%> 
                             <button class="btn-item-action btn-item-cancel" 
                                     onclick="openCancelModal('item', '<%= order._id %>', '<%= item._id %>')">
                                 <i class="fas fa-times"></i> Cancel Item
                             </button>
-                        <% } else if (order.status === 'Delivered' && item.status !== 'Return Requested' &&
+                        <% } else if (order.status === 'Delivered' && item.status !== 'Return Requested' && item.status !== 'Cancelled' &&   
                             !item.statusHistory.some(h=>h.status ==='Return Rejected')  &&!item.statusHistory.some(h=>h.status ==='Returned')){ %>
 
                             <button class="btn-item-action btn-item-return" 
@@ -597,18 +603,34 @@
         <% }) %>
     </div>
 
-   <!--Order Timeline (if you want to show tracking)  -->
-    <div class="card-section">
-        <div class="section-title">
-            <i class="fas fa-route"></i>
-            Order Timeline
+   <!--Order Timeline (if you want to show tracking) 
+    <div class="order-timeline card-section">
+            <%order.orderStatusHistory.forEach((preStatus,i)=>{%> 
+                <div class="timeline-item">
+                    <div class="timeline-dot active"></div>
+                    <%if( i<order.orderStatusHistory.length - 1){%> 
+                        <div class="timeline-line"></div>
+                    <%}%>
+
+                    <div class="timeline-content">
+                        <h4><%=preStatus.status%></h4>
+                        <div class="timeline-date">
+                            <%= new Date(preStatus.date).toLocaleDateString('en-IN')%>
+                        </div>
+                    </div>
+                </div>
+            <%})%>
         </div>
-        <div class="order-timeline">
-            <% 
+    </div>
+
+    <div class="order-timeline">
+            <%              
             const statuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+            const statuses2 = ['Pending', 'Processing', 'Shipped', 'Delivered','Cancelled'];
             const currentStatusIndex = statuses.indexOf(order.status);
             %>
-            <% statuses.forEach((status, index) => { %>
+            <%if(order.status!=='Cancelled'){%>
+                <% statuses.forEach((status, index) => { %>
                 <div class="timeline-item">
                     <div class="timeline-dot <%= index <= currentStatusIndex ? 'active' : '' %>"></div>
                     <% if (index < statuses.length - 1) { %>
@@ -618,15 +640,135 @@
                         <h4><%= status %></h4>
                         <% if (index <= currentStatusIndex) { %>
                             <div class="timeline-date">
-                                <%= index === 0 ? new Date(order.createdAt).toLocaleString('en-IN') : 'Processing' %>
+                                <%= index === 0 ? new Date(order.createdAt).toLocaleString('en-IN') : new Date(order.updatedAt).toLocaleString('en-IN')  %>
                             </div>
                         <% } %>
                     </div>
                 </div>
             <% }) %>
+            <%}else{%>
+
+
+            <% statuses2.forEach((status, index) => { %>
+                <div class="timeline-item">
+                    <div class="timeline-dot <%= index <= currentStatusIndex ? 'active' : '' %>"></div>
+                    <% if (index < statuses.length - 1) { %>
+                        <div class="timeline-line"></div>
+                    <% } %>
+                    <div class="timeline-content">
+                        <h4><%= status %></h4>
+                        <% if (index <= currentStatusIndex) { %>
+                            <div class="timeline-date">
+                                <%= index === 0 ? new Date(order.createdAt).toLocaleString('en-IN') : new Date(order.updatedAt).toLocaleString('en-IN')  %>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+
+            <%}%>
+
+
         </div>
-    </div>
-    
+    -->
+    <div class="card-section">
+        <div class="section-title d-flex justify-content-between ">
+            <div>
+                <i class="fas fa-route"></i>
+                Order Timeline 
+            </div>
+             
+                <%if( order.status === 'Cancelled'){%> 
+                    <span class="item-status-badge status-cancelled">Cancelled</span>
+                <%}%>
+             
+        </div> 
+        
+        <div class="order-timeline"> 
+             <%
+                const steps =['Pending', 'Processing', 'Shipped', 'Delivered']
+                const history = order.orderStatusHistory || []
+
+                const getDate = (step)=>{
+                    const entry = history.find(h=> h.status === step)
+                    return entry ? new Date(entry.date).toLocaleDateString('en-IN'):null
+                }
+             %> 
+             <%if(order.status !== 'Cancelled'){%>
+                <%steps.forEach((step,index)=>{ //looping through each status till we are at current status 
+                    const stepDate = getDate(step)
+                    const isActive = stepDate !== null
+                    %>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot <%= isActive ? 'active' : '' %>"></div>
+                            <%if(index < steps.length-1){%>
+                                <div class="timeline-line"></div>
+                            <%}%>
+
+                            <div class="timeline-content">
+                                <h4><%=step%></h4>
+
+                                <%if(stepDate){%>
+                                    <div class="timeline-date"><%=stepDate%></div>
+                                    <%}%>
+                                </div>
+                        
+                        </div>
+                        
+                    <%})%>
+
+            <%}
+            else{%>
+                <%steps.forEach((step,index)=>{
+                    const stepDate = getDate(step)
+                    const isActive = stepDate !== null
+                    %>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot <%=isActive? 'active':''%>"></div>
+                        <%if(index < steps.length-1){%>
+                            <div class="timeline-line"></div>
+                        <%}%>
+
+                        <div class="timeline-content">
+                            <h4><%=step%></h4>
+                            <%if(stepDate){%>
+                                <div class="timeline-date"><%=stepDate%></div>
+                            <%}%>
+                            </div>
+                        
+                        </div>
+
+                <%})%>
+                 <!-- Cancel badge -->
+                 <%
+                 const cancelEntry = history.find(h=> h.status === 'Cancelled' )
+                 %>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot active cancelled"></div>
+                    <div class="timeline-content">
+                            <h4 style="color: red;">Cancelled</h4>
+                            
+                            <%if(cancelEntry){%>
+                                <div class="timeline-date">
+                                    <%=new Date(cancelEntry.date).toLocaleDateString('en-IN')%>
+                                </div>
+                            <%}%>
+
+                        </div>
+                    </div> 
+
+
+            <%}%>
+
+
+
+            </div>
+
+        
+     
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
        
@@ -651,13 +793,15 @@
         </div>
 
         <!-- Payment Summary -->
-        <div class="card-section">
-            <div class="section-title">
-                <i class="fas fa-receipt"></i>
-                Payment Summary
+        <div class="card-section ">
+            <div class="section-content-title d-flex justify-content-between ">
+                <div class="d-flex align-items-center " >
+                    <i class="fas fa-receipt mr-2"></i>
+                    Payment Summary
+                </div>
+
                 <a href="/order-invoice/<%= order._id %>" 
-                    class="btn btn-primary " 
-                    style="margin-left: 90px;"
+                    class="btn btn-primary "  
                     target="_blank">
                     📄 Download Invoice
                 </a>
@@ -666,7 +810,7 @@
 
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span>₹<%= order.totalPrice.toFixed(2) %></span>
+                <span>₹<%= (order.subtotal-order.discount).toFixed(2) %></span>
             </div>
             <div class="summary-row">
                 <span>Discount</span>

@@ -73,7 +73,7 @@
                 <h2 class="content-title">Edit Product</h2>
             </div>
         </div>
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card mb-4">
                 <div class="card-body">
                     <form method="post" action="/admin/editProduct?id=<%=product._id %>&page=<%= page %>" enctype="multipart/form-data">
@@ -165,20 +165,20 @@
                                     <% product.variants.forEach((v,index)=>{ %>
 
                                         <div class="row mb-3 variant-row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label >Color</label>
                                                 <input type="text" name="color[]" class="form-control" value="<%= v.color %>">
                                             </div>
                                             
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label>Size</label>
-                                                <input type="text" name="size[]" class="form-control" value="<%= v.size %>">
+                                                <input type="number" name="size[]" min=1 class="form-control" value="<%= v.size %>">
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label >Stock</label>
-                                                <input type="text" name="stock[]" class="form-control" value="<%= v.stock %>">
+                                                <input type="number" name="stock[]" min=1 class="form-control" value="<%= v.stock %>">
                                             </div> 
                                         
 
@@ -209,20 +209,20 @@
                                 div.classList.add('row','mb-3','variant-row')
 
                                 div.innerHTML=`
-                                     <div class="col-md-4">
+                                     <div class="col-md-3">
                                                 <label >Color</label>
                                                 <input type="text" name="color[]" class="form-control"  >
                                             </div>
                                             
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label>Size</label>
-                                                <input type="text" name="size[]" class="form-control"  >
+                                                <input type="number" name="size[]" min=1 class="form-control"  >
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-3">
                                                 <label >Stock</label>
-                                                <input type="text" name="stock[]" class="form-control" >
+                                                <input type="number" name="stock[]" min=1 class="form-control" >
                                             </div> 
                                         
 
@@ -613,6 +613,7 @@ function validateForm() {
     //variant validation
     const variantRow = document.querySelectorAll('#variantContainer .variant-row')
     let variantError = false
+    let variantMsg ='Each variant row must have Color, Size, and Stock (valid number).'
 
     variantRow.forEach(row=>{
         const color = document.querySelector('[name="color[]"]').value.trim()
@@ -623,11 +624,21 @@ function validateForm() {
          if (!color || !size || !stock || isNaN(stock) || stock < 0) {
                 variantError = true;
             }
+        } 
+        if(stock<=0 ){
+            variantError= true
+            valid = false;
+            variantMsg='Stock must be greater than 0'
+        }
+        if(size<=0 ){
+            variantError= true
+            valid = false;
+            variantMsg='size must be greater than 0'
         }
     })
 
     if(variantError){
-        displayErrorMessage("variant-error",'Each variant row must have Color, Size, and Stock (valid number).')
+        displayErrorMessage("variant-error",variantMsg)
         isValid=false
     } 
   

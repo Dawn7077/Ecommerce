@@ -297,6 +297,20 @@
                             <div style="font-size:13px;color:var(--muted)">Pay on delivery</div>
                         </div>
                     </div>
+                    <div class="payment-method " data-payment="Stripe" onclick="selectPayment('Stripe')">
+                        <div><i class="fas fa-money-bill-wave"></i></div>
+                        <div>
+                            <div style="font-weight:700">Stripe</div>
+                            <div style="font-size:13px;color:var(--muted)">Pay on delivery</div>
+                        </div>
+                    </div>
+                    <div class="payment-method " data-payment="Wallet" onclick="selectPayment('Wallet')">
+                        <div><i class="fas fa-money-bill-wave"></i></div>
+                        <div>
+                            <div style="font-weight:700">Wallet</div>
+                            <div style="font-size:13px;color:var(--muted)">Pay on delivery</div>
+                        </div>
+                    </div>
 
                     <!-- <div class="payment-method" data-payment="online" onclick="selectPayment('online')">
                         <div><i class="fas fa-credit-card"></i></div>
@@ -313,7 +327,12 @@
                             <div style="font-size:13px;color:var(--muted)">Pay securely</div>
                         </div>
                     </div> -->
-                    <div class="payment-method" data-payment="online" onclick="selectPayment('online')">
+
+
+
+
+
+                    <!-- <div class="payment-method" data-payment="online" onclick="selectPayment('online')">
                         <div><i class="fas fa-credit-card"></i></div>
                         <div>
                             <div style="cursor:pointer;font-weight:700">Online Payment</div>
@@ -326,7 +345,7 @@
                             </div>
                             <div style="font-size:13px;color:var(--muted)">Pay securely</div>
                         </div>
-                    </div>
+                    </div> -->
                 
                 
                 </div>
@@ -671,11 +690,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function selectPayment(method) {
-    if(method==='cod'){
+    // if(method==='cod'){
         selectedPayment =method
-    }else{
-        selectedPayment =document.getElementById('myDropdown').value
-    } 
+    // }else{
+    //     selectedPayment =document.getElementById('myDropdown').value
+    // } 
     console.log(selectedPayment)
     document.querySelectorAll(".payment-method").forEach(e => e.classList.remove("selected"));
     document.querySelector(`[data-payment="${method}"]`).classList.add("selected");
