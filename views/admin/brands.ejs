@@ -52,7 +52,7 @@
       <div class="row">
         <div class="col-md-3">
           <div id="addForm">
-            <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
+            <form id="addBrandForm" enctype="multipart/form-data">
               <div class="mb-4">
                 <label for="product_name" class="form-label">Brand Name</label>
                 <input
@@ -68,15 +68,15 @@
                 <input class="form-control border" name="image" type="file" />
               </div>
               <div class="d-grid">
-                <button class="btn btn-primary mt-20" type="submit">
+                <button class="btn btn-primary mt-20" type="button" onclick="addBrand()">
                   Add Brand
                 </button>
               </div>
             </form>
           </div>
-          <div id="editForm" style="display: none;">
-            
-            <form action="/admin/editBrand" method="post" enctype="multipart/form-data">
+          <!-- edit -->
+          <div id="editForm" style="display: none;"> 
+            <form id="editBrandForm" enctype="multipart/form-data">
               <input type="hidden" name="brandId" id="editBrandId" />
               <div class="mb-4">
                 <label  class="form-label">Brand Name</label>
@@ -89,7 +89,7 @@
               </div>
 
               <div class="d-grid">
-                <button class="btn btn-primary mt-20" type="submit">Update Brand</button>
+                <button class="btn btn-primary mt-20"  type="button" onclick="updateBrand()">Update Brand</button>
               </div>
             </form>
           </div>
@@ -199,6 +199,76 @@
     
 
 <script>
+   async function addBrand(){
+    const form  = document.getElementById('addBrandForm')
+    const formData = new FormData(form)
+    console.log(formData)
+
+    try {
+      const res = await fetch('/admin/addBrand',{
+        method:'POST',
+        body:formData
+      })
+
+      const data = await res.json()
+      if(data.success){
+        Swal.fire({ 
+        icon: 'success',
+        title: 'Brand Added',
+        text: 'Brand added successfully!'
+        }).then(()=>{
+          window.location.reload()
+        })
+      }else{
+        Swal.fire({
+        icon: 'error',
+        title: 'Oops!',
+        text: data.message
+      });
+      }
+    } catch (error) {
+      Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Something went wrong'
+    });
+    }
+  }
+
+  async function updateBrand(){
+    const form = document.getElementById('editBrandForm')
+    const formData = new FormData(form)
+
+    try {
+      const res = await fetch('/admin/editBrand',{
+        method:'POST',
+        body:formData
+      })
+
+      const data = await res.json()
+
+      if(data.success){
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: data.message
+        }).then(() => window.location.reload());
+      }else{
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: data.message
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Something went wrong'
+      });
+    }
+  }
+
   function confirmDelete(){
     return confirm("Are you sure you want to delete this brand? ")
   }

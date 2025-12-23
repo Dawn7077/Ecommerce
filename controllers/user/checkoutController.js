@@ -730,11 +730,12 @@ const getCheckout = async (req, res) => {
             const discount = regular - sale;
 
             subtotal += regular * qty;
-            totalDiscount += discount * qty;
+            totalDiscount += Math.max(0,(regular - sale) * qty);
         });
 
         const cartAmount = subtotal - totalDiscount;
-        const shipping = subtotal >= 1000 ? 0 : 50;
+        // const shipping = subtotal >= 1000 ? 0 : 50;
+        const shipping = subtotal >= 3000 ? 0 : 500;
 
         let couponDiscount = 0;
         let appliedCoupon = null;
@@ -771,6 +772,7 @@ const getCheckout = async (req, res) => {
             coupons,
             appliedCoupon,
             subtotal: subtotal.toFixed(2),
+            // subtotal: cartAmount.toFixed(2),
             discount: totalDiscount.toFixed(2),
             couponDiscount: couponDiscount.toFixed(2),
             shipping,
@@ -987,6 +989,8 @@ const placeorder = async (req, res) => {
                 price: item.productId.salesPrice,
                 productName: item.productId.productName,
                 productImage: item.productId.productImage[0],
+                brand:item.productId.brand,
+                category: Array.isArray(item.productId.category)?item.productId.category[0]:item.productId.category,
                 variant: item.variant,
                 totalPrice: itemTotal,
                 address: selectedAddress._id,
@@ -1002,7 +1006,8 @@ const placeorder = async (req, res) => {
 
         //final amount calculation
 
-        const shipping = subtotal >= 1000 ? 0 : 100;
+        // const shipping = subtotal >= 1000 ? 0 : 100;
+        const shipping = subtotal >= 3000 ? 0 : 500;
         const totalPrice = subtotal - discount 
         const finalAmount = totalPrice - couponDiscount + shipping;
 
@@ -1085,6 +1090,14 @@ const placeorder = async (req, res) => {
 
         //   payment methods
         if (paymentMethod === 'cod') {
+            if(newOrder.totalPrice<3000){
+                return res.json({
+                    success: false,
+                    message: 'Total amount must be greater than 3000 for COD'
+                });
+            }
+
+
             await finalizeOrder(newOrder, cart, req);
             return res.json({
                 success: true,

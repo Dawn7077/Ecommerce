@@ -41,9 +41,24 @@ const getBrandPage = async(req,res)=>{
 
 const addBrand = async(req,res)=>{
     try {
-        const brand =req.body.name
-        const findBrand = await Brand.findOne({brandName:brand})
+        const brand =req.body.name.trim()
+        const findBrand = await Brand.findOne({
+            brandName:{$regex: new RegExp(`^${brand}$`,`i`)}
+        })
+        if(findBrand){
+             return res.json({
+                success: false,
+                message: 'Brand name already exists'
+            });
+        }
 
+        // if (!req.file) {
+        // return res.json({
+        //         success: false,
+        //         message: 'Brand image is required'
+        //     });
+        // }
+         
         if(!findBrand){
             const image = req.file.filename
             const newBrand =new Brand({
@@ -51,10 +66,17 @@ const addBrand = async(req,res)=>{
                 brandImage:image
             })
             await newBrand.save()
-            res.redirect('/admin/brands')
+            // res.redirect('/admin/brands')
+            return res.json({
+                success: true
+            });
         }
     } catch (error) {
-        res.redirect('/admin/pageError')
+        console.error(error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error'
+            });
     }
 }
 
@@ -92,6 +114,21 @@ const deleteBrand =async (req,res)=> {
 const editBrand = async(req,res)=>{
     try {
         const {brandId,name} = req.body
+        const brandName = name.trim()
+
+        const existingBrand = await Brand.findOne({
+            brandName:{$regex:new RegExp(`^${brandName}$`,'i')},
+            _id:{$ne:brandId}
+        })
+
+        if(existingBrand){
+            return res.json({
+                success: false,
+                message: 'Brand name already exists'
+            });
+        }
+
+
         let updateData = {
             brandName:name
         }
@@ -99,8 +136,11 @@ const editBrand = async(req,res)=>{
             updateData.brandImage = req.file.filename
         }
 
-        await Brand.findByIdAndUpdate(brandId,updateData),
-        res.redirect('/admin/brands?updated=true')
+        await Brand.findByIdAndUpdate(brandId,updateData)
+        // res.redirect('/admin/brands?updated=true') 
+        
+        return res.json({ success: true, message: 'Brand updated successfully!' })
+
     } catch (error) {
         console.log("Error editing brand:",error)
     }

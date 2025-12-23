@@ -4,12 +4,13 @@ const ExcelJS = require('exceljs')
 
 
 
-//calculating all orders stats
-function calculateStats(orders) {
+//calculating all orders stats for Sales Report
+function calculateStats1(orders) {
     let totalSales = 0
     let totalDiscount = 0
     let totalCouponDiscount = 0 
     let totalOrderAmount = 0 
+    let deliveredOrdersCount = 0;
 
     orders.forEach(order=>{
         totalOrderAmount += order.finalAmount
@@ -27,6 +28,125 @@ function calculateStats(orders) {
         totalOrderAmount:totalOrderAmount.toFixed(2),
     }
 }
+
+
+function calculateStats2(orders) {
+    let totalSales = 0
+    let totalDiscount = 0
+    let totalCouponDiscount = 0 
+    let totalOrderAmount = 0 
+    let deliveredOrdersCount = 0;
+
+    orders.forEach(order=>{
+        let orderHasDeliveredItem = false
+        let orderDeliveredAmount = 0 
+        let orderDeliveredDiscount = 0 
+        
+        order.orderedItems.forEach(item => {
+            if(item.status === 'Delivered'){
+                orderHasDeliveredItem =true
+
+                const itemPrice = item.price * item.quantity
+                orderDeliveredAmount += itemPrice
+
+                if(order.subtotal > 0){
+                    const itemProportion = itemPrice / order.subtotal
+                    orderDeliveredDiscount += (order.discount || 0 ) * itemProportion
+                }
+            }
+        })
+        //only counting the orders that have at least one delivered item 
+        if(orderHasDeliveredItem){
+            deliveredOrdersCount ++ 
+            totalOrderAmount += orderDeliveredAmount
+            totalDiscount += orderDeliveredDiscount
+
+            if(order.couponApplied && order.subtotal > 0 ){
+                const deliveredProportion = orderDeliveredAmount / order.subtotal
+                totalCouponDiscount += (order.couponDiscount || 0) * deliveredProportion
+            }
+            // Final sales = amount - discount - coupon
+            totalSales += orderDeliveredAmount - orderDeliveredDiscount -
+                (order.couponApplied ? (order.couponDiscount || 0) * (orderDeliveredAmount/order.subtotal) : 0)
+        }
+        
+    })
+
+    return {
+        totalOrders :orders.length,
+        totalSales:totalSales.toFixed(2),
+        totalDiscount:totalDiscount.toFixed(2),
+        totalCouponDiscount:totalCouponDiscount.toFixed(2),
+        totalOrderAmount:totalOrderAmount.toFixed(2),
+    }
+}
+//for all orders 
+function calculateStats(orders) {
+    let totalSales = 0;
+    let totalDiscount = 0;
+    let totalCouponDiscount = 0;
+    let totalOrderAmount = 0;
+    let deliveredOrdersCount = new Set();  
+
+    orders.forEach(order => {
+        let orderDeliveredAmount = 0;
+ 
+        order.orderedItems.forEach(item => {
+            if (item.status === 'Delivered') {
+                const itemTotal = item.price * item.quantity;
+                orderDeliveredAmount += itemTotal;
+                deliveredOrdersCount.add(order._id.toString()); 
+            }
+        });
+ 
+        if (orderDeliveredAmount > 0) {
+            totalOrderAmount += orderDeliveredAmount;
+ 
+            if ( (order.subtotal || 0) > 0) {
+                const proportion = orderDeliveredAmount / order.subtotal;
+                const orderDiscount = (order.discount || 0) * proportion;
+                const orderCouponDiscount = order.couponApplied ? (order.couponDiscount || 0) * proportion : 0;
+
+                totalDiscount += orderDiscount;
+                totalCouponDiscount += orderCouponDiscount;
+ 
+                totalSales += orderDeliveredAmount - orderDiscount - orderCouponDiscount;
+            } else { 
+                totalSales += orderDeliveredAmount;
+            }
+        }
+    });
+
+    return {
+        totalOrders: deliveredOrdersCount.size,
+        totalSales: totalSales.toFixed(2),
+        totalDiscount: totalDiscount.toFixed(2),
+        totalCouponDiscount: totalCouponDiscount.toFixed(2),
+        totalOrderAmount: totalOrderAmount.toFixed(2),
+    };
+}
+
+function calculateOrderNetAmount(order) {
+    let deliveredAmount = 0 
+    order.orderedItems.forEach(item =>{
+        if(item.status === 'Delivered'){
+            deliveredAmount += item.price * item.quantity
+        }
+    })
+
+    if(deliveredAmount === 0 || (order.subtotal || 0)===0){
+        return 0 
+    }
+
+    const proportion = deliveredAmount/ order.subtotal
+    const discount = (order.discount || 0) * proportion
+    const coupon = order.couponApplied? 
+        ( order.couponDiscount|| 0) * proportion :0
+
+    return +(deliveredAmount - discount -coupon).toFixed(2)
+}
+
+
 function getDateRange(filterType,customFrom,customTo) {
     const now = new Date()
     let startDate,endDate
@@ -59,11 +179,16 @@ function getDateRange(filterType,customFrom,customTo) {
                 startDate= new Date(customFrom)
                 startDate.setHours(0,0,0,0)
                 endDate= new Date(customTo) 
-                endDate = new Date(now.setHours(23,59,59,999));
+                endDate.setHours(23,59,59,999) 
             }else{
                 startDate= new Date(0)
                 endDate= new Date()
             }
+            break;
+        
+        case 'all':
+            startDate = new Date(0)
+            endDate = new Date()
             break;
         
         default:
@@ -79,15 +204,21 @@ const loadSalesReport = async(req,res)=>{
         const limit = 10;
 
         const query = {
+            status: { $nin: ['Cancelled','Returned'] },
             paymentStatus: { $in: ['Paid', 'Completed'] },
-            status: { $nin: ['Cancelled','Returned'] }
         }
 
-        const orders = await Order.find(query)
+        const rawOrders = await Order.find(query)
         .populate('userId', 'name email')
-        .sort({createdAt:-1})
-        .skip((page-1) * limit)
-        .limit(limit)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+        const orders = rawOrders.map(order => ({
+            ...order.toObject(),
+            deliveredNetAmount: calculateOrderNetAmount(order)
+        }));
+
 
         const totalOrders = await Order.countDocuments(query);
         const totalPages = Math.ceil(totalOrders / limit);
@@ -119,19 +250,24 @@ const filterSalesReport =  async(req,res)=>{
         const {startDate, endDate}= getDateRange(filterType, customFrom, customTo)
 
         const query ={
+            status: { $nin: ['Cancelled','Returned'] },
             paymentStatus:{$in:['Paid','Completed']},
-            status:{$nin:['Cancelled']},
             createdAt:{
                 $gte:startDate,
                 $lte:endDate
             }
         }
 
-        const orders = await Order.find(query)
-        .populate('userId','name email')
-        .sort({createdAt:-1})
-        .skip((page-1)*limit)
-        .limit(limit)
+        const rawOrders = await Order.find(query)
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+        const orders = rawOrders.map(order => ({
+            ...order.toObject(),
+            deliveredNetAmount: calculateOrderNetAmount(order)
+        }));
 
 
         const totalOrders = await Order.countDocuments(query)
@@ -162,17 +298,23 @@ const downloadSalesExcel = async (req,res)=>{
         const { startDate, endDate } = getDateRange(filterType, customFrom, customTo)
         
         const query = {
+            status: { $nin: ['Cancelled','Returned'] },
             paymentStatus: { $in: ['Paid', 'Completed'] },
-            status: { $nin: ['Cancelled'] },
             createdAt: {
                 $gte: startDate,
                 $lte: endDate
             }
         } 
 
-        const orders = await Order.find(query)
-        .populate('userId','name email')
-        .sort({createdAt:-1}) 
+        const rawOrders = await Order.find(query)
+            .populate('userId', 'name email')
+            .sort({ createdAt:-1 });
+
+        const orders = rawOrders.map(order => ({
+            ...order.toObject(),
+            deliveredNetAmount: calculateOrderNetAmount(order)
+        }));
+
  
         const stats = calculateStats(orders);
 
@@ -226,7 +368,7 @@ const downloadSalesExcel = async (req,res)=>{
                 order.orderedItems.length,
                 `₹${order.discount || 0}`,
                 `₹${order.couponDiscount || 0}`,
-                `₹${order.finalAmount}`
+                `₹${order.deliveredNetAmount}`
             ])
         })
 
@@ -258,17 +400,25 @@ const downloadSalesPDF = async (req,res) => {
         const { startDate, endDate } = getDateRange(filterType, customFrom, customTo);
 
         const query = {
+            status: { $nin: ['Cancelled','Returned'] },
             paymentStatus: { $in: ['Paid', 'Completed'] },
-            status: { $nin: ['Cancelled'] },
             createdAt: {
                 $gte: startDate,
                 $lte: endDate
             }
         };
 
-        const orders = await Order.find(query)
+        const rawOrders = await Order.find(query)
         .populate('userId', 'name email')
         .sort({ createdAt: -1 });
+
+        const orders = rawOrders.map(order => ({
+            ...order.toObject(),
+            deliveredNetAmount: calculateOrderNetAmount(order)
+        }));
+
+
+
         const stats = calculateStats(orders);
 
         const doc = new PDFDocument({margin:50})
@@ -347,7 +497,8 @@ const downloadSalesPDF = async (req,res) => {
                 order.paymentMethod,
                 `₹${order.discount || 0}`,
                 `₹${order.couponDiscount || 0}`,
-                `₹${order.finalAmount}`
+                `₹${order.deliveredNetAmount}`
+
             ];
 
             rowData.forEach((data, i) => {

@@ -93,6 +93,14 @@ const orderSchema = new mongoose.Schema({
         },
         productName: String,
         productImage: String,
+        
+        brand:String,
+        category:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Category"
+        },
+
+
         variant:{
             color:String,
             size:String,

@@ -563,6 +563,7 @@ const searchProducts = async(req,res)=>{
 const loadShop = async(req,res)=>{
     try {   
         const user = req.session.user
+        if(!user)return res.redirect('/login')
         const userData = user? await User.findById(user):null
         const category =req.query.category? req.query.category.trim() : null
         const brand = req.query.brand? req.query.brand.trim() : null

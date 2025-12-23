@@ -53,7 +53,7 @@
         <div class="col-lg-3 col-md-6">
             <div class="stats-card">
                 <h4>Total Order Amount</h4>
-                <h2><%= stats.totalOrderAmount %></h2>
+                <h2><%= stats.totalSales %></h2>
             </div>
         </div>
         <div class="col-lg-3 col-md-6">
@@ -164,15 +164,15 @@
                                             -
                                         <% } %>
                                     </td>
-                                    <td><b>₹ <%= order.finalAmount %></b></td>
+                                    <td><b>₹ <%= order.deliveredNetAmount %></b></td>
                                     <td>
                                         <% if(order.status === 'Delivered') {%>
                                             <span class="badge badge-success">Delivered</span>
                                         <% }else if(order.status === 'Processing'){%>
-                                            <span class="badge badge-info">Delivered</span>
+                                            <span class="badge badge-info">Processing</span>
                                         <% }else{%>
                                             <span class="badge badge-warning"><%=order.status %></span>
-                                        <% } %>
+                                        <% } console.log(order.finalAmount,order.status,order.paymentStatus);%>
                                     </td> 
                                 </tr>  
                             <% }) %>
@@ -205,6 +205,27 @@
 </section>
 
 <script>
+document.getElementById('filterForm').addEventListener('submit',function(e){
+    const filterType = document.getElementById('filterType').value
+
+    if(filterType === 'custom'){
+        const from = document.getElementById('customFrom').value
+        const to = document.getElementById('customTo').value
+        
+        if(!from || !to){
+            alert("Please select both From and To dates ")
+            e.preventDefault()
+            return
+        }
+
+        if(from > to){
+            alert("From date cannot be after To Date")
+            e.preventDefault()
+        }
+    }
+})
+
+
 function toggleCustomDate() {
     const filterType = document.getElementById('filterType').value
     const customFromDiv = document.getElementById('customFromDiv')
@@ -246,6 +267,8 @@ function downloadPDF() {
     window.open(url, '_blank')
 
 }
+
+document.addEventListener('DOMContentLoaded',toggleCustomDate)
 </script>
 
  <%- include("../../views/partials/admin/footer") %>

@@ -6,7 +6,7 @@ const storage = require('../helpers/multer')
 const uploads = multer({ storage: storage })
 
 const { getBrandPage, addBrand, blockBrand, unBlockBrand, deleteBrand, editBrand } = require('../controllers/admin/brandController')
-const { loadlogin, login, loadDashboard, pageError,
+const { loadlogin, login, loadDashboard, getLoadDashboard, getSalesTimeline, pageError,
     logout,
 } = require('../controllers/admin/adminController')
 const { customerInfo, customerBlocked, customerUnBlocked,deleteCustomer } = require('../controllers/admin/customerController')
@@ -25,6 +25,9 @@ router.get('/pageError', pageError)
 router.get('/login', loadlogin)
 router.post('/login', login)
 router.get('/dashboard', adminAuth, loadDashboard)
+router.get('/dashboard/data', adminAuth, getLoadDashboard)
+router.get('/dashboard/sales', adminAuth, getSalesTimeline)
+
 router.get('/logout', logout)
 //customer management
 router.get('/users', adminAuth, customerInfo)

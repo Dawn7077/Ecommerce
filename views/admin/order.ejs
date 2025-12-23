@@ -51,6 +51,7 @@
                         <option value="Shipped" <%= statusFilter === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                         <option value="Delivered" <%= statusFilter === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                         <option value="Cancelled" <%= statusFilter === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        <option value="Returned" <%= statusFilter === 'Returned' ? 'selected' : '' %>>Returned</option>
                     </select>
                 </div>
 
@@ -108,7 +109,7 @@
                                     <td><b><%= order.orderId %></b></td>
                                     <td><%= order.userId ? order.userId.name : 'Guest' %></td>
                                     <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                                    <td>$<%= order.totalPrice %></td>
+                                    <td>$<%= order.finalAmount %></td>
                                     <td>
                                         <% if (order.status === 'Pending') { %>
                                             <span class="badge badge-soft-warning">Pending</span>

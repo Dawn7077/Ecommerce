@@ -1,4 +1,9 @@
 <%- include("../../views/partials/admin/header") %>
+<style>
+  #topCategoriesChart{
+    width: 500px;
+  }
+</style>
 
 <section class="content-main">
   <div class="content-header d-flex justify-content-between align-items-center">
@@ -15,7 +20,7 @@
         <div class="card-body text-center">
           <i class="fas fa-users dashboard-icon text-primary"></i>
           <h5>Total Users</h5>
-          <h2>1,250</h2>
+          <h2><%= totalUsers %></h2>
         </div>
       </div>
     </div>
@@ -25,7 +30,7 @@
         <div class="card-body text-center">
           <i class="fas fa-boxes dashboard-icon text-success"></i>
           <h5>Products</h5>
-          <h2>342</h2>
+          <h2><%= totalProducts %></h2>
         </div>
       </div>
     </div>
@@ -35,7 +40,7 @@
         <div class="card-body text-center">
           <i class="fas fa-shopping-cart dashboard-icon text-warning"></i>
           <h5>Orders</h5>
-          <h2>179</h2>
+          <h2><%= totalOrders %></h2>
         </div>
       </div>
     </div>
@@ -45,11 +50,23 @@
         <div class="card-body text-center">
           <i class="fas fa-dollar-sign dashboard-icon text-danger"></i>
           <h5>Revenue</h5>
-          <h2>$12,480</h2>
+            <h2>₹<%= totalRevenue.toFixed(2).toLocaleString('en-IN') %></h2>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- filter -->
+
+  <div class="d-flex gap-2 mb-3">
+    <select id="filterType" class="form-select w-auto">
+      <option value="daily">Today</option>
+      <option value="monthly">This Month</option>
+      <option value="yearly">This Year</option>
+    </select>
+  </div>
+
+
 
   <!-- Chart Section -->
   <div class="card mt-5">
@@ -58,37 +75,345 @@
       <a href="/admin/sales-report" class="btn btn-primary">Report</a>
     </div>
     <div class="card-body">
-      <canvas id="salesChart" height="120"></canvas>
+
+      <canvas id="salesChart" height="120"></canvas> 
+      <canvas id="topProductsChart"></canvas>
+      <div class="row d-flex justify-content-between  mt-5">
+        <div class="col-md-6 col-lg-6">
+          <h5>Top Categories</h5>
+          <canvas id="topCategoriesChart"></canvas>
+        </div>
+
+        <div class="col-md-6 col-lg-6 mx-auto">
+          <h5>Top Brands</h5>
+          <canvas id="topBrandsChart"></canvas>
+        </div>
+      </div>
+
+ 
+      <!-- Top Products -->
+      <div class="row mt-5">
+          <div class="col-md-6">
+             <h5>Top 10 Products</h5>
+          </div>
+          <div class="card-body">
+            <table class="table">
+               <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Sold</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <% topProducts.forEach(p => { %>
+                    <tr>
+                      <td><%= p.product.productName %></td>
+                      <td><%= p.totalSold %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+
+            </table>
+          </div>
+      </div>
+      <!-- Top Categories -->
+      <div class="row mt-5">
+          <div class="col-md-6">
+             <h5>Top 10 Categories</h5>
+          </div>
+          <div class="card-body">
+            <table class="table">
+               <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Sold</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <% topCategories.forEach(c => { %>
+                    <tr>
+                      <td><%= c.category.name %></td>
+                      <td><%= c.totalSold %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+
+            </table>
+          </div>
+      </div>
+
+
+      <!-- brand chart  --> 
+
+<!-- Top Brands Table (Add after categories table) -->
+<div class="row mt-5">
+  <div class="col-md-6">
+    <h5>Top 10 Brands</h5>
+  </div>
+  <div class="card-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Brand</th>
+          <th>Units Sold</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% topBrands.forEach(b => { %>
+          <tr>
+            <td><%= b._id %></td>
+            <td><%= b.totalSold %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
     </div>
   </div>
-</section>
 
-<script>
-  // Simple Chart.js Example
-  const ctx = document.getElementById('salesChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [{
-        label: 'Sales ($)',
-        data: [1200, 1900, 3000, 2500, 3200, 4000],
-        borderColor: '#4A90E2',
-        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-        tension: 0.4,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: { beginAtZero: true }
-      }
+     <script id="chart-json" type="application/json">
+       {
+        "products":{
+          "labels":<%- JSON.stringify(topProducts.map(p=> p.product.productName)) %>,
+          "values":<%- JSON.stringify(topProducts.map(p=> p.totalSold)) %>
+        },
+        "categories":{
+          "labels":<%- JSON.stringify(topCategories.map(c=> c.category.name)) %>,
+          "values":<%- JSON.stringify(topCategories.map(c=> c.totalSold)) %>
+        },
+        "brands":{
+          "labels":<%- JSON.stringify(topBrands.map(b=> b._id)) %>,
+          "values":<%- JSON.stringify(topBrands.map(b=> b.totalSold)) %>
+        }
+       } 
+    </script>
+       
+  
+
+</section>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script >
+  const data = document.getElementById('chart-json').textContent
+  const chartData = JSON.parse(data)
+
+  const productLabel = chartData.products.labels
+  const productData = chartData.products.values
+  const categoryLabels = chartData.categories.labels
+  const categoryData = chartData.categories.values
+  const brandsLabels = chartData.brands.labels
+  const brandsData = chartData.brands.values 
+
+  let productChart
+  let categoryChart
+  let brandChart
+
+  // console.log('========================start here')
+  // console.log(categoryLabels,'=========\n',categoryData)
+
+  
+
+
+  function updateChart(data){
+
+    console.log(data.products.labels,data.categories.labels)
+
+    if(productChart) productChart.destroy()
+
+    productChart = new Chart(
+      document.getElementById('topProductsChart'),{
+        type:'bar',
+        data:{
+          labels:data.products.labels,
+          datasets:[{
+            label:"Unit Sold",
+            data:data.products.values,
+            backgroundColor: '#4A90E2',
+            borderColor: '#357ABD',
+            borderWidth: 1
+          }]
+        },
+        options:{
+          responsive:true,
+          scales:{
+            y:{beginAtZero:true}
+          }
+        }
+      })
+
+
+      if(categoryChart) categoryChart.destroy()
+
+      categoryChart = new Chart(
+        document.getElementById('topCategoriesChart'),{
+          type:'doughnut',
+          data:{
+            labels:data.categories.labels,
+            datasets:[{ 
+              label:'Unit Sold',
+              data:data.categories.values,
+              backgroundColor: [
+                  '#36A2EB',
+                  '#FF6384',
+                  '#FFCE56',
+                  '#4BC0C0',
+                  '#9966FF',
+                  '#FF9F40',
+                  '#FF6B6B',
+                  '#4ECDC4',
+                  '#45B7D1',
+                  '#96CEB4'
+                ]
+            }]
+          },
+          options:{
+            responsive:true,  
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                  position: 'bottom'
+              }
+            }
+          }
+
+        })
+
+    if(brandChart)brandChart.destroy()
+    if (data.brands && data.brands.labels.length > 0) {
+      brandChart = new Chart(
+        document.getElementById('topBrandsChart'),{
+            type:'doughnut',
+            data:{
+              labels:data.brands.labels,
+              datasets:[{
+                data:data.brands.values,
+                backgroundColor:[ 
+                  '#FF9F40','#4BC0C0','#9966FF',
+                  '#36A2EB','#FF6384','#FFCE56'
+                ]
+              }]
+            },
+            options:{
+              responsive:true,
+              plugins:{
+                legend:{ position:'bottom'}
+              }
+            }
+          }) 
     }
+
+    
+  
+  }
+
+  async function loadDashboardData(filterType) {
+    try {
+      const res = await fetch(`/admin/dashboard/data?filterType=${filterType}`)
+      if (!res.ok) throw new Error('Failed to fetch dashboard data');
+      
+      const data = await res.json()
+      console.log('Received data:', data);
+      updateChart(data) 
+
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        alert('Failed to load dashboard data. Please try again.');
+    }
+  }
+  
+  let salesChart
+
+  function renderSalesChart(labels,values){
+    if(salesChart) salesChart.destroy()
+
+    salesChart = new Chart(
+      document.getElementById('salesChart'),{
+        type:'line',
+        data:{
+          labels,
+          datasets:[{
+            label:'Sales (₹)',
+            data:values,
+            borderColor: '#4A90E2',
+            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+            fill:true,
+            tension:0.4,
+            pointRadius:4,
+            pointBackgroundColor: '#4A90E2',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 6
+          }]
+        },  
+        options:{
+          responsive:true,
+          scales:{
+            y:{
+              beginAtZero:true,
+              ticks:{
+                callback:function(value) {
+                    return '₹' + value.toLocaleString('en-IN');
+                }
+              }
+            }
+          },
+          plugins: {
+              legend: {
+                  display: true
+              },
+              tooltip: {
+                  callbacks: {
+                      label: function(context) {
+                          return 'Sales: ₹' + context.parsed.y.toLocaleString('en-IN');
+                      }
+                  }
+              }
+          } 
+        }
+        
+      })
+
+    }
+    
+  async function loadSalesChart(filterType) {
+     try {
+        const res = await fetch(`/admin/dashboard/sales?filterType=${filterType}`);
+        if (!res.ok) throw new Error('Failed to fetch sales data');
+        
+        const data = await res.json();
+        renderSalesChart(data.labels, data.values);
+    } catch (error) {
+        console.error('Error loading sales chart:', error);
+        alert('Failed to load sales chart. Please try again.');
+    }
+  } 
+
+  
+  document.getElementById('filterType').addEventListener('change',(e)=>{
+    const filterType = e.target.value
+    
+    loadDashboardData(filterType)
+    loadSalesChart(filterType)
+  })
+ 
+
+  document.addEventListener('DOMContentLoaded', () => { 
+      loadDashboardData('daily');
+      // loadDashboardData(chartData);
+      loadSalesChart('daily');
   });
+
+
+
+  // const productLabel = <%- JSON.stringify(topProducts.map(p=> p.product.productName)) %>;
+  // const productData = <%- JSON.stringify(topProducts.map(p=> p.totalSold)) %>;
+  // const categoryLabels =  <%- JSON.stringify(topCategories.map(c=> c.category.name)) %>;
+  // const categoryData =  <%- JSON.stringify(topCategories.map(c=> c.totalSold)) %>;
+   
 </script>
 
 <%- include("../../views/partials/admin/footer") %>

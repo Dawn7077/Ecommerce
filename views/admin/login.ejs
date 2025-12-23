@@ -27,11 +27,16 @@
     .login-container {
       width: 100%;
       max-width: 500px;
+
       padding: 20px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      background-color: hsl(193, 80%, 17%);
+      background-image: url('/img/logo2.png');
+      background-color: hsl(0, 100%, 77%);
+      background-repeat: no-repeat;
+      background-position: 5px 280px;
+      background-size: contain;
       border-radius: 8px;
-    }
+    } 
     .error-message {
       color: red;
       font-size: 0.875rem;
@@ -42,7 +47,7 @@
   </style>
 </head>
 <body>
-  <div class="login-container">
+  <div class="login-container" style="width: 450px; height: 380px;">
     <h2 class="text-center">Admin Login</h2>
     <% if (message) { %>
     <div class="alert alert-danger text-center"><%= message %></div>

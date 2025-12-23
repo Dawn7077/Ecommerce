@@ -331,7 +331,8 @@ const approveReturn  = async (req,res)=>{
             const totalItemsAmount = order.orderedItems.reduce((sum,i)=> sum + i.price * i.quantity ,0)
             const itemCouponDis = (item.price * item.quantity / totalItemsAmount) * (order.couponDiscount||0)
 
-            const refundAmount = (item.price * item.quantity) - itemCouponDis 
+            // const refundAmount = (item.price * item.quantity) - itemCouponDis 
+            const refundAmount = getItemPaidAmount(order, item);
             await refundToWallet(
                 order.userId,
                 refundAmount,
@@ -397,7 +398,11 @@ async function refundToWallet(userId, amount, reason) {
             })
         }
 
-        wallet.balance += amount
+        // wallet.balance += amount
+        
+        const roundedAmount = parseFloat(amount.toFixed(2));
+        
+        wallet.balance = parseFloat((wallet.balance + roundedAmount).toFixed(2));
 
         wallet.transactions.push({
             date:new Date(),
@@ -424,8 +429,9 @@ const getItemPaidAmount = (order, item) => {
     );
 
     const itemTotal = item.price * item.quantity;
+    const itemShare = (itemTotal / itemsTotal) * order.finalAmount;
 
-    return Math.round((itemTotal / itemsTotal) * order.finalAmount);
+    return parseFloat(itemShare.toFixed(2));
 };
 
 

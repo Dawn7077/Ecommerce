@@ -102,7 +102,7 @@ const cancelOrder = async (req,res)=>{
             });
         }
 
-        if(itemId){ // for single item cancel
+        if(itemId){     // for single item cancel
             const item = order.orderedItems.id(itemId)
             console.log(item)
 
@@ -180,7 +180,7 @@ const cancelOrder = async (req,res)=>{
 
 
 
-        } else{
+        } else{         // for whole order cancel
 
             if(!['Pending','Processing'].includes(order.status)){
                 return res.status(400).json({ 
@@ -210,11 +210,7 @@ const cancelOrder = async (req,res)=>{
                     if(!item.restocked && variant) {
                         variant.stock += item.quantity
                         item.restocked = true
-                    }
-
-                    if (!item.refunded && (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')) {
-                        item.refunded = true
-                    }
+                    } 
                     
                     const total = product.variants.reduce((sum,v)=> sum + v.stock, 0)
                     product.status = total > 0 ? "Available" : 'out of stock' 
@@ -242,12 +238,14 @@ const cancelOrder = async (req,res)=>{
                     for (const item of refundableItems) {
                         const itemTotal = item.price * item.quantity; //per item total 
 
-                        const itemPaidAmount =
-                            Math.round((itemTotal / itemsTotal) * order.finalAmount);
+                        // const itemPaidAmount = Math.round((itemTotal / itemsTotal) * order.finalAmount);
+                        const itemPaidAmount = getItemPaidAmount(order, item);
 
                         refundAmount += itemPaidAmount;
                         item.refunded = true;
                     }
+                    
+                    refundAmount = parseFloat(refundAmount.toFixed(2));
 
                     if (refundAmount > 0) {
                         await refundToWallet(
@@ -282,9 +280,11 @@ const getItemPaidAmount = (order, item) => {
         (sum, i) => sum + (i.price * i.quantity), 0 
     );
 
-    const itemTotal = item.price * item.quantity;
+    const itemTotal = item.price * item.quantity; 
 
-    return Math.round((itemTotal / itemsTotal) * order.finalAmount);
+    const itemShare = (itemTotal / itemsTotal) * order.finalAmount;
+
+    return parseFloat(itemShare.toFixed(2));
 };
 
 
@@ -299,7 +299,11 @@ async function refundToWallet(userId, amount, reason) {
                 transactions:[]
             })
         }
-        wallet.balance += amount
+        // wallet.balance += amount
+        
+        const roundedAmount = parseFloat(amount.toFixed(2));
+        
+        wallet.balance = parseFloat((wallet.balance + roundedAmount).toFixed(2));
 
         wallet.transactions.push({
             date:new Date(),

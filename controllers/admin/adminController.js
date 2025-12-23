@@ -1,6 +1,10 @@
 const User = require('../../models/userSchema')
+const Order = require('../../models/orderSchema')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
+const Category = require('../../models/categorySchema')
+const Product = require('../../models/productSchema')
+const Brand = require('../../models/brandSchema')
 
 const loadlogin = (req,res)=>{
     if(req.session.admin){
@@ -36,18 +40,388 @@ const login= async(req,res)=>{
         
     }
 }
+//dashboard controllers
+function getDateFilter(type,value){
+    let start,end
+    const now = new Date()
+
+    if(value){
+        if(type === 'yearly'){
+            start = new Date(value,0,1,0,0,0)
+            end = new Date(value,11,31,23,59,59)
+        }
+
+        else if(type === 'monthly'){
+            const year = now.getFullYear()
+            start = new Date(year,value-1,1,0,0,0)
+            end = new Date(year,value,0,23,59,59)
+        }else{ 
+            start = new Date()
+            end = new Date()
+            start.setDate(end.getDate()- 30)
+        } 
+    }else{
+        if (type === 'daily') {
+            start = new Date(now)
+            start.setHours(0,0,0,0)
+
+            end = new Date(now)
+            end.setHours(23,59,59,999)
+        }
+
+        else if (type === 'monthly') { 
+            start = new Date(now.getFullYear(),now.getMonth(),1)
+            end = new Date(now.getFullYear(),now.getMonth() + 1,0,23,59,59,999)
+        }
+
+        else if (type === 'yearly') {
+            start = new Date(now.getFullYear(),0,1)
+            end = new Date(now.getFullYear(),11,31,23,59,59,999)
+        }
+
+        else { 
+            start = new Date()
+            start.setDate(now.getDate() - 30)
+            end = now
+        }
+    }
+
+    
+    return { $gte:start , $lte:end }
+}
 
 const loadDashboard = async (req,res)=>{
     if(req.session.admin){
         try {
-            res.render('admin/dashboard')
+            const filterType = req.query.filterType || ''
+            const value = req.query.value || ''
+            const dateFilter = getDateFilter(filterType,value)
+
+            const totalUsers = await User.countDocuments()
+            const totalProducts = await Product.countDocuments()
+            const totalOrders = await Order.countDocuments()
+
+            const revenueData = await Order.aggregate([
+                {
+                    $match:{
+                        createdAt: dateFilter, 
+                        paymentStatus:{$in:['Paid','Completed']}
+                    }
+                },
+                {$unwind:"$orderedItems"},
+                {
+                    $match:{
+                        "orderedItems.status":"Delivered"
+                    }
+                },
+                {
+                    $addFields:{
+                        itemTotal:{
+                            $multiply:["$orderedItems.price","$orderedItems.quantity"]
+                        }
+                    }
+                }, 
+                {
+                    $addFields:{
+                        itemProportion:{
+                            $cond:[
+                                {$gt:["$subtotal",0]},
+                                {$divide:["$itemTotal","$subtotal"]},
+                                0
+                            ]
+                        }
+                    }
+                },
+
+                {
+                    $addFields:{
+                        itemDiscount:{
+                            $multiply:[
+                                {$ifNull:["$discount",0]},
+                                "$itemProportion"
+                            ]
+                        },
+                        itemCouponDiscount:{
+                            $cond:[
+                                "$couponApplied",
+                                {
+                                    $multiply:[
+                                        { $ifNull:["$couponDiscount",0]},
+                                        "$itemProportion"
+                                    ]
+                                },
+                                0
+                            ]
+                        }
+                    }
+                },
+
+                {
+                    $addFields:{
+                        itemRevenue:{
+                            $subtract:[
+                                "$itemTotal",
+                                {$add :["$itemDiscount","$itemCouponDiscount"]}
+                            ]
+                        }
+                    }
+                },
+
+                {
+                    $group:{
+                        _id:null,
+                        totalRevenue:{$sum : "$itemRevenue"}
+                    }
+                }
+            ])
+
+            const totalRevenue = revenueData.length>0 ? revenueData[0].totalRevenue : 0
+
+            console.log('totalRevenue',totalRevenue)
+
+            const topProducts = await Order.aggregate([
+                {$match:{
+                    createdAt:dateFilter
+                }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.product",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10},
+                {$lookup:{
+                    from:"products",
+                    localField:"_id",
+                    foreignField:"_id",
+                    as:"product"
+                }},
+                {$unwind:"$product"}
+            ])
+
+            const topCategories = await Order.aggregate([
+                {$match:{ createdAt:dateFilter }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.category",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10},
+                {$lookup:{
+                    from:"categories",
+                    localField:"_id",
+                    foreignField:"_id",
+                    as:"category"
+                }},
+                {$unwind:"$category"}
+            ])
+
+            const topBrands = await Order.aggregate([
+                {$match:{
+                    // status:"Delivered",
+                    createdAt:dateFilter
+                }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.brand",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10}
+            ])
+            console.log(topBrands)
+            res.render('admin/dashboard',{
+                totalUsers, totalProducts,totalOrders,totalRevenue,
+                topProducts,
+                topCategories,
+                topBrands
+            })
         } catch (error) {
+            console.log(error)
             res.redirect('/admin/pageError')
         }
     }else{
         res.redirect('/admin/login')
     }
 }
+
+const getLoadDashboard =  async (req,res)=>{
+    if(req.session.admin){
+        try {
+            const filterType = req.query.filterType || 'daily'
+            const value = req.query.value || null
+            const dateFilter = getDateFilter(filterType,value)
+            console.log(filterType,dateFilter)
+
+            const topProducts = await Order.aggregate([
+                {$match:{
+                    createdAt:dateFilter
+                }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.product",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10},
+                {$lookup:{
+                    from:"products",
+                    localField:"_id",
+                    foreignField:"_id",
+                    as:"product"
+                }},
+                {$unwind:"$product"}
+            ])
+
+            const topCategories = await Order.aggregate([
+                {$match:{ createdAt:dateFilter }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.category",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10},
+                {$lookup:{
+                    from:"categories",
+                    localField:"_id",
+                    foreignField:"_id",
+                    as:"category"
+                }},
+                {$unwind:"$category"}
+            ])
+
+            const topBrands = await Order.aggregate([
+                {$match:{ 
+                    createdAt:dateFilter
+                }},
+                {$unwind:"$orderedItems"},
+                {$match:{
+                    "orderedItems.status":"Delivered"
+                }},
+                {$group:{
+                    _id:"$orderedItems.brand",
+                    totalSold:{$sum:"$orderedItems.quantity"}
+                }},
+                {$sort:{totalSold:-1}},
+                {$limit:10}
+            ])
+
+
+
+
+            res.json({
+                products:{
+                    labels:topProducts.map(p=> p.product.productName),
+                    values:topProducts.map(p=> p.totalSold),
+                },
+                categories:{
+                    labels:topCategories.map(c=> c.category.name),
+                    values:topCategories.map(c=> c.totalSold),
+                },
+                brands:{
+                    labels:topBrands.map(b=> b._id),
+                    values:topBrands.map(b=> b.totalSold)
+                }
+            })
+        } catch (error) {
+            console.log(error)
+            res.redirect('/admin/pageError')
+        }
+    }else{
+        res.redirect('/admin/login')
+    }
+}
+
+const getSalesTimeline = async(req,res)=>{
+    try {
+        const filterType = req.query.filterType || 'monthly'
+        const dateFilter = getDateFilter(filterType)
+        
+        let groupStage = {}
+        let labels = []
+
+        if(filterType === 'daily'){
+            // groupStage = {hour:{$hour:'$createdAt'}}
+            labels = Array.from({length:24},(_,i)=>`${i}:00`)
+        }
+
+        if(filterType === 'monthly'){
+            // groupStage = {day:{$dayOfMonth:'$createdAt'}} 
+
+            const daysInMonth = new Date(
+                new Date().getFullYear(),
+                new Date().getMonth()+1,
+                0
+            ).getDate()
+
+            labels = Array.from({ length:daysInMonth},(_,i)=> `Day ${i+1}`)
+        }
+
+        if(filterType === 'yearly'){
+            // groupStage = {month:{$month:'$createdAt'}}
+            labels = ['Jan','Feb','Mar','Apr','May',"Jun","Jul",'Aug','Sep','Oct','Nov','Dec']
+        }
+
+
+
+        const sales = await Order.aggregate([
+            {
+                $match:{
+                    status:'Delivered',
+                    createdAt:dateFilter
+                }
+            },
+            {
+                $group:{
+                    _id:
+                    filterType === 'daily' ?{$hour:'$createdAt'}:
+                        filterType === 'monthly'?{$dayOfMonth:'$createdAt'}:{ $month: '$createdAt' },
+                    totalSales:{$sum:"$finalAmount"}
+                }
+            },
+            {$sort:{"_id":1}}
+        ])
+
+        const map = {}
+        sales.forEach(s=>{ 
+            map[s._id] = s.totalSales
+        })
+
+        let values
+
+        if(filterType === 'daily' ){
+            values = labels.map((_,i)=> map[i] || 0)
+        }
+        else {
+            values = labels.map((_, i) => map[i + 1] || 0)
+        }
+
+
+        res.json({labels,values})
+
+    } catch (error) {
+        console.log(err)
+        res.status(500).json({ error: "Sales timeline error" })
+    }
+}
+
 const pageError = async(req,res)=>{
     res.render('admin/admin-error')
 }
@@ -74,6 +448,8 @@ module.exports= {
     loadlogin,
     login,
     loadDashboard,
+    getLoadDashboard,
+    getSalesTimeline,
     pageError,
     logout
 }
