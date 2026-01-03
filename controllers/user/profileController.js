@@ -4,8 +4,7 @@ const Wallet = require('../../models/walletSchema')
 const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const env = require('dotenv')
-const session = require('express-session')
-const user = require('../../../UserManageApp/model/user')
+const session = require('express-session') 
 
 
 const securePassword = async(password)=>{
