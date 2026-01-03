@@ -953,11 +953,14 @@ const placeorder = async (req, res) => {
         let couponDiscount = 0;
         let appliedCoupon = false;
         let referralUserId = null;
+        let couponId
 
         if(req.session.appliedCoupon){
             appliedCoupon = true
 
             const appliedData = req.session.appliedCoupon;
+            couponId= req.session.appliedCoupon.id 
+            
 
             if (appliedData.type === 'referral') {
                 couponDiscount = Math.min(
@@ -1046,7 +1049,8 @@ const placeorder = async (req, res) => {
             paymentStatus: paymentMethod === 'cod' ? 'Completed' : 'Payment Pending',
             invoiceDate: new Date(),
             couponApplied: appliedCoupon,
-            couponDiscount: couponDiscount
+            couponDiscount: couponDiscount,
+            couponId:couponId
         });
         newOrder.orderStatusHistory.push({ // order history update 
             status:'Pending',

@@ -190,6 +190,9 @@ const orderSchema = new mongoose.Schema({
     couponDiscount: {
         type: Number,
         default: 0
+    },
+    couponId: {
+        type: String, 
     }
 }, {
     timestamps: true

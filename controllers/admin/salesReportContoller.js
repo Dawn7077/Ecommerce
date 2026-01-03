@@ -204,7 +204,7 @@ const loadSalesReport = async(req,res)=>{
         const limit = 10;
 
         const query = {
-            status: { $nin: ['Cancelled','Returned'] },
+            // status: { $nin: ['Cancelled','Returned'] },
             paymentStatus: { $in: ['Paid', 'Completed'] },
         }
 

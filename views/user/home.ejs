@@ -231,7 +231,44 @@ var swiper = new Swiper(".swiper-container", {
 
 console.log("Slides:", document.querySelectorAll(".swiper-slide").length);
 
-
+ function addToWishlist(productId){
+    fetch('add-to-wishlist',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json'
+      },
+      body:JSON.stringify({productId})
+    }).then((res)=>res.json())
+    .then(data=>{
+      if(data.status){
+        Swal.fire({
+          title:"Added to Wishlist",
+          // text:data.message,
+          text:'Prodcut has been added to wiahlist',
+          icon:"success",
+          timer:2000
+      })
+      const btn = document.getElementById(`wishlist-btn-${productId}`)
+      btn.innerHTML = `<i class= "fas fa-heart" style="color: red;"></i>`
+      }else{
+        Swal.fire({
+          title:"Already in Wishlist",
+          text:data.message,
+          icon:"warning",
+          timer:2000
+      })
+      }
+    })
+    .catch(error=>{
+      Swal.fire({
+          title:"Error",
+          text:'There was an error adding the product to your wishlist',
+          icon:"error",
+          timer:2000
+      })
+    })
+  }
+ 
  
 
 </script>

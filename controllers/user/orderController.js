@@ -1,6 +1,7 @@
 const Order = require('../../models/orderSchema.js');
 const Product = require('../../models/productSchema.js'); 
 const Wallet = require('../../models/walletSchema.js')
+const Coupon =require('../../models/couponSchema.js')
 
 const loadOrderPage = async(req,res)=>{
     try {
@@ -102,7 +103,8 @@ const cancelOrder = async (req,res)=>{
             });
         }
 
-        if(itemId){     // for single item cancel
+        // for single item cancel
+        if(itemId){    
             const item = order.orderedItems.id(itemId)
             console.log(item)
 
@@ -180,7 +182,9 @@ const cancelOrder = async (req,res)=>{
 
 
 
-        } else{         // for whole order cancel
+        } 
+         // for whole order cancel
+        else{        
 
             if(!['Pending','Processing'].includes(order.status)){
                 return res.status(400).json({ 
@@ -275,14 +279,24 @@ const cancelOrder = async (req,res)=>{
     }
 }
 
-const getItemPaidAmount = (order, item) => {
+const getItemPaidAmount = async (order, item) => {
     const itemsTotal = order.orderedItems.reduce(
         (sum, i) => sum + (i.price * i.quantity), 0 
     );
-
+    
+    const coupon = await Coupon.findById(order.couponId);
+    if(coupon){
+        console.log('======<',coupon.minimumPrice)
+        
+    }
+    
     const itemTotal = item.price * item.quantity; 
-
+    
     const itemShare = (itemTotal / itemsTotal) * order.finalAmount;
+    if(coupon.minimumPrice>order.finalAmount-itemShare){
+        console.log(coupon.minimumPrice,(order.finalAmount-itemShare),'======<',(coupon.minimumPrice<order.finalAmount-itemShare))
+    }
+    
 
     return parseFloat(itemShare.toFixed(2));
 };
