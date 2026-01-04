@@ -8,6 +8,9 @@
     href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
     rel="stylesheet"
   />
+  <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <link rel="stylesheet" href="/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css" />
   <style>
@@ -44,6 +47,13 @@
     .text-center{
       color: white;
     }
+    .toggle-password {
+      position: absolute;
+      right: 15px;
+      top: 38px;
+      cursor: pointer;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -64,15 +74,17 @@
         />
         <div id="emailError" class="error-message"></div>
       </div>
-      <div class="form-group">
+      <div class="form-group position-relative">
         <label for="adminPassword">Password</label>
         <input
           type="password"
-          class="form-control"
+          class="form-control inputstyle"
           id="adminPassword"
           name="password"
+          placeholder="Password"
           required
-        />
+        /> 
+        <i class="fa-solid fa-eye toggle-password mt-2" id="togglePassword" onclick="togglePassword('adminPassword', this)"></i>
         <div id="passwordError" class="error-message"></div>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Log In</button>
@@ -110,6 +122,20 @@
         }
       });
     });
+
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+      }
+    }
   </script>
 </body>
 </html>
