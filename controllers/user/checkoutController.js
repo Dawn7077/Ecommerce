@@ -1243,7 +1243,7 @@ const retryCancelledOrder = async (req,res) =>{
             if(!variant){
                 return res.status(400).json({
                     success:false,
-                    message:`Variant "${item.variants.color/item.variants.size}" not found for Product "${item.productName}" `
+                    message:`Variant "${item.variant.color/item.variant.size}" not found for Product "${item.productName}" `
                 })
             }
             if(variant.stock < item.quantity){
@@ -1252,6 +1252,8 @@ const retryCancelledOrder = async (req,res) =>{
                     message:`Insufficient stock for "${item.variants.color/item.variants.size}", only  "${variant.stock}" available `
                 })
             }
+        } //==============
+        
 
             
 
@@ -1288,8 +1290,9 @@ const retryCancelledOrder = async (req,res) =>{
 
                 const totalStock = product.variants.reduce((sum,v)=> sum + v.stock,0)
                 product.status = totalStock > 0 ? "Available" : 'out of stock';
-
+                
                 await product.save()
+ 
             }
 
             //reset order and history
@@ -1298,31 +1301,37 @@ const retryCancelledOrder = async (req,res) =>{
             order.paymentStatus = paymentMethod === 'Wallet'?'Paid':'Payment Pending'
             order.paymentMethod = paymentMethod
 
-            //cleaning status history
-            if(paymentMethod === 'Wallet'){
-                order.orderStatusHistory =[{
-                    status:'Pending',
-                    date: new Date()
-                },
-                {
-                    status:'Processing',
-                    date: new Date()
-                }
-            ]
-            }else{
-                order.orderStatusHistory =[{
-                    status:'Pending',
-                    date: new Date()
-                }]
+            //cleaning status history 
+            order.orderStatusHistory = [];
+
+            // starts at Pending on retry
+            order.orderStatusHistory.push({
+            status: 'Pending',
+            date: new Date(),
+            note: 'Order retried after cancellation'
+            });
+
+            //  If wallet payment, 
+            if (paymentMethod === 'Wallet') {
+            order.orderStatusHistory.push({
+                status: 'Processing',
+                date: new Date(),
+                note: 'Wallet payment successful'
+            });
             }
+
+
             
             
             //reset item status in order
             for(const item of order.orderedItems){
                 item.status = paymentMethod === 'Wallet' ? 'Processing':'Pending'
-                item.cancellationReason = undefined,
-                item.returnReason = undefined,
-                item.returnRequestDate = undefined,
+                item.cancellationReason = undefined;
+                item.returnReason = undefined;
+                item.returnRequestDate = undefined;
+
+                item.refunded = false;
+                item.restocked = false;
 
                 item.statusHistory= [{
                     status: paymentMethod === 'Wallet' ? 'Processing':'Pending',
@@ -1352,7 +1361,7 @@ const retryCancelledOrder = async (req,res) =>{
                 message:'Order successfully retried',
                 OrderId:order._id, 
             }) 
-        }
+        
 
 
     } catch (error) {
