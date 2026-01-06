@@ -9,7 +9,7 @@ const {getForgotPassPage, forgotEmailValid ,verifyForgotPassOtp,getResetPassPage
     getEditAddress,editAddress,deleteAddress
 } = require('../controllers/user/profileController')
 const {userAuth, adminAuth,isloggedOut} =require('../middleware/auth')
-const {productDetails} = require('../controllers/user/productController')
+const {productDetails,} = require('../controllers/user/productController')
 const passport = require('passport')
 const {loadWishlist,addToWishlist,removeProduct,deleteWishlist} = require('../controllers/user/wishlistController')
 
@@ -101,7 +101,7 @@ router.post('/edit-address',userAuth,editAddress)
 router.get('/delete-address',userAuth,deleteAddress)
 
 //product management
-router.get('/productDetails',productDetails)
+router.get('/productDetails',productDetails) 
 
 //wishLish
 router.get('/wishlist',userAuth,loadWishlist)

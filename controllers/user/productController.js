@@ -2,6 +2,7 @@
 const Product = require('../../models/productSchema')
 const Category = require('../../models/categorySchema')
 const Wishlist = require('../../models/wishlistSchema')
+const Cart = require('../../models/cartSchema')
 const User = require('../../models/userSchema')
 
 
@@ -9,8 +10,11 @@ const User = require('../../models/userSchema')
 
 const productDetails=async(req,res)=>{
     try {
-        const userId = req.session.user._id
-        const userData =await User.findById(userId)
+
+        const userSession = req.session.user
+        const userId = userSession ? userSession._id : null;
+ 
+        const userData = userId ? await User.findById(userId) : null;
         const productId =req.query.id
         const product =await Product.findById(productId).populate('category')
         // if(product.isBlocked)return res.redirect('/shop')
@@ -35,7 +39,14 @@ const productDetails=async(req,res)=>{
         console.log(findCategory)
         console.log(totalOffer)
 
-        const wishlist = await Wishlist.findOne({userId})
+        let wishlistProducts = []
+
+        if(userId){
+            const wishlist = await Wishlist.findOne({userId})
+            if(wishlist) wishlistProducts = wishlist.products
+        }
+
+
 
         res.render('user/product-details',{
             user:userData,
@@ -43,7 +54,7 @@ const productDetails=async(req,res)=>{
             quantity:product.quantity,
             totalOffer,
             category:findCategory,
-            wishlist:wishlist.products,
+            wishlist:wishlistProducts,
             recommendedProducts,
             crumbs: [
                     { label: "Home", url: "/" },
@@ -58,6 +69,7 @@ const productDetails=async(req,res)=>{
         res.redirect('/pageNotFound')
     }
 }
+ 
 module.exports = {
-    productDetails,
+    productDetails, 
 }

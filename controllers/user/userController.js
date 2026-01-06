@@ -33,12 +33,20 @@ const loadHomePage = async (req,res)=>{
         productData.sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt))
         productData = productData.slice(0,4)
 
+        let wishlistProducts = []
+        if(user){
+            let userId = user._id
+            const wishlist = await WishLish.findOne({userId})
+            wishlistProducts = wishlist ? wishlist.products : []; 
+        }
+
+
 
         if(user){
             const UserData =await User.findOne({_id:user._id})
-            res.render('user/home',{user:UserData, productData,banner:findBanner||[]})
+            res.render('user/home',{user:UserData,wishlist:wishlistProducts, productData,banner:findBanner||[]})
         }else{
-            return res.render('user/home',{user:null,productData,banner:findBanner||[]})
+            return res.render('user/home',{user:null,wishlist:wishlistProducts,productData,banner:findBanner||[]})
         }
 
     } catch (error) {
@@ -563,7 +571,7 @@ const searchProducts = async(req,res)=>{
 const loadShop = async(req,res)=>{
     try {   
         const user = req.session.user
-        if(!user)return res.redirect('/login')
+        // if(!user)return res.redirect('/login')
         const userData = user? await User.findById(user):null
         const category =req.query.category? req.query.category.trim() : null
         const brand = req.query.brand? req.query.brand.trim() : null
@@ -620,9 +628,15 @@ const loadShop = async(req,res)=>{
 
         const categories = await Category.find({isListed:true}).lean()
         const brands = await Brand.find({isBlocked:false}).lean()
-        let userId = user._id
-        const wishlist = await WishLish.findOne({userId})
-        console.log('==>',wishlist.products)
+
+        let wishlistProducts = []
+        if(user){
+            let userId = user._id
+            const wishlist = await WishLish.findOne({userId})
+            wishlistProducts = wishlist ? wishlist.products : [];
+            console.log('==>',wishlistProducts)
+        }
+
 
         res.render('user/shop',{
             user:userData,
@@ -632,7 +646,7 @@ const loadShop = async(req,res)=>{
             totalProducts,
             currentPage:parseInt(page),
             totalPages,
-            wishlist:wishlist.products,
+            wishlist:wishlistProducts,
             selectedBrand:brand||null,
             selectedCategory:category||null,
             selectedPrice:{gt,lt}||null,

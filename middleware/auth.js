@@ -23,19 +23,23 @@ const User = require('../models/userSchema')
 const userAuth = async(req,res,next)=>{
     try {
         if(req.session.user){
-            
             const user = await User.findById(req.session.user._id)
-
+            
+            
             if (!user || user.isBlocked) {
-                req.session.destroy(() => {
-                    return res.redirect('/login');
-                });
-            }else if(user && !user.isBlocked){
-                next()
-            }else{
-                return res.redirect('/login')
-            }   
+                req.session.destroy()
+
+                if(req.xhr || req.headers.accept?.includes('application/json')){
+                    return res.status(401).json({status:false, message:"User Blocked or not found"})
+                }
+                return res.redirect('/login');
+            }
+            return next()  
         }else{
+            if(req.xhr || req.headers.accept?.includes('application/json')){
+                console.log('guest req hit..........')
+                return res.status(401).json({status:false, message:"Please login to continue."})
+            }
             return res.redirect('/login')
         }
     } catch (error) {
