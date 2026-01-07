@@ -177,7 +177,16 @@ const loadDashboard = async (req,res)=>{
 
             const totalRevenue = revenueData.length>0 ? revenueData[0].totalRevenue : 0
 
-            console.log('totalRevenue',totalRevenue)
+
+            //  Calculate Net Sales -------------------
+            
+            const orders = await Order.find({ createdAt: dateFilter });
+            const stats = calculateStats(orders);
+            const netSales = +stats.totalSales;
+                
+            // ----------------------------     
+
+            console.log('totalRevenue',totalRevenue,netSales)
 
             const topProducts = await Order.aggregate([
                 {$match:{
@@ -241,7 +250,7 @@ const loadDashboard = async (req,res)=>{
             ])
             console.log(topBrands)
             res.render('admin/dashboard',{
-                totalUsers, totalProducts,totalOrders,totalRevenue,
+                totalUsers, totalProducts,totalOrders,totalRevenue,netSales,
                 topProducts,
                 topCategories,
                 topBrands
@@ -441,7 +450,79 @@ const logout =async(req,res)=>{
         res.redirect('/pageError')
     }
 }
-    
+
+
+function calculateOrderNetAmount(order) { 
+    const activeItemsTotal = order.totalPrice || 1; 
+    const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+
+    let netAmount = 0;
+    const isPrepaid = ['Wallet', 'Stripe'].includes(order.paymentMethod);
+    order.orderedItems.forEach(item => {
+        const isSold =(isPrepaid && ['Paid', 'Completed'].includes(order.paymentStatus)) || item.status === 'Delivered';
+
+        // if (isSold && !item.refunded && item.status !== 'Cancelled') {
+        if (isSold && !item.refunded ) {
+            const itemBaseValue = item.price * item.quantity;
+            const itemCouponShare = itemBaseValue * couponRatio;
+            netAmount += (itemBaseValue - itemCouponShare);
+        }
+    });
+ 
+    // if (netAmount > 0) {
+    if (netAmount > 0 && order.finalAmount > 0) {
+        const shipping = (order.finalAmount - (order.totalPrice - order.couponDiscount));
+        netAmount += shipping;
+    }
+
+    return +netAmount.toFixed(2);
+}
+
+function calculateStats(orders) {
+    let stats = {
+        totalOrders: 0,
+        totalSales: 0,
+        totalOrderAmount: 0,
+        totalCancelled: 0,
+        totalRefunded: 0,
+        totalDiscount: 0,  
+        totalCouponDiscount: 0
+    };
+
+    orders.forEach(order => {
+        const orderNet = calculateOrderNetAmount(order);
+        if (orderNet > 0) {
+            stats.totalOrders++;
+            stats.totalSales += orderNet;
+        }
+ 
+        stats.totalDiscount += (order.discount || 0);
+        stats.totalCouponDiscount += (order.couponDiscount || 0);
+        stats.totalOrderAmount += (order.finalAmount || 0);
+ 
+        const activeItemsTotal = order.totalPrice || 1;
+        const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+
+        order.orderedItems.forEach(item => {
+            const itemBaseValue = item.price * item.quantity;
+            const itemCouponShare = itemBaseValue * couponRatio;
+            const itemActualPaidValue = itemBaseValue - itemCouponShare;
+
+            if (item.status === 'Cancelled') {
+                stats.totalCancelled += itemActualPaidValue;
+            }
+            if (item.refunded) {
+                stats.totalRefunded += itemActualPaidValue;
+            }
+        });
+    });
+ 
+    for (let key in stats) {
+        if (key !== 'totalOrders') stats[key] = stats[key].toFixed(2);
+    }
+    return stats;
+}
+
     
     
 module.exports= {

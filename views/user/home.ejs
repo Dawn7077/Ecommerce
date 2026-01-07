@@ -170,7 +170,10 @@
     </div>
     <div class="row product__filter">
       <% for(let i = 0; i < productData.length; i++) { %>
-      <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+      <div class="col-lg-3 col-md-4 col-12 col-sm-6"> 
+          
+      <% const isWishlisted  = wishlist.some(p=>p.productId.toString() === productData[i]._id.toString() ) %>
+
         <div class="product-cart-wrap mb-30">
           <div class="product-img-action-wrap">
             <div class="product-img product-img-zoom">
@@ -182,17 +185,30 @@
                 />
               </a>
             </div>
-            <a
-              href="/addToWishlist?id=<%= productData[i]._id %>"
-              class="wishlist-btn"
-            >
-              <i class="fas fa-heart"></i>
-            </a>
+
+            <% if(user) {%>
+            <span id="wishlist-btn-<%= productData[i]._id%>" class="wishlist-btn" onclick="addToWishlist('<%=productData[i]._id%>')">
+               <i class="<%= isWishlisted ? 'fas' : 'far' %> fa-heart" style="color: red;"></i></span>
+              
+            <% }else {%>
+            <span id="wishlist-btn-<%= productData[i]._id %>" class="wishlist-btn" onclick="redirectLogin()">
+               <i class=" far fa-heart" style="color: red;"></i></span>
+             <% } %>
+
+
           </div>
           <div class="product-content-wrap">
             <h6><%= productData[i].productName %></h6>
             <h5>₹ <%= productData[i].salesPrice %></h5>
-            <a href="/addToCart?id=<%= productData[i]._id %>">Add to cart</a>
+
+            <% if(user) {%>
+              <button class="btn" onclick="addToCart('<%= productData[i]._id %>')" style="width: 100%;">Add to Cart</button>
+            <% }else {%>
+              <button class="btn" onclick="redirectLogin()" style="width: 100%;">Add to Cart</button>
+            <% } %>
+
+
+
           </div>
         </div>
       </div>
@@ -201,7 +217,70 @@
   </div>
 </section>
 
- 
+ <div id="variantModal" class="variant-modal-overlay" style="display: none;"> 
+  <div class="variant-modal">
+    <h3>Select Variant</h3>
+    <div class="variant-group">
+      <label>Color:</label>
+      <select id="variantColor" class="variant-select"></select>
+    </div> 
+    <div class="variant-group">
+      <label>Size:</label>
+      <select id="variantSize" class="variant-select"></select>
+    </div>
+    <div class="modal-buttons">
+      <button onclick="closeVariantModal()" class="modal-cancel">Cancel</button>
+      <button onclick="confirmAddToCart()" class="modal-confirm">Add to Cart</button>
+    </div>
+  </div>
+</div>
+<!-- variant modal css style -->
+ <style>
+    .variant-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+  }
+  .variant-modal {
+    width: 350px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 5px 20px rgba(0,0,0,0.25);
+  }
+  .variant-select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #d0dce7;
+  }
+  .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  .modal-confirm {
+    background: #1c72e3;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .modal-cancel {
+    background: #feedd5;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+ </style>
 
 
 <%- include("../../views/partials/user/footer") %>
@@ -269,6 +348,75 @@ console.log("Slides:", document.querySelectorAll(".swiper-slide").length);
     })
   }
  
+let selectedProductId = null;
+
+function addToCart(productId) { 
+    selectedProductId = productId;
+    fetch(`/product-variants/${productId}`)
+    .then(res => res.json())
+    .then(data => {
+        window.allVariants = data.variants;
+        const colors = [...new Set(data.variants.map(v => v.color))];
+
+        document.getElementById('variantColor').innerHTML = 
+            colors.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        updateSizeDropDown();
+        document.getElementById('variantColor').onchange = updateSizeDropDown;
+        document.getElementById('variantModal').style.display = 'flex';
+    });
+}
+
+function updateSizeDropDown() {
+    const colorSelected = document.getElementById('variantColor').value;
+    const validSizes = allVariants
+        .filter(v => v.color === colorSelected)
+        .map(v => v.size);
+    
+    document.getElementById('variantSize').innerHTML = 
+        validSizes.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function closeVariantModal() {
+    document.getElementById('variantModal').style.display = 'none';
+}
+
+function confirmAddToCart() {
+    const color = document.getElementById('variantColor').value;
+    const size = document.getElementById('variantSize').value;
+
+    fetch('/add-to-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: selectedProductId, color, size })
+    })
+    .then(res => res.json())
+    .then(data => {
+        closeVariantModal();
+        if(data.status) {
+            Swal.fire({ title: "Added!", text: "Product added to cart", icon: "success", timer: 2000 });
+        } else {
+            Swal.fire({ title: "Error", text: data.message, icon: "warning" });
+        }
+    });
+}
+
+function redirectLogin(){
+        Swal.fire({
+            title:'Login Required',
+            text:"Please login to continue",
+            icon:'warning',
+            showCancelButton:true,
+            confirmButtonColor:'#3085d6',
+            cancelButtonColor:'#d33',
+            confirmButtonText:'Login Now'
+        })
+        .then(result=>{
+            if(result.isConfirmed){
+                window.location.href = '/login'
+            }
+        })
+    }
  
 
 </script>

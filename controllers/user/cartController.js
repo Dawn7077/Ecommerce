@@ -57,6 +57,7 @@ const loadCart =async(req,res)=>{
 const addToCart = async (req, res) => {
     try {
         const{ productId, color , size }= req.body;
+        const quantity = parseInt(req.body.quantity) || 1
        
         if(!req.session.user){
             return res.json({
@@ -92,6 +93,9 @@ const addToCart = async (req, res) => {
         if(variant.stock <= 0){
             return res.json({ status: false, message: "Selected Variant out of stock" });
         }
+        if(variant.stock<quantity){
+            return res.json({ status: false, message: `Only ${variant.stock} units available` });
+        }
 
         let cart = await Cart.findOne({ userId });
 
@@ -110,11 +114,11 @@ const addToCart = async (req, res) => {
             //     return res.json({ status: false, message: "Limit: Only 3 items allowed" });
             // }
 
-            if (existingItem.quantity + 1 > variant.stock) {
-                return res.json({ status: false, message: "Not enough stock" });
+            if (existingItem.quantity + quantity > variant.stock) {
+                return res.json({ status: false, message: `Only ${variant.stock} units available. You already added ${existingItem.quantity}`});
             }
  
-            existingItem.quantity += 1;
+            existingItem.quantity += quantity;
             existingItem.price = product.salesPrice;
             existingItem.totalPrice = product.salesPrice * existingItem.quantity;
 
@@ -123,7 +127,7 @@ const addToCart = async (req, res) => {
             cart.items.push({
                 productId,
                 variant:{ color,size },
-                quantity: 1,
+                quantity: quantity,
                 price: product.salesPrice,
                 totalPrice: product.salesPrice
             });

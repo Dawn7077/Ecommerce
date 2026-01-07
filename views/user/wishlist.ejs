@@ -118,10 +118,19 @@
                                            <td class="price" data-title="Price">₹<span>
                                             <%= product.salesPrice %>
                                            </span></td>
-                                           <td class="text-center" data-title="Add to Cart">
-                                               <!-- <a href="" onclick="addToCart(' <%= product._id %>')" class="btn btn-sm">Add to Cart</a> -->
-                                                <button class="add-to-cart-btn btn btn-sm" onclick="addToCart('<%=product._id %>')">Add to Cart</button>
+
+                                           <td class="text-center" data-title="Add to Cart">  
+                                            <% if(cartProductIds.includes(product._id.toString())){ %>
+                                              <button class="btn btn-sm" style="background-color:#6c757d; color: #fcfcfc;" disabled>
+                                                <i class="fas fa-check"></i> Added
+                                              </button>
+                                            <% } else { %>
+                                              <button id="cart-btn-<%=product._id %>" class="add-to-cart-btn btn btn-sm" onclick="addToCart('<%=product._id %>', this)">Add to Cart</button>
+                                              <% } %>
+                                              
                                            </td>
+
+
                                            <td class="action" data-title="Remove">
                                                <a class="btn btn-sm" href="#" onclick="confirmRemove('<%=product._id%>')">
                                                    <i class="fi-rs-trash"></i>
@@ -347,9 +356,12 @@
 
       
   let selectedProductId =null
+  let currentBtn = null 
 
-  function addToCart(productId){ 
+  function addToCart(productId,btnElement){ 
     selectedProductId = productId;
+    currentBtn = btnElement    
+
     fetch(`/product-variants/${productId}`)
     .then(res=>res.json())
     .then(data=>{
@@ -411,9 +423,16 @@
       closeVariantModal()
 
       if(data.status){
+
+        if(currentBtn){
+          currentBtn.innerHTML = `<i class="fas fa-check"></i> Added`
+          currentBtn.style.backgroundColor = '#6c757d'
+          currentBtn.style.color = '#fff'
+          currentBtn.disabled = true
+        }
+
         Swal.fire({
-          title:"Added to Cart",
-          // text:data.message,
+          title:"Added to Cart", 
           text:'Prodcut has been added to cart',
           icon:"success",
           timer:2000

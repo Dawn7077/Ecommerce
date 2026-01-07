@@ -1,6 +1,7 @@
 const Wishlist = require('../../models/wishlistSchema')
 const User = require('../../models/userSchema')
 const Product = require('../../models/productSchema')
+const Cart = require('../../models/cartSchema')
 
 const loadWishlist1 = async(req,res)=>{
     try {
@@ -62,6 +63,10 @@ const loadWishlist= async (req,res)=>{
             path: "products.productId",
             populate: "category"
         });
+
+        const cart = await Cart.findOne({userId})
+        const cartProductIds = cart?cart.items.map(item=>item.productId.toString()) : []
+
         let products =[]
         if(wishlist){
             products = wishlist.products
@@ -72,6 +77,7 @@ const loadWishlist= async (req,res)=>{
         res.render('user/wishlist',{
             user,
             wishlist:products,
+            cartProductIds
 
         })
          

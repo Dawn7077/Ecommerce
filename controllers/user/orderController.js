@@ -89,7 +89,6 @@ const cancelOrder = async (req,res)=>{
         const {itemId , reason}  = req.body
         console.log('cancel request:',orderId)
 
-        let refundAmount = 0
 
         const order = await Order.findOne({_id:orderId, userId})
 
@@ -106,6 +105,8 @@ const cancelOrder = async (req,res)=>{
         // for single item cancel
         if(itemId){    
             const item = order.orderedItems.id(itemId)
+            let refundAmount = 0
+            
             console.log(item)
 
             if(!item){
@@ -124,6 +125,31 @@ const cancelOrder = async (req,res)=>{
                     message: 'Refund already processed for this item'
                 });
             }
+            
+
+
+
+
+            // ====================================
+             let newSubtotal = 0
+            //calculating new subtotal for the remaining items excluding itemId and i.cancelled(status)
+            order.orderedItems.forEach(i=>{
+                if(i._id.toString() !== itemId && i.status !== 'Cancelled'){
+                    newSubtotal += (i.price * i.quantity) 
+                }
+            }) 
+            if(order.couponApplied && order.couponId){
+                const coupon = await Coupon.findById(order.couponId)  
+                //checking coupon eligibility new amount > coupon min price 
+                if(order.couponApplied && newSubtotal < coupon.minimumPrice){
+                        return res.status(400).json({ 
+                        success: false, 
+                        message: `COUPON APPLIED : Item cannot be cancelled due to remaining total ${newSubtotal} is less than coupon min price ${coupon.minimumPrice}`
+                    });
+                }
+            }
+            
+            // ====================================
 
 
 
@@ -157,7 +183,7 @@ const cancelOrder = async (req,res)=>{
              //wallet refund
             if(order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe'){
                  
-                refundAmount = getItemPaidAmount(order, item)
+                refundAmount = await getItemPaidAmount(order, item)
 
                 await refundToWallet(
                     order.userId,
@@ -226,10 +252,10 @@ const cancelOrder = async (req,res)=>{
                 
             
             }
-        }
+        
             // refundAmount = order.finalAmount
         //wallet refund
-            if((order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe') && !itemId){ 
+            if((order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe') ){ 
                             
                     const refundableItems = order.orderedItems.filter(i => !i.refunded); 
                     const itemsTotal = order.orderedItems.reduce(
@@ -241,15 +267,17 @@ const cancelOrder = async (req,res)=>{
 
                     for (const item of refundableItems) {
                         const itemTotal = item.price * item.quantity; //per item total 
-
-                        // const itemPaidAmount = Math.round((itemTotal / itemsTotal) * order.finalAmount);
-                        const itemPaidAmount = getItemPaidAmount(order, item);
+ 
+                        const itemPaidAmount = await getItemPaidAmount(order, item);
 
                         refundAmount += itemPaidAmount;
+                        console.log(refundAmount)
                         item.refunded = true;
                     }
+                    const fi = order.finalAmount   //₹7800.00
                     
                     refundAmount = parseFloat(refundAmount.toFixed(2));
+                     
 
                     if (refundAmount > 0) {
                         await refundToWallet(
@@ -264,7 +292,8 @@ const cancelOrder = async (req,res)=>{
                 status: 'Cancelled',
                 date: new Date()
             });
-        
+        }
+
         await order.save()
 
         res.json({
@@ -290,15 +319,13 @@ const getItemPaidAmount = async (order, item) => {
         
     }
     
-    const itemTotal = item.price * item.quantity; 
-    
-    const itemShare = (itemTotal / itemsTotal) * order.finalAmount;
-    if(coupon.minimumPrice>order.finalAmount-itemShare){
-        console.log(coupon.minimumPrice,(order.finalAmount-itemShare),'======<',(coupon.minimumPrice<order.finalAmount-itemShare))
-    }
-    
+    const itemTotal = item.price * item.quantity;
 
-    return parseFloat(itemShare.toFixed(2));
+    const paidRatio = order.finalAmount / itemsTotal;
+
+    const refundAmount = itemTotal * paidRatio; 
+
+    return parseFloat(refundAmount.toFixed(2));
 };
 
 

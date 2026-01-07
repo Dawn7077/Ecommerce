@@ -2,6 +2,7 @@ const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const Wallet = require('../../models/walletSchema')
+const Coupon = require('../../models/couponSchema')
 
 const getOrderList = async (req, res) => {
     try {
@@ -286,6 +287,26 @@ const approveReturn  = async (req,res)=>{
 
         const order = await Order.findById(orderId);
         if(!order) return res.json({ success: false, message: "Order not found" });
+
+        if(order.couponApplied && order.couponId){
+            const coupon = await Coupon.findById(order.couponId)
+
+            if(coupon){
+                let remainingTotal =0
+
+                order.orderedItems.forEach(i =>{
+                    if(i._id.toString() !== itemId && !['Cancelled','Returned'].includes(i.status)){
+                        remainingTotal += i.price * i.quantity
+                    }
+                })
+                if(remainingTotal < coupon.minimumPrice){
+                    return res.json({
+                        success: false,
+                        message: `Coupon applied. Refund not allowed because remaining total ₹${remainingTotal} is below coupon minimum ₹${coupon.minimumPrice}`
+                    });
+                }
+            }
+        }
 
         const item = order.orderedItems.id(itemId)
         
