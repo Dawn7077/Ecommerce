@@ -50,11 +50,12 @@
         <div class="card-body text-center">
           <i class="fas fa-dollar-sign dashboard-icon text-danger"></i>
           <h5>Revenue</h5>
-            <h2>₹<%= totalRevenue.toFixed(2).toLocaleString('en-IN') %></h2>
+          <h6 class="text-muted">Delivered & Paid</h6>
+          <h2>₹<%= totalRevenue.toFixed(2).toLocaleString('en-IN') %></h2>
+          <small class="text-muted">Net Sales: ₹<%= netSales.toFixed(2).toLocaleString('en-IN') %></small>
         </div>
       </div>
     </div>
-  </div>
 
   <!-- filter -->
 

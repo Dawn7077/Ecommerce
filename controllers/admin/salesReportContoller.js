@@ -5,145 +5,151 @@ const ExcelJS = require('exceljs')
 
 
 //calculating all orders stats for Sales Report
-function calculateStats1(orders) {
-    let totalSales = 0
-    let totalDiscount = 0
-    let totalCouponDiscount = 0 
-    let totalOrderAmount = 0 
-    let deliveredOrdersCount = 0;
-
-    orders.forEach(order=>{
-        totalOrderAmount += order.finalAmount
-        totalDiscount += order.discount || 0
-        totalCouponDiscount += order.couponDiscount || 0
-
-        totalSales += order.finalAmount
-    })
-
+ 
+function getSalesBaseQuery() {
     return {
-        totalOrders :orders.length,
-        totalSales:totalSales.toFixed(2),
-        totalDiscount:totalDiscount.toFixed(2),
-        totalCouponDiscount:totalCouponDiscount.toFixed(2),
-        totalOrderAmount:totalOrderAmount.toFixed(2),
-    }
-}
-
-
-function calculateStats2(orders) {
-    let totalSales = 0
-    let totalDiscount = 0
-    let totalCouponDiscount = 0 
-    let totalOrderAmount = 0 
-    let deliveredOrdersCount = 0;
-
-    orders.forEach(order=>{
-        let orderHasDeliveredItem = false
-        let orderDeliveredAmount = 0 
-        let orderDeliveredDiscount = 0 
-        
-        order.orderedItems.forEach(item => {
-            if(item.status === 'Delivered'){
-                orderHasDeliveredItem =true
-
-                const itemPrice = item.price * item.quantity
-                orderDeliveredAmount += itemPrice
-
-                if(order.subtotal > 0){
-                    const itemProportion = itemPrice / order.subtotal
-                    orderDeliveredDiscount += (order.discount || 0 ) * itemProportion
-                }
-            }
-        })
-        //only counting the orders that have at least one delivered item 
-        if(orderHasDeliveredItem){
-            deliveredOrdersCount ++ 
-            totalOrderAmount += orderDeliveredAmount
-            totalDiscount += orderDeliveredDiscount
-
-            if(order.couponApplied && order.subtotal > 0 ){
-                const deliveredProportion = orderDeliveredAmount / order.subtotal
-                totalCouponDiscount += (order.couponDiscount || 0) * deliveredProportion
-            }
-            // Final sales = amount - discount - coupon
-            totalSales += orderDeliveredAmount - orderDeliveredDiscount -
-                (order.couponApplied ? (order.couponDiscount || 0) * (orderDeliveredAmount/order.subtotal) : 0)
-        }
-        
-    })
-
-    return {
-        totalOrders :orders.length,
-        totalSales:totalSales.toFixed(2),
-        totalDiscount:totalDiscount.toFixed(2),
-        totalCouponDiscount:totalCouponDiscount.toFixed(2),
-        totalOrderAmount:totalOrderAmount.toFixed(2),
-    }
-}
-//for all orders 
-function calculateStats(orders) {
-    let totalSales = 0;
-    let totalDiscount = 0;
-    let totalCouponDiscount = 0;
-    let totalOrderAmount = 0;
-    let deliveredOrdersCount = new Set();  
-
-    orders.forEach(order => {
-        let orderDeliveredAmount = 0;
- 
-        order.orderedItems.forEach(item => {
-            if (item.status === 'Delivered') {
-                const itemTotal = item.price * item.quantity;
-                orderDeliveredAmount += itemTotal;
-                deliveredOrdersCount.add(order._id.toString()); 
-            }
-        });
- 
-        if (orderDeliveredAmount > 0) {
-            totalOrderAmount += orderDeliveredAmount;
- 
-            if ( (order.subtotal || 0) > 0) {
-                const proportion = orderDeliveredAmount / order.subtotal;
-                const orderDiscount = (order.discount || 0) * proportion;
-                const orderCouponDiscount = order.couponApplied ? (order.couponDiscount || 0) * proportion : 0;
-
-                totalDiscount += orderDiscount;
-                totalCouponDiscount += orderCouponDiscount;
- 
-                totalSales += orderDeliveredAmount - orderDiscount - orderCouponDiscount;
-            } else { 
-                totalSales += orderDeliveredAmount;
-            }
-        }
-    });
-
-    return {
-        totalOrders: deliveredOrdersCount.size,
-        totalSales: totalSales.toFixed(2),
-        totalDiscount: totalDiscount.toFixed(2),
-        totalCouponDiscount: totalCouponDiscount.toFixed(2),
-        totalOrderAmount: totalOrderAmount.toFixed(2),
+        $or: [
+            { paymentStatus: { $in: ['Paid', 'Completed'] } },
+            { paymentMethod: { $in: ['Wallet', 'Stripe'] } },
+            { status: 'Delivered' }
+        ]
     };
 }
 
-function calculateOrderNetAmount(order) {
-    let deliveredAmount = 0 
-    order.orderedItems.forEach(item =>{
-        if(item.status === 'Delivered'){
-            deliveredAmount += item.price * item.quantity
-        }
-    })
+// const query = {
+//     createdAt: { $gte: startDate, $lte: endDate },
+//     ...getSalesBaseQuery()
+// };
+ 
 
-    if(deliveredAmount === 0 || (order.subtotal || 0)===0){
-        return 0 
+function calculateStats3(orders) {
+    let totalSales = 0;
+    let totalOrderAmount = 0;
+    let totalCancelled = 0;
+    let totalRefunded = 0;
+    let totalOrdersCount = 0;
+    let deliveredOrdersCount = new Set();  
+
+    orders.forEach(order => {
+        const netAmount = calculateOrderNetAmount(order);
+        if (netAmount > 0) {
+            totalSales += netAmount;
+            totalOrderAmount += netAmount;
+            totalOrdersCount++;
+        }
+ 
+        const paidRatio = order.finalAmount / (order.subtotal || 1);
+        order.orderedItems.forEach(item => {
+            const itemActualValue = item.price * item.quantity * paidRatio;
+            if (item.status === 'Cancelled') totalCancelled += itemActualValue;
+            if (item.refunded) totalRefunded += itemActualValue;
+        });
+    });
+
+    return {
+        totalOrders: totalOrdersCount,
+        totalSales: totalSales.toFixed(2),
+        totalOrderAmount: totalOrderAmount.toFixed(2),
+        totalCancelled: totalCancelled.toFixed(2),
+        totalRefunded: totalRefunded.toFixed(2)
+    };
+}
+
+function calculateOrderNetAmount3(order) {
+    const deliveredItemsAmount = order.orderedItems
+        .filter(item => item.status === 'Delivered')
+        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    if (deliveredItemsAmount === 0) return 0;
+
+    const totalPossibleAmount = order.orderedItems
+        .filter(item => item.status !== 'Cancelled')
+        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    if (deliveredItemsAmount === totalPossibleAmount) {
+        return +order.finalAmount.toFixed(2);
+    }
+    
+    const ratio = order.finalAmount / (order.subtotal || 1);
+    return +(deliveredItemsAmount * ratio).toFixed(2);
+
+}
+
+//for all orders 
+
+function calculateOrderNetAmount(order) { 
+    const activeItemsTotal = order.totalPrice || 1; 
+    const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+
+    let netAmount = 0;
+    const isPrepaid = ['Wallet', 'Stripe'].includes(order.paymentMethod);
+    order.orderedItems.forEach(item => {
+        const isSold =(isPrepaid && ['Paid', 'Completed'].includes(order.paymentStatus)) || item.status === 'Delivered';
+
+        // if (isSold && !item.refunded && item.status !== 'Cancelled') {
+        if (isSold && !item.refunded ) {
+            const itemBaseValue = item.price * item.quantity;
+            const itemCouponShare = itemBaseValue * couponRatio;
+            netAmount += (itemBaseValue - itemCouponShare);
+        }
+    });
+
+    // Add shipping only if at least one item is delivered and kept
+    // if (netAmount > 0) {
+    if (netAmount > 0 && order.finalAmount > 0) {
+        const shipping = (order.finalAmount - (order.totalPrice - order.couponDiscount));
+        netAmount += shipping;
     }
 
-    const proportion = deliveredAmount/ order.subtotal
-    const discount = (order.discount || 0) * proportion
-    const coupon = order.couponApplied? 
-        ( order.couponDiscount|| 0) * proportion :0
+    return +netAmount.toFixed(2);
+}
 
-    return +(deliveredAmount - discount -coupon).toFixed(2)
+function calculateStats(orders) {
+    let stats = {
+        totalOrders: 0,
+        totalSales: 0,
+        totalOrderAmount: 0,
+        totalCancelled: 0,
+        totalRefunded: 0,
+        totalDiscount: 0, // Product/Category offers
+        totalCouponDiscount: 0
+    };
+
+    orders.forEach(order => {
+        const orderNet = calculateOrderNetAmount(order);
+        if (orderNet > 0) {
+            stats.totalOrders++;
+            stats.totalSales += orderNet;
+        }
+
+        //  whole system stats
+        stats.totalDiscount += (order.discount || 0);
+        stats.totalCouponDiscount += (order.couponDiscount || 0);
+        stats.totalOrderAmount += (order.finalAmount || 0);
+
+        // Calculate item-wise cancelled/refunded amounts
+        const activeItemsTotal = order.totalPrice || 1;
+        const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+
+        order.orderedItems.forEach(item => {
+            const itemBaseValue = item.price * item.quantity;
+            const itemCouponShare = itemBaseValue * couponRatio;
+            const itemActualPaidValue = itemBaseValue - itemCouponShare;
+
+            if (item.status === 'Cancelled') {
+                stats.totalCancelled += itemActualPaidValue;
+            }
+            if (item.refunded) {
+                stats.totalRefunded += itemActualPaidValue;
+            }
+        });
+    });
+
+    // Format all to fixed(2)
+    for (let key in stats) {
+        if (key !== 'totalOrders') stats[key] = stats[key].toFixed(2);
+    }
+    return stats;
 }
 
 
@@ -204,8 +210,13 @@ const loadSalesReport = async(req,res)=>{
         const limit = 10;
 
         const query = {
-            // status: { $nin: ['Cancelled','Returned'] },
-            paymentStatus: { $in: ['Paid', 'Completed'] },
+            $or: [
+                { paymentStatus: 'Paid' },
+                { paymentStatus: 'Completed' },
+                { paymentMethod: { $in: ['Wallet', 'Stripe'] } },
+                { status: 'Delivered' }
+            ]
+            
         }
 
         const rawOrders = await Order.find(query)
@@ -213,15 +224,38 @@ const loadSalesReport = async(req,res)=>{
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit);
+// *******
+    const orders = rawOrders.map(order => {
+    let itemRefunded = 0;
+    let itemCancelled = 0;
+    
+    // Calculate the share of coupon for this specific item
+    const activeItemsTotal = order.totalPrice || 1;
+    const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
 
-        const orders = rawOrders.map(order => ({
-            ...order.toObject(),
-            deliveredNetAmount: calculateOrderNetAmount(order)
-        }));
+    order.orderedItems.forEach(item => {
+        const itemBaseValue = item.price * item.quantity;
+        const itemActualValue = itemBaseValue - (itemBaseValue * couponRatio);
+
+        if (item.refunded) {
+            itemRefunded += itemActualValue;
+        } else if (item.status === 'Cancelled') {
+            itemCancelled += itemActualValue;
+        }
+    });
+
+    return {
+        ...order.toObject(),
+        deliveredNetAmount: calculateOrderNetAmount(order),
+        totalCancelled: +itemCancelled.toFixed(2),
+        totalRefunded: +itemRefunded.toFixed(2)
+    };
+});
+// *******
 
 
-        const totalOrders = await Order.countDocuments(query);
-        const totalPages = Math.ceil(totalOrders / limit);
+const totalOrders = await Order.countDocuments(query);
+const totalPages = Math.ceil(totalOrders / limit);
 
         const allOrders = await Order.find(query)
         //---
@@ -249,14 +283,14 @@ const filterSalesReport =  async(req,res)=>{
         const limit =10 
         const {startDate, endDate}= getDateRange(filterType, customFrom, customTo)
 
-        const query ={
-            status: { $nin: ['Cancelled','Returned'] },
-            paymentStatus:{$in:['Paid','Completed']},
-            createdAt:{
-                $gte:startDate,
-                $lte:endDate
-            }
-        }
+        const query = {
+            createdAt: { $gte: startDate, $lte: endDate },
+            $or: [
+                { paymentStatus: { $in: ['Paid', 'Completed'] } },
+                { paymentMethod: { $in: ['Wallet', 'Stripe'] } },
+                { status: 'Delivered' }
+            ]
+        };
 
         const rawOrders = await Order.find(query)
         .populate('userId', 'name email')
@@ -264,10 +298,28 @@ const filterSalesReport =  async(req,res)=>{
         .skip((page - 1) * limit)
         .limit(limit);
 
-        const orders = rawOrders.map(order => ({
-            ...order.toObject(),
-            deliveredNetAmount: calculateOrderNetAmount(order)
-        }));
+        // *******
+        const orders = rawOrders.map(order => {
+            const paidRatio = order.finalAmount / (order.subtotal || 1);
+            let totalCancelled  = 0
+            let totalRefunded  = 0
+
+            order.orderedItems.forEach(item => {
+                const itemTotal = item.price * item.quantity * paidRatio;
+
+                if(item.status === 'Cancelled') totalCancelled += itemTotal;
+                if(item.refunded) totalRefunded += itemTotal;
+            });
+
+            return {
+                ...order.toObject(),
+                deliveredNetAmount: calculateOrderNetAmount(order),
+                totalCancelled: +totalCancelled.toFixed(2),
+                totalRefunded: +totalRefunded.toFixed(2)
+            };
+        });
+        
+        // *******
 
 
         const totalOrders = await Order.countDocuments(query)
@@ -310,10 +362,30 @@ const downloadSalesExcel = async (req,res)=>{
             .populate('userId', 'name email')
             .sort({ createdAt:-1 });
 
-        const orders = rawOrders.map(order => ({
-            ...order.toObject(),
-            deliveredNetAmount: calculateOrderNetAmount(order)
-        }));
+        //==================
+        const orders = rawOrders.map(order => {
+            const netAmount = calculateOrderNetAmount(order); 
+            
+             
+            const activeItemsTotal = order.totalPrice || 1;
+            const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+            let itemRefunded = 0;
+            let itemCancelled = 0;
+
+            order.orderedItems.forEach(item => {
+                const itemActualValue = (item.price * item.quantity) * (1 - couponRatio);
+                if (item.refunded) itemRefunded += itemActualValue;
+                else if (item.status === 'Cancelled') itemCancelled += itemActualValue;
+            });
+
+            return {
+                ...order.toObject(),
+                deliveredNetAmount: netAmount,
+                totalCancelled: +itemCancelled.toFixed(2),
+                totalRefunded: +itemRefunded.toFixed(2)
+            };
+        });
+        //==================
 
  
         const stats = calculateStats(orders);
@@ -322,12 +394,12 @@ const downloadSalesExcel = async (req,res)=>{
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet('Sales Report')
         //heading
-        worksheet.mergeCells('A1:H1');
+        worksheet.mergeCells('A1:J1'); 
         worksheet.getCell('A1').value = 'SALES REPORT';
         worksheet.getCell('A1').font = { size: 16, bold: true };
         worksheet.getCell('A1').alignment = { horizontal: 'center' };
         //date
-        worksheet.mergeCells('A2:H2');
+        worksheet.mergeCells('A2:J2');
         worksheet.getCell('A2').value = `Date: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
         worksheet.getCell('A2').alignment = { horizontal: 'center' };
 
@@ -338,6 +410,8 @@ const downloadSalesExcel = async (req,res)=>{
         worksheet.addRow(['Total Order Amount:', `₹${stats.totalOrderAmount}`]);
         worksheet.addRow(['Total Discount:', `₹${stats.totalDiscount}`]);
         worksheet.addRow(['Total Coupon Discount:', `₹${stats.totalCouponDiscount}`]);
+        worksheet.addRow(['Total Cancelled:', `₹${stats.totalCancelled}`]);
+        worksheet.addRow(['Total Refunded:', `₹${stats.totalRefunded}`]);
         worksheet.addRow(['Net Sales:', `₹${stats.totalSales}`]);
         worksheet.addRow([]);
 
@@ -350,7 +424,9 @@ const downloadSalesExcel = async (req,res)=>{
             'Items',
             'Discount',
             'Coupon Discount',
-            'Total Amount'
+            'Cancelled Amount',
+            'Refunded Amount',
+            'Net Sales'
         ]);
         headerRow.font = { bold: true };
         headerRow.fill = {
@@ -359,18 +435,20 @@ const downloadSalesExcel = async (req,res)=>{
             fgColor: { argb: 'FFD3D3D3' }
         };
         //table data for each row 
-        orders.forEach(order=>{
+        orders.forEach(order => {
             worksheet.addRow([
                 order.orderId,
                 new Date(order.createdAt).toLocaleDateString(),
-                order.userId.name,
+                order.userId?.name || 'Guest',
                 order.paymentMethod,
                 order.orderedItems.length,
                 `₹${order.discount || 0}`,
                 `₹${order.couponDiscount || 0}`,
+                `₹${order.totalCancelled || 0}`,
+                `₹${order.totalRefunded || 0}`,
                 `₹${order.deliveredNetAmount}`
-            ])
-        })
+            ]);
+        });
 
         worksheet.columns.forEach(column=>{
             column.width =15
@@ -412,10 +490,28 @@ const downloadSalesPDF = async (req,res) => {
         .populate('userId', 'name email')
         .sort({ createdAt: -1 });
 
-        const orders = rawOrders.map(order => ({
-            ...order.toObject(),
-            deliveredNetAmount: calculateOrderNetAmount(order)
-        }));
+        const orders = rawOrders.map(order => {
+            const netAmount = calculateOrderNetAmount(order); 
+            
+             
+            const activeItemsTotal = order.totalPrice || 1;
+            const couponRatio = (order.couponDiscount || 0) / activeItemsTotal;
+            let itemRefunded = 0;
+            let itemCancelled = 0;
+
+            order.orderedItems.forEach(item => {
+                const itemActualValue = (item.price * item.quantity) * (1 - couponRatio);
+                if (item.refunded) itemRefunded += itemActualValue;
+                else if (item.status === 'Cancelled') itemCancelled += itemActualValue;
+            });
+
+            return {
+                ...order.toObject(),
+                deliveredNetAmount: netAmount,
+                totalCancelled: +itemCancelled.toFixed(2),
+                totalRefunded: +itemRefunded.toFixed(2)
+            };
+        });
 
 
 
@@ -449,6 +545,8 @@ const downloadSalesPDF = async (req,res) => {
             ['Total Order Amount:', `${stats.totalOrderAmount}`],
             ['Total Discount:', `${stats.totalDiscount}`],
             ['Total Coupon Discount:', `${stats.totalCouponDiscount}`],
+            ['Total Cancelled:', `₹${stats.totalCancelled}`],
+            ['Total Refunded:', `₹${stats.totalRefunded}`],
             ['Net Sales:', `${stats.totalSales}`]
         ]
 
@@ -465,9 +563,18 @@ const downloadSalesPDF = async (req,res) => {
         //table header
         doc.fontSize(10).font('Helvetica-Bold');
         const tableTop = doc.y;
-        const colWidths = [80, 80, 100, 70, 70, 70, 70];
-        const headers = ['Order ID', 'Date', 'Customer', 'Payment', 'Discount', 'Coupon', 'Total'];
-
+        const colWidths = [75, 65, 90, 60, 55, 55, 55, 55, 55];
+        const headers = [
+            'Order ID',
+            'Date',
+            'Customer',
+            'Payment',
+            'Discount',
+            'Coupon',
+            'Cancelled',
+            'Refunded',
+            'Net'
+        ];
         let xPos = 50;
         headers.forEach((header, i) => {
             doc.text(header, xPos, tableTop, { width: colWidths[i], align: 'left' });
@@ -493,12 +600,13 @@ const downloadSalesPDF = async (req,res) => {
             const rowData = [
                 order.orderId,
                 new Date(order.createdAt).toLocaleDateString(),
-                (order.userId?.name || 'Guest').substring(0, 15),
+                (order.userId?.name || 'Guest').substring(0, 12),
                 order.paymentMethod,
                 `₹${order.discount || 0}`,
                 `₹${order.couponDiscount || 0}`,
+                `₹${order.totalCancelled || 0}`,
+                `₹${order.totalRefunded || 0}`,
                 `₹${order.deliveredNetAmount}`
-
             ];
 
             rowData.forEach((data, i) => {

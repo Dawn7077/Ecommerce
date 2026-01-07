@@ -134,6 +134,8 @@
                             <th>Items</th>
                             <th>Discount</th>
                             <th>Coupon</th>
+                            <th>Cancelled</th>
+                            <th>Refunded</th>
                             <th>Total</th>
                             <th>Status</th>
                         </tr>
@@ -164,6 +166,10 @@
                                             -
                                         <% } %>
                                     </td>
+
+                                    <td>₹ <%= order.totalCancelled %></td>
+                                    <td>₹ <%= order.totalRefunded %></td>
+
                                     <td><b>₹ <%= order.deliveredNetAmount %></b></td>
                                     <td>
                                         <% if(order.status === 'Delivered') {%>
