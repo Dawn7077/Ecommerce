@@ -1,0 +1,52 @@
+<%- include("../../views/partials/user/header") %>
+<section class="content-main mt-80 mb-80">
+   <div class="card mx-auto card-login col-4">
+       <div class="card-body">
+           <h4 class="card-title mb-4">Enter your current password</h4>
+           <form onsubmit="validateCurrentPassword(event)">
+               <div class="mb-3">
+                   <input class="form-control" name="password" placeholder="Current Password" type="text" id="password">
+                   <div class="error-message" id="password-error"></div>
+               </div>
+               <div class="mb-4">
+                   <button type="submit" class="btn btn-primary w-100" >Verify</button>
+               </div> 
+           </form>
+         
+          
+       </div>
+   </div>
+</section>
+<script>
+   async function validateCurrentPassword(event) {
+    event.preventDefault()
+       const password = document.getElementById('password').value; 
+       const errorDiv = document.getElementById('password-error')  
+       try {
+           const res =await fetch('/confirm-password',{
+               method:"POST",
+               headers:{"Content-Type":'application/json'},
+               body:JSON.stringify({password})
+            })
+            const data = await res.json()
+
+            if(data.success){
+                // window.alert(data.message)
+                Swal.fire('Success', data.message, 'success')
+                .then(()=>window.location.href=data.redirectUrl )
+                    
+            }else{
+                Swal.fire('Error', data.message, 'error');
+                errorDiv.innerHTML = `${data.message} <a href="/forgot-current-password" style="color: blue;">forgot Password?</a>` 
+            }
+
+             
+        
+        } catch (error) { 
+            window.alert(data.message)
+            console.log('Error happened')
+        }
+    
+   }
+</script>
+<%- include("../../views/partials/user/footer") %>

@@ -4,11 +4,19 @@
 <section class="content-main mt-80 mb-80">
    <div class="card mx-auto card-login col-4">
        <div class="card-body">
-           <h4 class="card-title mb-4">Enter New Email</h4>
-           <form method="post" action="/update-email" onsubmit="return validateEmailForm()">
+           <h4 class="card-title mb-4">Update your Info</h4>
+           <form onsubmit="submitData(event)">
+               <div class="mb-3">
+                   <input class="form-control" name="newName" placeholder="New Name" type="text" id="name">
+                   <div class="error-message" id="name-error"></div>
+               </div>
                <div class="mb-3">
                    <input class="form-control" name="newEmail" placeholder="New Email" type="text" id="email">
                    <div class="error-message" id="email-error"></div>
+               </div>
+               <div class="mb-3">
+                   <input class="form-control" name="newPhone" placeholder="New Phone" type="text" id="phone">
+                   <div class="error-message" id="phone-error"></div>
                </div>
                <div class="mb-4">
                    <button type="submit" class="btn btn-primary w-100">Submit</button>
@@ -20,6 +28,27 @@
 
 
 <script>
+
+    function nameValidateCheck(){
+        const nameVal = document.getElementById('name').value
+        const emailError = document.getElementById('name-error');  
+        const namePattern = /^[A-Za-z\s]+$/
+        
+        if(nameVal.trim()==="") {
+          emailError.style.display="block"
+          emailError.innerHTML= "please enter a valid name"
+          return false;
+        }else if(!namePattern.test(nameVal)){
+          emailError.style.display = "block"
+          emailError.innerHTML= "Name can only contain letters and space"
+          return false;
+        }else{
+          emailError.style.display = "none"
+          return true;
+        }
+         
+      }
+
    function validateEmailForm() {
        const emailInput = document.getElementById('email');
        const emailError = document.getElementById('email-error');
@@ -41,6 +70,74 @@
            return true;
        }
    }
+
+   function phoneValidateCheck(){
+        const phoneVal = document.getElementById('phone').value
+        const emailError = document.getElementById('phone-error');
+        const phonePattern = /^[0-9]+$/;
+
+
+        if(phoneVal.trim()===''){
+          emailError.style.display = 'block'
+          emailError.innerHTML ='Enter valid phone number'
+          return false;
+        }else if(!phonePattern.test(phoneVal)){
+          emailError.style.display = 'block'
+          emailError.innerHTML = 'Phone number can only contain digits'
+          return false;
+        }else if(phoneVal.length !== 10) {
+            phoneError.style.display = 'block';
+            phoneError.innerHTML = 'Enter 10 digit phone number';
+            return false;
+        }else{
+          emailError.style.display = 'none'
+          emailError.innerHTML= ''
+          return true;
+        }
+      }
+
+   async function submitData(event){
+    event.preventDefault()
+
+    const isNameValid = nameValidateCheck()
+    const isEmailValid =validateEmailForm()
+    const isPhoneValid =phoneValidateCheck()
+
+    if( !isEmailValid || !isNameValid || !isPhoneValid){  
+        Swal.fire('Error',  'Please Choose right Info ', 'error');
+        return
+    }
+
+
+        try {
+            const newName =  document.getElementById('name').value.trim()
+            const newEmail =  document.getElementById('email').value.trim()
+            const newPhone =  document.getElementById('phone').value.trim()
+
+            const res = await fetch('/update-profile',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    newName,
+                    newEmail,
+                    newPhone,
+                })
+            })
+            const data = await res.json()
+            if(data.success){
+                Swal.fire('Success', data.message, 'success')
+                .then(()=>window.location.href=data.redirectUrl )
+            }else{
+                Swal.fire('Error', data.message, 'error');
+            }
+        } catch (error) {
+            console.log(error)
+            Swal.fire('Error', 'Something error happened', 'error');
+        }
+   }
+
+
+
 </script>
 <%- include("../../views/partials/user/footer") %>
 

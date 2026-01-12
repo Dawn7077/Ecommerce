@@ -18,25 +18,42 @@ const login= async(req,res)=>{
     try {
         const {password,email}=req.body 
         const admin =await User.findOne({email,isAdmin:true})
-        if (admin){
+
+
+        if(!admin){
+            return res.json({
+                success:false,
+                message:"This is not a admin account"
+            })
+        }else{
             const passwordMatch = await bcrypt.compare(password,admin.password)
-            if(passwordMatch){
-                // req.session.admin= true
+            if(passwordMatch){ 
                 req.session.admin= {
                     _id:admin._id,
                     name:admin.name,
                     email:admin.email
                 }
-                return res.redirect('/admin/dashboard')
-            }else{
-                return res.redirect('/admin/login')
+                // return res.redirect('/admin/dashboard')
+                return res.json({ 
+                    success:true,
+                    redirectUrl:'/admin/dashboard'
+                })
+            }else{//password not match
+                // return res.redirect('/admin/login')
+                return res.json({
+                    success:false,
+                    message:"Invalid email or password"
+                })
             }
-        }else{
-            return res.redirect('/admin/login')
-        }
+        } 
+
     } catch (error) {
         console.log("login Error",error);
-        return res.redirect('/pageError')
+        // return res.redirect('/pageError')
+        return res.status(500).json({
+            success: false,
+            message: "Server error. Please try again."
+        });
         
     }
 }

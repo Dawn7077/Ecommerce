@@ -96,7 +96,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <form action="/admin/offer-management" method="GET" class="row g-3">
-                <input type="hidden" name="type" value="<%= filterType %>">
+                <input type="hidden" name="filterType" value="<%= filterType %>">
                 <div class="col-md-10">
                     <input 
                         type="text" 
@@ -272,7 +272,7 @@
             <ul class="pagination justify-content-center">
                 <% for(let i = 1; i <= totalPages; i++) { %>
                     <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>&type=<%= filterType %>&search=<%= search %>">
+                        <a class="page-link" href="?page=<%= i %>&filterType=<%= filterType %>&search=<%= search %>">
                             <%= i %>
                         </a>
                     </li>
