@@ -245,14 +245,47 @@ const verifyEmailOtp = async(req,res)=>{
 
 const updateEmail = async(req,res)=>{
     try {
-        const newEmail = req.body.newEmail
-        console.log('Updating email to :',newEmail,'for user id:',req.session.user._id);
+        const {newName,newEmail,newPhone} = req.body
+        console.log('Updating user info to :',newEmail,'for user id:',req.session.user._id);
         const userId = req.session.user._id
+        const existingUserName = await User.findOne({
+            name:newName,
+            _id:{$ne:userId}
+        })
+        const existingUserEmail = await User.findOne({
+            email:newEmail,
+            _id:{$ne:userId}
+        })
+        // const existingUserPhone = await User.findOne({
+        //     phone:newPhone,
+        //     _id:{$ne:userId}
+        // })
+
+        if(existingUserName ){
+            return res.json({
+                success:false,
+                message:`${newName} has been used already`,
+                redirectUrl:'/verify-email-Otp'
+            })
+        }
+        if( existingUserEmail){
+            return res.json({
+                success:false,
+                message:`${newEmail} has been used already`,
+                redirectUrl:'/verify-email-Otp'
+            })
+        }
+          
         await User.updateOne({_id:userId},{
-            $set:{email:newEmail}
+            $set:{name:newName,email:newEmail,phone:newPhone}
         })
         req.session.user.email = newEmail
-        res.redirect('/user-profile')
+        return res.json({
+                success:true,
+                message:`User Info has been updated`,
+                redirectUrl:'/user-profile'
+            })
+        // res.redirect('/user-profile')
     } catch (error) {
         res.redirect("/pageNotFound")
     }
@@ -260,9 +293,64 @@ const updateEmail = async(req,res)=>{
 
 const getChangePassword = async (req,res)=>{
     try {
-        res.render('user/changePassword')
+        // res.render('user/changePassword')
+        res.render('user/confirmCurrentPaswd')
     } catch (error) {
         res.redirect('/pageNotFound')
+    }
+}
+const forgotCurrentPswd = async (req,res)=>{
+    try {
+        res.render('user/changePassword') 
+    } catch (error) {
+        res.redirect('/pageNotFound')
+    }
+}
+
+const passwordConfirm = async (req,res)=> {
+    try {
+        const {password} =req.body
+        const userId = req.session.user._id
+        const user = await User.findById(userId)
+        if(!user){
+            return res.json({
+                success:false,
+                message:"User Not Logged in",
+                redirectUrl:"/reset-password"
+            })
+        }
+        if(user.isGoogleUser===true){
+            return res.json({
+                success:false,
+                message:"User Account was a Single sign in using Google sign in ",
+                redirectUrl:"/user-profile"
+            })
+        }
+        const passwordMatch  = await bcrypt.compare(password,user.password)
+
+        if(passwordMatch){
+            res.json({
+                success:true,
+                message:"Success password confirmed",
+                redirectUrl:"/reset-password"
+            })
+            
+        }
+        else{
+            res.json({
+                success:false,
+                message:"Password did not match",
+                redirectUrl:"/change-password"
+            })
+        }
+
+    } catch (error) {
+        console.log(error)
+        res.json({
+                success:false,
+                message:"Something was wrong Error",
+                redirectUrl:"/change-password"
+            })
     }
 }
 
@@ -448,6 +536,7 @@ module.exports= {
     verifyEmailOtp,
     updateEmail,
     getChangePassword,
+    passwordConfirm,forgotCurrentPswd,
     changePasswordValid,
     verifyPasswordOtp,
     getAddAddress,

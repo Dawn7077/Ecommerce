@@ -9,7 +9,11 @@
         <h2 class="content-title card-title">Products</h2>
     </div>
 </div>
-<header class="card-header text-center mb-20">
+<header class="card-header text-center mb-20 d-flex align-items-center">
+    <a href="/admin/addProducts" class="btn btn-sm  d-flex justify-content-evenly align-items-center " style="background-color: #adb5bd; color: #ffffff;">
+        <i class="icon material-icons md-add_box mx-1"></i>
+        <span class="text">Add Product</span>    
+    </a>
     <form action="/admin/products" method="get" class="d-inline">
         <div class="input-group input-group-sm border border-1 border-grey rounded-pill d-flex align-items-center" style="width: 500px; margin-left: 230px;">
             <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products or brands" name="search" value="<%= search %>">

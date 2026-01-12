@@ -1,10 +1,58 @@
 const Product = require('../../models/productSchema')
 const Category = require('../../models/categorySchema') 
 
+const addProductOffer1 = async (req,res)=>{
+    try {
+        const {productId,percentage}  = req.body
+
+        if (!percentage || percentage < 1 || percentage > 90) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'Percentage must be between 1 and 90' 
+            });
+        }
+
+        const findProduct = await Product.findById(productId);
+        if (!findProduct) {
+            return res.status(404).json({ 
+                status: false, 
+                message: 'Product not found' 
+            });
+        }
+        //checking if category offers is there
+        const findCategory = await Category.findById(findProduct.category);
+        if (findCategory && findCategory.categoryOffer > percentage) {
+            return res.json({ 
+                status: false, 
+                message: 'This product\'s category already has an offer. Greater than your new offer' 
+            });
+        }
+
+        const category = await Category.findById(findProduct.category);
+
+        findProduct.productOffer = percentage;
+        findProduct.salesPrice = getFinalPrice(findProduct, category);
+
+        await findProduct.save();
+
+        res.json({ 
+            status: true, 
+            message: 'Product offer added successfully',
+            newPrice: findProduct.salesPrice 
+        });
+          
+    } catch (error) {
+        console.error("Add Product Offer Error:", error);
+        res.status(500).json({ status: false, message: "Internal server error" });
+    }
+}
+
+
+
 const getOfferManagement = async(req,res)=>{
     try {
         const page= parseInt(req.query.page) || 1
-        const limit = 10
+        const limit = 5
         const search = req.query.search || ''
         const filterType = req.query.filterType || 'all'
 
@@ -52,8 +100,7 @@ const getOfferManagement = async(req,res)=>{
 
             const totalCategories = await Category.countDocuments(query)
             const totalPages = Math.ceil(totalCategories/limit)
-            
-        // console.log(products,categories,filterType,search,page,totalPages)
+             
 
             return res.render('admin/offerManagement',{
                 products:[],
@@ -65,7 +112,7 @@ const getOfferManagement = async(req,res)=>{
             })
         }else{
             const productQuery ={productOffer:{$gte:0}} 
-            const categoryQuery  ={ categoryOffer:{$gte:0}}
+            const categoryQuery  ={ categoryOffer:{$gte:0}} 
 
             if(search){ 
                 productQuery.productName = { $regex: search, $options: 'i' };
@@ -74,12 +121,18 @@ const getOfferManagement = async(req,res)=>{
             const products = await Product.find(productQuery)
             .populate('category','name')
             .sort({createdAt:-1}) 
+            .skip((page-1)*limit)
             .limit(5)
 
             const categories = await Category.find(categoryQuery)
             .sort({createdAt:-1}) 
+            .skip((page-1)*limit)
             .limit(5)
 
+            const totalProducts = await Product.countDocuments(productQuery)
+            const totalCategories = await Category.countDocuments(categoryQuery)
+ 
+            const totalPages = Math.max(Math.ceil(totalProducts/limit),Math.ceil(totalCategories/limit))
             
         console.log(products,categories,filterType,search,page)
 
@@ -88,8 +141,8 @@ const getOfferManagement = async(req,res)=>{
                 categories,
                 filterType,
                 search,
-                currentPage: 1,
-                totalPages:1
+                currentPage: page,
+                totalPages:totalPages
             })
 
 
@@ -99,52 +152,7 @@ const getOfferManagement = async(req,res)=>{
         res.redirect('/admin/pageError');
     }   
 }
-
-const addProductOffer1 = async (req,res)=>{
-    try {
-        const {productId,percentage}  = req.body
-
-        if (!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
-                status: false, 
-                message: 'Percentage must be between 1 and 90' 
-            });
-        }
-
-        const findProduct = await Product.findById(productId);
-        if (!findProduct) {
-            return res.status(404).json({ 
-                status: false, 
-                message: 'Product not found' 
-            });
-        }
-        //checking if category offers is there
-        const findCategory = await Category.findById(findProduct.category);
-        if (findCategory && findCategory.categoryOffer > percentage) {
-            return res.json({ 
-                status: false, 
-                message: 'This product\'s category already has an offer. Greater than your new offer' 
-            });
-        }
-
-        const category = await Category.findById(findProduct.category);
-
-        findProduct.productOffer = percentage;
-        findProduct.salesPrice = getFinalPrice(findProduct, category);
-
-        await findProduct.save();
-
-        res.json({ 
-            status: true, 
-            message: 'Product offer added successfully',
-            newPrice: findProduct.salesPrice 
-        });
-          
-    } catch (error) {
-        console.error("Add Product Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" });
-    }
-}
+  
 const addProductOffer = async (req, res) => {
     try {
         const { productId, percentage } = req.body;
@@ -179,7 +187,6 @@ const addProductOffer = async (req, res) => {
         res.status(500).json({ status: false, message: "Internal server error" });
     }
 };
-
 
 const removeProductOfferPage =  async (req, res) => {
     try {
@@ -245,8 +252,7 @@ const addCategoryOffer =  async (req,res) => {
         res.status(500).json({ status: false, message: 'Internal server error' })
     }
 }
-
-
+ 
 const removeCategoryOfferPage = async (req, res) => {
     try {
         const {categoryId} = req.body;

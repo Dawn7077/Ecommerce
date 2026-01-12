@@ -41,7 +41,7 @@
       border-radius: 8px;
     } 
     .error-message {
-      color: red;
+      color: rgb(48, 48, 48);
       font-size: 0.875rem;
     }
     .text-center{
@@ -62,7 +62,7 @@
     <% if (message) { %>
     <div class="alert alert-danger text-center"><%= message %></div>
     <% } %>
-    <form id="adminLoginForm" method="post" action="/admin/login">
+    <form id="adminLoginForm" >
       <div class="form-group">
         <label for="adminEmail">Email address</label>
         <input
@@ -92,6 +92,7 @@
   </div>
   <script src="/js/jquery.min.js"></script>
   <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const adminLoginForm = document.getElementById("adminLoginForm");
@@ -100,26 +101,50 @@
       const emailError = document.getElementById("emailError");
       const passwordError = document.getElementById("passwordError");
 
-      adminLoginForm.addEventListener("submit", function (event) {
+      adminLoginForm.addEventListener("submit",async function (event) {
+        event.preventDefault();
+        emailError.textContent = "";
+        passwordError.textContent = "";
+
         let isValid = true;
         const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailPattern.test(emailField.value)) {
           emailError.textContent = "Invalid email format";
-          isValid = false;
-        } else {
-          emailError.textContent = "";
-        }
+          return
+        }  
         if (passwordField.value.length < 8) {
           passwordError.textContent =
             "Password should contain at least 8 characters";
-          isValid = false;
-        } else {
-          passwordError.textContent = "";
+          return
+        }  
+        
+        try {
+          const res = await fetch('/admin/login',{
+            method:'POST',
+            headers:{
+              "Content-Type": "application/json"
+            },
+            body:JSON.stringify({
+              email:emailField.value,
+              password:passwordField.value
+            })
+          })
+
+          const data = await res.json()
+          if(data.success){
+            Swal.fire("Success", "Welcome Admin", "success")
+              .then(() => window.location.href = data.redirectUrl)
+          }else{
+            passwordError.textContent = data.message || "Something went wrong"
+          }
+
+        } catch (error) {
+          console.log(error)
+          passwordError.textContent = data.message || "Something went wrong"
+
         }
 
-        if (!isValid) {
-          event.preventDefault();
-        }
+         
       });
     });
 
