@@ -459,15 +459,18 @@
       </div>
       <div class="form-group">
         <label for="pincode">Pincode:</label>
-        <input type="number" id="pincode" name="pincode"  >
+        <input type="text" id="pincode" name="pincode"  >
+        <!-- <input type="text" id="pincode" oninput="allowOnlyNumbers(event)" maxlength="6"> -->
       </div>
       <div class="form-group">
         <label for="phone">Phone:</label>
-        <input type="number" id="phone" name="phone"  >
+        <input type="text" id="phone" name="phone"  >
+        <!-- <input type="text" id="phone" oninput="allowOnlyNumbers(event)" maxlength="10"> -->
+
       </div>
       <div class="form-group">
         <label for="altPhone">Alternate Phone:</label>
-        <input type="number" id="altPhone" name="altPhone">
+        <input type="text" id="altPhone" name="altPhone">
       </div>
       <button type="submit" class="btn btn-primary">Save Address</button>
     </form>
@@ -475,12 +478,12 @@
 </div> 
 <!-- validate address add modal -->
 <script>
-    document.getElementById("addressModal").addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (validateAddressForm()) {
-            this.submit();
-        }
-    });
+    // document.getElementById("addressModal").addEventListener("submit", function (e) {
+    //     e.preventDefault();
+    //     if (validateAddressForm()) {
+    //         this.submit();
+    //     }
+    // });
 
     function validateAddressForm() {
         const fields = [
@@ -537,6 +540,8 @@
         }
         return errorDiv;
     }
+
+
 </script>
 
 
@@ -570,15 +575,19 @@
             </div>
             <div class="form-group">
                 <label for="editPincode">Pincode</label>
-                <input type="number" name="editPincode" id="editPincode"  >
+                <!-- <input type="text" name="editPincode" id="editPincode"  > -->
+                <input type="text" id="editPincode" maxlength="6" oninput="allowOnlyNumbers(event)">
             </div>
             <div class="form-group">
                 <label for="editPhone">Phone</label>
-                <input type="number" name="editPhone" id="editPhone"  >
+                <!-- <input type="text" name="editPhone" id="editPhone"  > -->
+                 <input type="text" id="editPhone" maxlength="10" oninput="allowOnlyNumbers(event)">
             </div>
             <div class="form-group">
                 <label for="editAltPhone">Alternate Phone</label>
-                <input type="number" name="editAltPhone" id="editAltPhone">
+                <!-- <input type="text" name="editAltPhone" id="editAltPhone"> -->
+                 <input type="text" id="editAltPhone" maxlength="10" oninput="allowOnlyNumbers(event)">
+                
             </div>
             <button type="submit" class="btn btn-primary">Update Address</button>
         </form>
@@ -586,12 +595,12 @@
 </div>
 <!-- validate address edit modal -->
 <script>
-    document.getElementById("editAddressModal").addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (validateEditAddressForm()) {
-            this.submit();
-        }
-    });
+    // document.getElementById("editAddressModal").addEventListener("submit", function (e) {
+    //     e.preventDefault();
+    //     if (validateEditAddressForm()) {
+    //         this.submit();
+    //     }
+    // });
 
     function validateEditAddressForm() {
         const fields = [
@@ -776,6 +785,9 @@ window.onclick = function(event) {
  
 document.getElementById("modalAddressForm").addEventListener("submit", async function(e){
   e.preventDefault();
+    if (!validateAddressForm()) {
+        return;  
+    }
  
 
    
@@ -832,6 +844,9 @@ document.getElementById("modalAddressForm").addEventListener("submit", async fun
 
 document.getElementById('modalEditAddressForm').addEventListener('submit',async function(e){
     e.preventDefault()
+    if (!validateEditAddressForm()) {
+        return;  
+    }
 
     const addressId = document.getElementById('editAddressId').value
     const addressType = document.getElementById('editAddressType').value
@@ -932,6 +947,11 @@ document.getElementById('couponInput')?.addEventListener('keydown',function(e){
         applyCouponCode()
     }
 })
+
+function allowOnlyNumbers(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+}
+
 
 </script>
 
