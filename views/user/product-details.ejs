@@ -542,15 +542,18 @@
         <span class="old-price" style="color: #f16c5d;"
           >₹<%= product.regularPrice.toLocaleString('en-IN') %></span
         >
-        <% if (totalOffer) { %>
+       
         <span class="offer-tag"><%= totalOffer %>% OFF</span>
-        <% } %> -->
+         -->
         <% 
         const effectiveDiscount = totalOffer
         const discountedPrice = product.regularPrice - Math.floor(product.regularPrice*effectiveDiscount/100) %>
         <span class="new-price">₹<%= discountedPrice.toLocaleString('en-IN') %></span>
+
+         <% if (totalOffer) { %>
         <span class="old-price" style="color: #f16c5d;"
-          >₹<%= product.regularPrice.toLocaleString('en-IN') %></span
+          >₹<%= product.regularPrice.toLocaleString('en-IN') %></span>
+          <% } %>
       </div>
 
       <div class="product-description">
