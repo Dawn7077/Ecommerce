@@ -17,7 +17,7 @@ const { getProductAddPage, addProducts, getAllProducts, addProductOffer, removeP
     blockProduct, unBlockProduct, getEditProduct, editProduct, deleteSingleImage,deleteProduct,
 } = require('../controllers/admin/productController')
 const { getBannerPage, getAddBannerPage, addBanner, bannerDelete } = require('../controllers/admin/bannerController')
-
+const {getOfferManagement,editProductOffer,editCategoryOffer,removeProductOfferPage,removeCategoryOfferPage}= require('../controllers/admin/offerController')
 
 //error management
 router.get('/pageError', pageError)
@@ -37,7 +37,10 @@ router.get('/deleteCustomer', adminAuth, deleteCustomer)
 //category management
 router.get('/category', adminAuth, categoryInfo)
 router.post('/addCategory', adminAuth, addCategory)
-router.post('/addCategoryOffer', adminAuth, addCategoryOffer)
+
+// router.post('/addCategoryOffer', adminAuth, addCategoryOffer)
+router.post('/addCategoryOffer', adminAuth, editCategoryOffer)
+
 router.post('/removeCategoryOffer', adminAuth, removeCategoryOffer)
 router.get('/listCategory', adminAuth, getListCategory)
 router.get('/unlistCategory', adminAuth, getUnlistCategory)
@@ -93,7 +96,6 @@ router.post('/sales-report/filter',adminAuth,filterSalesReport)
 router.get('/sales-report/download/excel',adminAuth,downloadSalesExcel)
 router.get('/sales-report/download/pdf',adminAuth,downloadSalesPDF)
 //offerManagement
-const {getOfferManagement,editProductOffer,editCategoryOffer,removeProductOfferPage,removeCategoryOfferPage}= require('../controllers/admin/offerController')
 router.get('/offer-management',adminAuth,getOfferManagement)
 router.post('/edit-product-offer',adminAuth,editProductOffer)
 router.post('/remove-product-offer',adminAuth,removeProductOfferPage)
