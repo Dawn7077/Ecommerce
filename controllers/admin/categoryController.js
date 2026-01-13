@@ -60,6 +60,14 @@ const addCategoryOffer = async (req, res) => {
         const percentage = parseInt(req.body.percentage)
         const categoryId = req.body.categoryId
         const category = await Category.findById(categoryId)
+
+        if(!percentage || percentage < 1 || percentage > 90) {
+            return res.status(400).json({ 
+                status: false, 
+                message: 'Percentage must be between 1 and 90' 
+            });
+        }
+
         if (!category) {
             return res.status(404).json({ status: false, message: 'Category not found' })
         }
