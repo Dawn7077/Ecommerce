@@ -291,7 +291,20 @@
         title:'Offer in percentage',
         input:'number',
         inputLabel:'Percentage',
-        inputPlaceholder:'%'
+        inputPlaceholder:'Enter a offer percentage',
+        showCancelButton:true,
+        inputAttributes:{
+            min:1,
+            max:90
+        },
+        inputValidator:(value)=> {
+            if(!value){
+                return 'Offer percentage is required';
+            }
+            if(value < 1 || value > 90){
+                return 'Please enter a valid percentage between 1 and 90';
+            }
+        }
       })
 
       if(amount){

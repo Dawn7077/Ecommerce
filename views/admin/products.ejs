@@ -1,8 +1,7 @@
 <%- include("../../views/partials/admin/header") %>
-<head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet"> 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<head> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
 </head>
 <div class="content-header">
     <div>
@@ -133,7 +132,19 @@
             input:'number',
             inputLabel:'percentage',
             inputPlaceholder:'Enter a offer percentage',
-            showCancelButton:true
+            showCancelButton:true,
+            inputAttributes:{
+                min:1,
+                max:90
+            },
+            inputValidator:(value)=> {
+                if(!value){
+                    return 'Offer percentage is required';
+                }
+                if(value < 1 || value > 90){
+                    return 'Please enter a valid percentage between 1 and 90';
+                }
+            }
         })
         if(!amount)return
         fetch('/admin/addProductOffer',{
@@ -158,6 +169,7 @@
             Swal.fire('Error','Unexected error occured ','error')
         })
     }
+    
     async function removeOffer(productId) {
         try {
             Swal.fire({
