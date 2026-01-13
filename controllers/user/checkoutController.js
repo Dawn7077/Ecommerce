@@ -1258,7 +1258,7 @@ const retryCancelledOrder = async (req,res) =>{
             
 
             //payment 
-            if(order.paymentMethod === 'Wallet'){
+            if( paymentMethod === 'Wallet'){
                 const wallet = await Wallet.findOne({userId})
                 if(!wallet || wallet.balance < order.finalAmount){
                     
