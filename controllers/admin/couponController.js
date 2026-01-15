@@ -1,5 +1,5 @@
-const Coupon = require('../../models/couponSchema')
-const mongoose = require('mongoose')
+import Coupon from '../../models/couponSchema.js'
+import mongoose from 'mongoose'
 
 const loadCoupon = async(req,res)=>{
     try {
@@ -120,7 +120,7 @@ const deleteCoupon = async(req,res)=>{
 }
 
 
-module.exports = {
+export {
     loadCoupon,
     createCoupon,
     getEditCoupon,

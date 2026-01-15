@@ -1,11 +1,20 @@
-const User = require('../../models/userSchema')
-const Address = require('../../models/addressSchema')
-const Cart = require('../../models/cartSchema')
-const Coupon = require('../../models/couponSchema')
-const Order = require('../../models/orderSchema')  
-const Product = require('../../models/productSchema')
-const Wallet = require('../../models/walletSchema')
-const Stripe = require('stripe')
+// const User = require('../../models/userSchema')
+// const Address = require('../../models/addressSchema')
+// const Cart = require('../../models/cartSchema')
+// const Coupon = require('../../models/couponSchema')
+// const Order = require('../../models/orderSchema')  
+// const Product = require('../../models/productSchema')
+// const Wallet = require('../../models/walletSchema')
+
+import User from '../../models/userSchema.js'
+import Address from '../../models/addressSchema.js'
+import Cart from '../../models/cartSchema.js'
+import Coupon from '../../models/couponSchema.js'
+import Order from '../../models/orderSchema.js' 
+import Product from '../../models/productSchema.js'
+import Wallet from '../../models/walletSchema.js'
+
+import Stripe from 'stripe'
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 const getCheckout1 = async(req,res)=>{
@@ -125,94 +134,6 @@ const getCheckout1 = async(req,res)=>{
         res.redirect("/cart");
     }
 }
-
-
-const addNewAddress = async (req,res)=>{
-    try {
-        const userId = req.session.user._id
-        const userData = await User.findById(userId)
-        const{addressType,name,city,landMark,state,pincode,phone,altPhone} = req.body
-        const userAddress = await Address.findOne({userId:userData._id})
-        if(!userAddress){
-            const newAddress = new Address({
-                userId:userData._id,
-                address:[{addressType,name,city,landMark,state,pincode,phone,altPhone}]
-            })
-            await newAddress.save()
-        }else{
-            userAddress.address.push({addressType,name,city,landMark,state,pincode,phone,altPhone})
-            await userAddress.save()
-        }
-        console.log('address added')
-        return res.json({ success: true });
-
-
-    } catch (error) {
-        console.log("New Address Add ERROR →", error);
-      return res.status(500).json({ success: false, message: "Server error" });
-    }
-}
-
-const updateAddress = async (req,res)=>{
-    try {
-        const userId =req.session.user._id
-        const addressId = req.params.id
-        const {addressType,name,city,landMark,
-              state,pincode,phone,altPhone} = req.body
-
-        const userAddress = await Address.findOne({userId})
-
-        if(!userAddress){
-            return res.status(404).json({success:false,message:'Address not found'})
-        }
-
-        const addressIndex = userAddress.address.findIndex(
-            add=> add._id.toString() === addressId
-        )
-
-        if(addressIndex === -1){
-            return res.status(404).json({success:false,message:'Address not found'})
-        }
-        
-        userAddress.address[addressIndex] = {
-            ...userAddress.address[addressIndex]._doc,
-            addressType,name,city,landMark,state,pincode,phone,altPhone
-        }
-        
-        await userAddress.save()
-        console.log("Address updated")
-        return res.status(200).json({success:true})
- 
-    } catch (error) { 
-        console.log("Edit address error:",error)
-        return res.status(500).json({success:false,message:'Server Error'})
-    }
-}
-
-const deleteCheckoutAddress =  async (req,res)=>{
-    try {
-        const userId =req.session.user._id
-        const addressId = req.params.id
-        const userAddress = await Address.findOne({userId})
-        if(!userAddress){
-            return res.status(404).json({success:false,message:'Address not found'})
-        }
-
-        userAddress.address =userAddress.address.filter(
-            addr=> addr._id.toString()!== addressId
-        )
-        await userAddress.save()
-        console.log("Address deleted")
-        return res.status(200).json({success:true})
-
-    } catch (error) {
-        console.log("delete address error:",error)
-        return res.status(500).json({success:false,message:'Server Error'})
-        
-    }
-}
-
-
 const applyCoupon1 = async(req,res)=>{
     try {
         const {couponCode} = req.body
@@ -284,26 +205,6 @@ const applyCoupon1 = async(req,res)=>{
         return res.json({ 
                 success: false, 
                 message: 'Error in applying coupon' 
-            })
-    }
-}
-
- 
-
-const removeCoupon = async(req,res)=>{
-    try {
-        delete req.session.appliedCoupon
-
-        return res.json({ 
-                success: true, 
-                message: 'Coupon removed successfully' , 
-            })
-        
-    } catch (error) {
-        console.log('Error in removing coupon',error)
-        return res.json({ 
-                success: false, 
-                message: 'Error in removing coupon' 
             })
     }
 }
@@ -545,6 +446,111 @@ async function finalizeOrder1(order,cart,req) {
         } 
     
 }
+
+
+const addNewAddress = async (req,res)=>{
+    try {
+        const userId = req.session.user._id
+        const userData = await User.findById(userId)
+        const{addressType,name,city,landMark,state,pincode,phone,altPhone} = req.body
+        const userAddress = await Address.findOne({userId:userData._id})
+        if(!userAddress){
+            const newAddress = new Address({
+                userId:userData._id,
+                address:[{addressType,name,city,landMark,state,pincode,phone,altPhone}]
+            })
+            await newAddress.save()
+        }else{
+            userAddress.address.push({addressType,name,city,landMark,state,pincode,phone,altPhone})
+            await userAddress.save()
+        }
+        console.log('address added')
+        return res.json({ success: true });
+
+
+    } catch (error) {
+        console.log("New Address Add ERROR →", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+}
+
+const updateAddress = async (req,res)=>{
+    try {
+        const userId =req.session.user._id
+        const addressId = req.params.id
+        const {addressType,name,city,landMark,
+              state,pincode,phone,altPhone} = req.body
+
+        const userAddress = await Address.findOne({userId})
+
+        if(!userAddress){
+            return res.status(404).json({success:false,message:'Address not found'})
+        }
+
+        const addressIndex = userAddress.address.findIndex(
+            add=> add._id.toString() === addressId
+        )
+
+        if(addressIndex === -1){
+            return res.status(404).json({success:false,message:'Address not found'})
+        }
+        
+        userAddress.address[addressIndex] = {
+            ...userAddress.address[addressIndex]._doc,
+            addressType,name,city,landMark,state,pincode,phone,altPhone
+        }
+        
+        await userAddress.save()
+        console.log("Address updated")
+        return res.status(200).json({success:true})
+ 
+    } catch (error) { 
+        console.log("Edit address error:",error)
+        return res.status(500).json({success:false,message:'Server Error'})
+    }
+}
+
+const deleteCheckoutAddress =  async (req,res)=>{
+    try {
+        const userId =req.session.user._id
+        const addressId = req.params.id
+        const userAddress = await Address.findOne({userId})
+        if(!userAddress){
+            return res.status(404).json({success:false,message:'Address not found'})
+        }
+
+        userAddress.address =userAddress.address.filter(
+            addr=> addr._id.toString()!== addressId
+        )
+        await userAddress.save()
+        console.log("Address deleted")
+        return res.status(200).json({success:true})
+
+    } catch (error) {
+        console.log("delete address error:",error)
+        return res.status(500).json({success:false,message:'Server Error'})
+        
+    }
+}
+  
+const removeCoupon = async(req,res)=>{
+    try {
+        delete req.session.appliedCoupon
+
+        return res.json({ 
+                success: true, 
+                message: 'Coupon removed successfully' , 
+            })
+        
+    } catch (error) {
+        console.log('Error in removing coupon',error)
+        return res.json({ 
+                success: false, 
+                message: 'Error in removing coupon' 
+            })
+    }
+}
+
 //new placeorder-----------
  
 const applyCoupon = async (req, res) => {
@@ -1565,9 +1571,8 @@ const orderFailedPage = async(req,res) =>{
         
     }
 }
-
-
-module.exports = {
+ 
+export  {
     getCheckout,
     addNewAddress,
     updateAddress,

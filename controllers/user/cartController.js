@@ -1,6 +1,10 @@
-const User = require('../../models/userSchema')
-const Product = require('../../models/productSchema')
-const Cart = require('../../models/cartSchema')
+// const User = require('../../models/userSchema')
+// const Product = require('../../models/productSchema')
+// const Cart = require('../../models/cartSchema')
+
+import User from '../../models/userSchema.js'
+import Product from '../../models/productSchema.js'
+import Cart  from '../../models/cartSchema.js'
 
 // const loadCart =async(req,res)=>{
 //     try {
@@ -269,7 +273,7 @@ const variantData = async(req,res)=>{
 }
 
 
-module.exports = {
+export  {
     loadCart,
     addToCart,
     updateCart,

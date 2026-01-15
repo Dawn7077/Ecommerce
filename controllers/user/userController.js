@@ -1,17 +1,35 @@
-const User =require("../../models/userSchema")
-const mongoose = require('mongoose');
+// const User =require("../../models/userSchema")
+// const mongoose = require('mongoose');
 
-const nodemailer =require('nodemailer')
-const Category = require('../../models/categorySchema')
-const Product = require('../../models/productSchema')
-const Banner = require('../../models/bannerSchema')
-const Brand = require('../../models/brandSchema')
-const WishLish = require('../../models/wishlistSchema')
-const bcrypt = require('bcrypt')
+// const nodemailer =require('nodemailer')
+// const Category = require('../../models/categorySchema')
+// const Product = require('../../models/productSchema')
+// const Banner = require('../../models/bannerSchema')
+// const Brand = require('../../models/brandSchema')
+// const WishLish = require('../../models/wishlistSchema')
+// const bcrypt = require('bcrypt')
 // const { search } = require("../../routes/userRouter");
-const { productDetails } = require("./productController");
-const { parse } = require("dotenv");
-const env = require("dotenv").config()
+// const { productDetails } = require("./productController");
+// const { parse } = require("dotenv");
+// const env = require("dotenv").config()
+
+
+
+import User from '../../models/userSchema.js'
+import mongoose from 'mongoose'
+import Category from '../../models/categorySchema.js'
+import Product from '../../models/productSchema.js'
+import Banner from '../../models/bannerSchema.js'
+import Brand from '../../models/brandSchema.js'
+import WishLish from '../../models/wishlistSchema.js'
+import bcrypt from 'bcrypt'
+import { productDetails } from "./productController.js"
+import dotenv from 'dotenv'
+dotenv.config()
+
+import { generateOtp } from '../../utils/otp.js'
+import { sendVerificationEmail } from '../../services/emailServices.js'
+
 
 const loadHomePage = async (req,res)=>{
     try {
@@ -87,55 +105,8 @@ const loadSignUp = async(req,res)=>{
 //     }
 // }
 
-function generateReferralCode(name){
-    const prefix = name.split(" ")[0].substring(0, 4).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `${prefix}-${random}`;
-}
 
-function generateOtp(){
-    return Math.floor(100000 + Math.random()*900000).toString()
-}
-async function sendVerificationEmail(email,otp){
-    try {
-        const transporter = nodemailer.createTransport({
-            service:'gmail',
-            port:587,
-            secure:false,
-            requireTLS:true,
-            auth:{
-                user:process.env.NODEMAILER_EMAIL,
-                pass:process.env.NODEMAILER_PASSWORD
-            }
-        })  
 
-        const info = await transporter.sendMail({
-            from: `"Kickshop Security" <${process.env.NODEMAILER_EMAIL}>`,
-            to:email,
-            subject: "Your OTP for account verification",
-            text:`Your OTP is ${otp}`,
-            // html:`<b>Your OTP:${otp}</b>`
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 500px;">
-                <h2>Verify your Kickshop account</h2>
-                <p>Use the OTP below to complete your account verification:</p>
-                <h3 style="letter-spacing: 2px;">${otp}</h3>
-                <p>This code is valid for <strong>5 minutes</strong>.</p>
-                <hr>
-                <p style="font-size: 12px; color: #777;">
-                    If you did not request this verification, please ignore this email.
-                </p>
-                </div>
-            `
-        })
-
-        return info.accepted.length>0
-
-    } catch (error) {
-        console.error('Error sending email',error)
-        return false
-    }
-}
 const signup = async(req,res)=>{
     try {
         const {name,email,phone,password,cPassword}=req.body
@@ -681,7 +652,7 @@ const loadShop = async(req,res)=>{
 }
 
 
-module.exports = {
+export {
     loadHomePage,
     loadSignUp,
     signup,

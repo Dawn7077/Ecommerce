@@ -1,6 +1,11 @@
-const User = require('../../models/userSchema')
-const Wallet = require('../../models/walletSchema')
-const Stripe = require('stripe')
+// const User = require('../../models/userSchema')
+// const Wallet = require('../../models/walletSchema')
+// const Stripe = require('stripe')
+// const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+
+import User from '../../models/userSchema.js'
+import Wallet from '../../models/walletSchema.js'
+import Stripe from 'stripe'
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 const getWallet = async (req,res)=>{
@@ -101,7 +106,7 @@ const stripeWalletCancel = async(req,res)=>{
      return res.redirect('/wallet')
 }
 
-module.exports = {
+export  {
     getWallet,
     addWalletMoney,
     stripeWalletSuccess,

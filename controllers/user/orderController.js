@@ -1,7 +1,12 @@
-const Order = require('../../models/orderSchema.js');
-const Product = require('../../models/productSchema.js'); 
-const Wallet = require('../../models/walletSchema.js')
-const Coupon =require('../../models/couponSchema.js')
+// const Order = require('../../models/orderSchema.js');
+// const Product = require('../../models/productSchema.js'); 
+// const Wallet = require('../../models/walletSchema.js')
+// const Coupon =require('../../models/couponSchema.js')
+
+import Order from '../../models/orderSchema.js' 
+import Product from '../../models/productSchema.js'  
+import Wallet from '../../models/walletSchema.js' 
+import Coupon from '../../models/couponSchema.js'
 
 const loadOrderPage = async(req,res)=>{
     try {
@@ -421,7 +426,7 @@ const requestReturn = async (req,res)=>{
         res.status(500).json({ success: false, message: 'Server error' });
     }
 }
-const PDFDocument = require('pdfkit');
+import PDFDocument from 'pdfkit'
 
 const generateOrderInvoice = async (req, res) => {
     try {
@@ -517,7 +522,7 @@ const generateOrderInvoice = async (req, res) => {
 };
 
 
-module.exports = {
+export  {
     loadOrderPage,
     getUserOrders,
     getOrderDetails,

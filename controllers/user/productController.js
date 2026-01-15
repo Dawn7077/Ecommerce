@@ -1,10 +1,15 @@
 
-const Product = require('../../models/productSchema')
-const Category = require('../../models/categorySchema')
-const Wishlist = require('../../models/wishlistSchema')
-const Cart = require('../../models/cartSchema')
-const User = require('../../models/userSchema')
+// const Product = require('../../models/productSchema')
+// const Category = require('../../models/categorySchema')
+// const Wishlist = require('../../models/wishlistSchema')
+// const Cart = require('../../models/cartSchema')
+// const User = require('../../models/userSchema')
 
+import Product from '../../models/productSchema.js'
+import Category from '../../models/categorySchema.js'
+import Wishlist from '../../models/wishlistSchema.js'
+import Cart from '../../models/cartSchema.js'
+import User from '../../models/userSchema.js'
 
 
 
@@ -70,6 +75,6 @@ const productDetails=async(req,res)=>{
     }
 }
  
-module.exports = {
+export {
     productDetails, 
 }

@@ -1,10 +1,19 @@
-const User =require('../../models/userSchema')
-const Address = require('../../models/addressSchema')
-const Wallet = require('../../models/walletSchema')
-const nodemailer = require('nodemailer')
-const bcrypt = require('bcrypt')
-const env = require('dotenv')
-const session = require('express-session') 
+// const User =require('../../models/userSchema')
+// const Address = require('../../models/addressSchema')
+// const Wallet = require('../../models/walletSchema')
+// const nodemailer = require('nodemailer')
+// const bcrypt = require('bcrypt')
+// const env = require('dotenv')
+// const session = require('express-session')
+// const user = require('../../../UserManageApp/model/user')
+
+import User from '../../models/userSchema.js'
+import Address from '../../models/addressSchema.js'
+import Wallet from '../../models/walletSchema.js'
+import nodemailer from 'nodemailer'
+import bcrypt from 'bcrypt'
+import dotenv  from 'dotenv' 
+dotenv.config()
 
 
 const securePassword = async(password)=>{
@@ -12,7 +21,7 @@ const securePassword = async(password)=>{
         const passwordHash = await bcrypt.hash(password,10)
         return passwordHash
     } catch (error) { 
-
+        console.log(error)
     }
 }
 
@@ -62,6 +71,7 @@ const getForgotPassPage = async(req,res)=>{
     try {
         res.render('user/forgot-password')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -87,6 +97,7 @@ const forgotEmailValid = async(req,res)=>{
             })
         }
     } catch (error) { 
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -100,6 +111,7 @@ const verifyForgotPassOtp = async(req,res)=>{
             res.json({success:false,message:'Otp not matching'})
          }
     } catch (error) {
+        console.log(error)
         res.status(500).json({success:false,message:'An error occured ,Please try again'})
     }
 }
@@ -108,6 +120,7 @@ const getResetPassPage = async(req,res)=>{
     try {
         res.render('user/reset-password')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -147,6 +160,7 @@ const postNewPassword = async(req,res)=>{
         }
 
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -189,6 +203,7 @@ const getChangeEmail = async(req,res)=>{
     try {
         res.render('user/changeEmail')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -239,6 +254,7 @@ const verifyEmailOtp = async(req,res)=>{
             })
         }
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -287,6 +303,7 @@ const updateEmail = async(req,res)=>{
             })
         // res.redirect('/user-profile')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -296,6 +313,7 @@ const getChangePassword = async (req,res)=>{
         // res.render('user/changePassword')
         res.render('user/confirmCurrentPaswd')
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -303,6 +321,7 @@ const forgotCurrentPswd = async (req,res)=>{
     try {
         res.render('user/changePassword') 
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -402,6 +421,7 @@ const verifyPasswordOtp = async(req,res)=>{
             })
         }
     } catch (error) {
+        console.log(error)
         res.status(500).json({success:false,message:'Erron occured in verifyOtp, Please try again later'})
     }
 }
@@ -413,6 +433,7 @@ const getAddAddress = async (req,res)=>{
             user:user
         })
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -523,7 +544,7 @@ const deleteAddress = async (req,res)=>{
     }
 }
 
-module.exports= {
+export {
     getForgotPassPage,
     forgotEmailValid,
     verifyForgotPassOtp,

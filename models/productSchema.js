@@ -1,4 +1,4 @@
-const mongoose =require('mongoose')
+import mongoose from "mongoose"
 const {Schema} = mongoose
 
 const productSchema =new Schema({
@@ -83,4 +83,4 @@ productSchema.set('toObject', { virtuals: true });//for recieving virtual data f
 const Product =  mongoose.model("Product",productSchema)
 
 
-module.exports = Product
+export default Product

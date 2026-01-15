@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from "mongoose"
 const {Schema} = mongoose
 
 const wishlistSchema = new Schema({
@@ -23,4 +23,4 @@ const wishlistSchema = new Schema({
 
 const Wishlish = mongoose.model("Wishlist",wishlistSchema)
 
-module.exports = Wishlish
+export default Wishlish

@@ -1,7 +1,7 @@
-const Wishlist = require('../../models/wishlistSchema')
-const User = require('../../models/userSchema')
-const Product = require('../../models/productSchema')
-const Cart = require('../../models/cartSchema')
+import Wishlist from '../../models/wishlistSchema.js'
+import User from '../../models/userSchema.js'
+import Product from '../../models/productSchema.js'
+import Cart from '../../models/cartSchema.js'
 
 const loadWishlist1 = async(req,res)=>{
     try {
@@ -172,7 +172,7 @@ const deleteWishlist =async (req,res)=>{
 
 
 
-module.exports = {
+export  {
     loadWishlist,
     addToWishlist,
     removeProduct,

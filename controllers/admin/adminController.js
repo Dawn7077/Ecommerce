@@ -1,10 +1,19 @@
-const User = require('../../models/userSchema')
-const Order = require('../../models/orderSchema')
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
-const Category = require('../../models/categorySchema')
-const Product = require('../../models/productSchema')
-const Brand = require('../../models/brandSchema')
+// const User = require('../../models/userSchema')
+// const Order = require('../../models/orderSchema')
+// const mongoose = require('mongoose')
+// const bcrypt = require('bcrypt')
+// const Category = require('../../models/categorySchema')
+// const Product = require('../../models/productSchema')
+// const Brand = require('../../models/brandSchema')
+
+import User from '../../models/userSchema.js'
+import Order from '../../models/orderSchema.js'
+import mongoose from 'mongoose'
+import bcrypt from 'bcrypt'
+import Category from '../../models/categorySchema.js'
+import Product from '../../models/productSchema.js'
+import Brand from '../../models/brandSchema.js'
+
 
 const loadlogin = (req,res)=>{
     if(req.session.admin){
@@ -443,7 +452,7 @@ const getSalesTimeline = async(req,res)=>{
         res.json({labels,values})
 
     } catch (error) {
-        console.log(err)
+        console.log(error)
         res.status(500).json({ error: "Sales timeline error" })
     }
 }
@@ -542,7 +551,7 @@ function calculateStats(orders) {
 
     
     
-module.exports= {
+export {
     loadlogin,
     login,
     loadDashboard,

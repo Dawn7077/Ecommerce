@@ -1,4 +1,4 @@
-const User = require('../../models/userSchema')
+import User from '../../models/userSchema.js'
 
 
 
@@ -69,7 +69,7 @@ const deleteCustomer = async(req,res)=>{
      }
 }
 
-module.exports = {
+export {
     customerInfo,
     customerBlocked,
     customerUnBlocked,

@@ -1,5 +1,5 @@
-const Brand = require('../../models/brandSchema')
-const Product =require('../../models/productSchema')
+import Brand from '../../models/brandSchema.js'
+import Product from '../../models/productSchema.js'
 
 const getBrandPage = async(req,res)=>{
     try {
@@ -147,7 +147,7 @@ const editBrand = async(req,res)=>{
 }
 
 
-module.exports= {
+ export {
     getBrandPage,
     addBrand,
     blockBrand,

@@ -1,72 +1,76 @@
-const mongoose = require('mongoose')
-const {Schema}= mongoose
-const {v4:uuidv4} = require("uuid")
+// const mongoose = require('mongoose')
+// const {Schema}= mongoose
+// const {v4:uuidv4} = require("uuid")
 
-const orderSchema1 = new Schema({
-    orderId:{
-        type:String,
-        default:()=>uuidv4(),
-        unique:true
-    },
-    userId:{
-        type:Schema.Types.ObjectId,
-        ref:"User",
-        require:true
-    },
-    orderedItems:[{
-        productId:{
-            type:Schema.Types.ObjectId,
-            ref:"Product",
-            require:true
-        },
-        quantity:{
-            type:Number,
-            required:true
-        },
-        price:{
-            type:Number,
-            default:0
-        },
-        totalPrice:{
-            type:Number,
-            required:true
-        },
-        discount:{
-            type:Number,
-            default:0
-        },
-        finalAmount:{
-            type:Number,
-            required:true
-        },
-        address:{
-            type:Schema.Types.ObjectId,
-            ref:"Address",
-            required:true
+// const orderSchema1 = new Schema({
+//     orderId:{
+//         type:String,
+//         default:()=>uuidv4(),
+//         unique:true
+//     },
+//     userId:{
+//         type:Schema.Types.ObjectId,
+//         ref:"User",
+//         require:true
+//     },
+//     orderedItems:[{
+//         productId:{
+//             type:Schema.Types.ObjectId,
+//             ref:"Product",
+//             require:true
+//         },
+//         quantity:{
+//             type:Number,
+//             required:true
+//         },
+//         price:{
+//             type:Number,
+//             default:0
+//         },
+//         totalPrice:{
+//             type:Number,
+//             required:true
+//         },
+//         discount:{
+//             type:Number,
+//             default:0
+//         },
+//         finalAmount:{
+//             type:Number,
+//             required:true
+//         },
+//         address:{
+//             type:Schema.Types.ObjectId,
+//             ref:"Address",
+//             required:true
 
-        },
-        invoiceDate:{
-            type:Date
-        },
-        status:{
-            type:String,
-            enum:['Payment Pending',"Pending","Processing","Shipped","Delivered","Cancelled","Return Request","Returned"],
-            default: "Pending"
-        },
-        createdOn:{
-            type:Date,
-            default:Date.now,
-            requird:true
-        },
-        couponApplied:{
-            type:Boolean,
-            default:false
-        }
+//         },
+//         invoiceDate:{
+//             type:Date
+//         },
+//         status:{
+//             type:String,
+//             enum:['Payment Pending',"Pending","Processing","Shipped","Delivered","Cancelled","Return Request","Returned"],
+//             default: "Pending"
+//         },
+//         createdOn:{
+//             type:Date,
+//             default:Date.now,
+//             requird:true
+//         },
+//         couponApplied:{
+//             type:Boolean,
+//             default:false
+//         }
 
-    }]
-})
+//     }]
+// })
 
-const orderSchema = new mongoose.Schema({
+import mongoose from "mongoose";
+const {Schema} = mongoose
+// import {uuidv4 as v4} from 'uuid'
+
+const orderSchema = new Schema({
     orderId:{
         type:String,
         // default:()=>uuidv4(),
@@ -212,4 +216,5 @@ orderSchema.pre('save',async function (next) {
 })  
 
 const Order =mongoose.model("Order",orderSchema)
-module.exports= Order
+// module.exports= Order
+export default Order
