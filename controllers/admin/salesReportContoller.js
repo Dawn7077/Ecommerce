@@ -1,6 +1,6 @@
-const Order = require('../../models/orderSchema')
-const PDFDocument = require('pdfkit')
-const ExcelJS = require('exceljs')
+import Order from '../../models/orderSchema.js'
+import PDFDocument from 'pdfkit' 
+import ExcelJS from 'exceljs' 
 
 
 
@@ -631,7 +631,7 @@ const downloadSalesPDF = async (req,res) => {
 
 
 
-module.exports = {
+export {
     loadSalesReport,
     filterSalesReport,
     downloadSalesExcel,

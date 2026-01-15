@@ -1,4 +1,5 @@
-const mongoose =require("mongoose")
+// const mongoose =require("mongoose")
+import mongoose from "mongoose"
 const {Schema} = mongoose
 
 const couponSchema = new Schema({
@@ -37,4 +38,4 @@ const couponSchema = new Schema({
 
 const Coupon = mongoose.model("Coupon",couponSchema)
 
-module.exports= Coupon
+export default Coupon

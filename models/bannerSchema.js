@@ -1,5 +1,6 @@
-const mongoose =require("mongoose")
-const { stringify } = require("uuid")
+// const mongoose =require("mongoose")
+// const { stringify } = require("uuid")
+import mongoose from "mongoose"
 const {Schema} =mongoose
 
 const bannerSchema = new Schema({
@@ -29,4 +30,4 @@ const bannerSchema = new Schema({
 })
 
 const Banner =  mongoose.model('Banner',bannerSchema)
-module.exports = Banner
+export default Banner

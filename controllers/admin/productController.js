@@ -1,11 +1,12 @@
 //productController.js
-const Product = require('../../models/productSchema')
-const Category = require('../../models/categorySchema')
-const Brand = require('../../models/brandSchema')
-const User =require('../../models/userSchema')
-const fs = require('fs')
-const path = require('path')
-const sharp = require('sharp')
+import Product from '../../models/productSchema.js'
+import Category from '../../models/categorySchema.js'
+import Order from '../../models/orderSchema.js'
+import Brand from '../../models/brandSchema.js'
+import User from '../../models/userSchema.js'
+import fs from 'fs'
+import path from 'path'
+import sharp from 'sharp'
 
 const getProductAddPage= async(req,res)=>{
     try {
@@ -248,6 +249,23 @@ const getAllProducts = async(req,res)=>{
     const category = await Category.find({isListed:true})
     const brand = await Brand.find({isBlocked:false})
     // console.log(productData.category.name,"====cat===> ",category)
+
+
+    //total sales on each pg
+
+    const order = await Order.find()
+    order.orderedItems.forEach(ord=>{
+      if(ord._id === productData._id){
+        
+      }
+    })
+
+
+
+
+
+
+
     if(category && brand){
       res.render('admin/products',{
         data:productData,
@@ -459,7 +477,7 @@ const deleteProduct = async(req,res)=>{
   }
 }
 
-module.exports={
+export {
     getProductAddPage,
     addProducts,
     getAllProducts,

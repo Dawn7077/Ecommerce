@@ -1,4 +1,5 @@
-const mongoose =require('mongoose')
+// const mongoose =require('mongoose')
+import mongoose from "mongoose"
 const {Schema} = mongoose
 
 const cartSchema = new Schema({
@@ -6,7 +7,7 @@ const cartSchema = new Schema({
     userId:{
         type:Schema.Types.ObjectId,
         ref:"User",
-        require:true
+        required:true
     },
     items:[{
         productId:{
@@ -45,4 +46,4 @@ const cartSchema = new Schema({
 
 const Cart = mongoose.model("Cart",cartSchema)
 
-module.exports = Cart
+export default Cart

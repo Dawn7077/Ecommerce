@@ -1,11 +1,19 @@
-const User =require('../../models/userSchema')
-const Address = require('../../models/addressSchema')
-const Wallet = require('../../models/walletSchema')
-const nodemailer = require('nodemailer')
-const bcrypt = require('bcrypt')
-const env = require('dotenv')
-const session = require('express-session')
-const user = require('../../../UserManageApp/model/user')
+// const User =require('../../models/userSchema')
+// const Address = require('../../models/addressSchema')
+// const Wallet = require('../../models/walletSchema')
+// const nodemailer = require('nodemailer')
+// const bcrypt = require('bcrypt')
+// const env = require('dotenv')
+// const session = require('express-session')
+// const user = require('../../../UserManageApp/model/user')
+
+import User from '../../models/userSchema.js'
+import Address from '../../models/addressSchema.js'
+import Wallet from '../../models/walletSchema.js'
+import nodemailer from 'nodemailer'
+import bcrypt from 'bcrypt'
+import dotenv  from 'dotenv' 
+dotenv.config()
 
 
 const securePassword = async(password)=>{
@@ -524,7 +532,7 @@ const deleteAddress = async (req,res)=>{
     }
 }
 
-module.exports= {
+export {
     getForgotPassPage,
     forgotEmailValid,
     verifyForgotPassOtp,

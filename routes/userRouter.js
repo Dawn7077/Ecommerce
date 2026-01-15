@@ -1,17 +1,52 @@
-const express = require('express')
+// const express = require('express')
+// const router = express.Router()
+// const { loadHomePage, loadSignUp, signup, getVerifyOtp, verifyOtp, resendOtp, pageNotFound,
+//     loadlogin, login, logout, loadShoppingPage, filterProduct, filterByPrice, searchProducts, loadShop
+// } = require('../controllers/user/userController')
+// const { getForgotPassPage, forgotEmailValid, verifyForgotPassOtp, getResetPassPage,
+//     resendForgotOtp, postNewPassword, userProfile, getChangeEmail, changeEmailValid, verifyEmailOtp,
+//     updateEmail, getChangePassword,forgotCurrentPswd, passwordConfirm , changePasswordValid, verifyPasswordOtp, getAddAddress, addAddress,
+//     getEditAddress, editAddress, deleteAddress
+// } = require('../controllers/user/profileController')
+// const { userAuth, adminAuth, isloggedOut } = require('../middleware/auth')
+// const { productDetails, } = require('../controllers/user/productController')
+// const passport = require('passport')
+// const { loadWishlist, addToWishlist, removeProduct, deleteWishlist } = require('../controllers/user/wishlistController')
+
+
+import express from 'express'
 const router = express.Router()
-const { loadHomePage, loadSignUp, signup, getVerifyOtp, verifyOtp, resendOtp, pageNotFound,
-    loadlogin, login, logout, loadShoppingPage, filterProduct, filterByPrice, searchProducts, loadShop
-} = require('../controllers/user/userController')
-const { getForgotPassPage, forgotEmailValid, verifyForgotPassOtp, getResetPassPage,
+
+import { loadHomePage, loadSignUp, signup, getVerifyOtp, verifyOtp, resendOtp, pageNotFound,
+loadlogin, login, logout, loadShoppingPage, filterProduct, filterByPrice, searchProducts, loadShop} 
+from '../controllers/user/userController.js'
+
+import { getForgotPassPage, forgotEmailValid, verifyForgotPassOtp, getResetPassPage,
     resendForgotOtp, postNewPassword, userProfile, getChangeEmail, changeEmailValid, verifyEmailOtp,
     updateEmail, getChangePassword,forgotCurrentPswd, passwordConfirm , changePasswordValid, verifyPasswordOtp, getAddAddress, addAddress,
     getEditAddress, editAddress, deleteAddress
-} = require('../controllers/user/profileController')
-const { userAuth, adminAuth, isloggedOut } = require('../middleware/auth')
-const { productDetails, } = require('../controllers/user/productController')
-const passport = require('passport')
-const { loadWishlist, addToWishlist, removeProduct, deleteWishlist } = require('../controllers/user/wishlistController')
+} from '../controllers/user/profileController.js'
+
+import { userAuth, adminAuth, isloggedOut } from'../middleware/auth.js'
+import { productDetails, }from '../controllers/user/productController.js'
+
+import passport from 'passport'
+import { loadWishlist, addToWishlist, removeProduct, deleteWishlist } from '../controllers/user/wishlistController.js'
+
+
+import { loadCart, addToCart, updateCart, deleteItemCart, deleteCart, variantData } from '../controllers/user/cartController.js'
+import { getCheckout, addNewAddress, updateAddress, deleteCheckoutAddress, applyCoupon,
+    removeCoupon, placeorder, createStripeSession, stripeSuccess, stripeCancel, orderSuccessPage, orderFailedPage,
+    retryCancelledOrder, getOrderDetailsForRetry
+} from '../controllers/user/checkoutController.js'
+
+import { loadOrderPage, getUserOrders, getOrderDetails, cancelOrder, requestReturn, generateOrderInvoice } from '../controllers/user/orderController.js'
+
+import { getWallet, addWalletMoney, stripeWalletSuccess, stripeWalletCancel, } from '../controllers/user/walletController.js'
+
+
+
+
 
 // ========================>
     const checkurl = async (req,res,next)=> {
@@ -122,8 +157,9 @@ router.get('/remove-from-wishlist', userAuth, removeProduct)
 router.delete('/delete-wishlist', userAuth, deleteWishlist)
 
 
-const { loadCart, addToCart, updateCart, deleteItemCart, deleteCart, variantData } = require('../controllers/user/cartController')
+// const { loadCart, addToCart, updateCart, deleteItemCart, deleteCart, variantData } = require('../controllers/user/cartController')
 //cart management
+
 router.get('/cart', userAuth, loadCart)
 router.get('/product-variants/:id', userAuth, variantData)
 router.post('/add-to-cart', userAuth, addToCart)
@@ -132,10 +168,12 @@ router.delete('/product-delete-cart/:productId', userAuth, deleteItemCart)
 router.delete('/delete-cart', userAuth, deleteCart)
 
 //checkout management
-const { getCheckout, addNewAddress, updateAddress, deleteCheckoutAddress, applyCoupon,
-    removeCoupon, placeorder, createStripeSession, stripeSuccess, stripeCancel, orderSuccessPage, orderFailedPage,
-    retryCancelledOrder, getOrderDetailsForRetry
-} = require('../controllers/user/checkoutController')
+
+// const { getCheckout, addNewAddress, updateAddress, deleteCheckoutAddress, applyCoupon,
+//     removeCoupon, placeorder, createStripeSession, stripeSuccess, stripeCancel, orderSuccessPage, orderFailedPage,
+//     retryCancelledOrder, getOrderDetailsForRetry
+// } = require('../controllers/user/checkoutController')
+
 
 router.get('/checkout/', userAuth, getCheckout)
 router.post('/add-new-address', userAuth, addNewAddress)
@@ -158,7 +196,7 @@ router.post('/retry-cancelled-order', userAuth, retryCancelledOrder)
 
 //soft delete
 //orders management
-const { loadOrderPage, getUserOrders, getOrderDetails, cancelOrder, requestReturn, generateOrderInvoice } = require('../controllers/user/orderController')
+// const { loadOrderPage, getUserOrders, getOrderDetails, cancelOrder, requestReturn, generateOrderInvoice } = require('../controllers/user/orderController')
 router.get('/order', userAuth, getUserOrders)
 router.get('/order/:id', userAuth, getOrderDetails)
 router.post('/cancel-order/:id', userAuth, cancelOrder)
@@ -166,11 +204,12 @@ router.post('/return-order/:id', userAuth, requestReturn)
 router.get('/order-invoice/:id', userAuth, generateOrderInvoice);
 
 //wallet management  
-const { getWallet, addWalletMoney, stripeWalletSuccess, stripeWalletCancel, } = require('../controllers/user/walletController')
-router.get('/wallet', userAuth, getWallet)
+// const { getWallet, addWalletMoney, stripeWalletSuccess, stripeWalletCancel, } = require('../controllers/user/walletController')
+router.get('/wallet', userAuth, getWallet) 
 router.post('/wallet/add-money', userAuth, addWalletMoney)
 router.get('/wallet/stripe-success', userAuth, stripeWalletSuccess)
 router.get('/wallet/stripe-cancel', userAuth, stripeWalletCancel)
 
 
-module.exports = router
+// module.exports = router
+export default router

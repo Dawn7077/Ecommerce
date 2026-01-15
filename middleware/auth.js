@@ -1,4 +1,5 @@
-const User = require('../models/userSchema')
+// const User = require('../models/userSchema')
+import User from '../models/userSchema.js'
 
 // const userAuth = (req,res,next)=>{
 //     if(req.session.user){
@@ -83,7 +84,7 @@ const adminAuth =  (req,res,next)=>{
     }
 }
 
-module.exports = {
+export {
     userAuth,
     adminAuth,
     isloggedOut

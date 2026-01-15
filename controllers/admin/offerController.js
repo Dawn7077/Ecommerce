@@ -1,5 +1,5 @@
-const Product = require('../../models/productSchema')
-const Category = require('../../models/categorySchema') 
+import Product from '../../models/productSchema.js'
+import Category from '../../models/categorySchema.js'
 
 const addProductOffer1 = async (req,res)=>{
     try {
@@ -376,7 +376,7 @@ function getFinalPrice(product, category) {
 }
 
 
-module.exports = {
+export {
     getOfferManagement,
     addProductOffer,
     removeProductOfferPage,

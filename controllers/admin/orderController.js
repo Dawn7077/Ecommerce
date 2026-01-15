@@ -1,8 +1,8 @@
-const Order = require('../../models/orderSchema');
-const User = require('../../models/userSchema');
-const Product = require('../../models/productSchema');
-const Wallet = require('../../models/walletSchema')
-const Coupon = require('../../models/couponSchema')
+import Order from '../../models/orderSchema.js'
+import User from '../../models/userSchema.js'
+import Product from '../../models/productSchema.js'
+import Wallet from '../../models/walletSchema.js'
+import Coupon from '../../models/couponSchema.js'
 
 const getOrderList = async (req, res) => {
     try {
@@ -458,7 +458,7 @@ const getItemPaidAmount = (order, item) => {
 
 
 
-module.exports = {
+export {
     getOrderList,
     getOrderDetails,
     changeOrderStatus,

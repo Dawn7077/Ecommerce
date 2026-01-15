@@ -1,11 +1,31 @@
-const express = require('express')
-const  env = require('dotenv').config()
-const session = require('express-session')
-const db  = require('./models/db')
-const path = require('path')
-const userRouter = require('./routes/userRouter')
-const adminRouter = require('./routes/adminRouter')
-const passport = require('./config/passport')
+// const express = require('express')
+// const  env = require('dotenv').config()
+// const session = require('express-session')
+// const db  = require('./models/db')
+// const path = require('path')
+// const userRouter = require('./routes/userRouter')
+// const adminRouter = require('./routes/adminRouter')
+// const passport = require('./config/passport')
+
+import express from 'express'
+import session from 'express-session'
+import dotenv from 'dotenv'
+
+import db from './models/db.js'
+import { fileURLToPath } from 'url'
+import path from 'path'
+
+import userRouter from './routes/userRouter.js'
+import adminRouter from './routes/adminRouter.js'
+import passport from './config/passport.js'
+
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+
+dotenv.config()
+
 const app = express()
 db()
 

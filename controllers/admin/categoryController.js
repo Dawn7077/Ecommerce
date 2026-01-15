@@ -1,5 +1,5 @@
-const Category = require('../../models/categorySchema')
-const Product = require('../../models/productSchema')
+import Category from '../../models/categorySchema.js'
+import Product from '../../models/productSchema.js'
 
 const categoryInfo = async (req, res) => {
     try {
@@ -186,7 +186,7 @@ const deleteCategory = async (req, res) => {
 }
 
 
-module.exports = {
+export {
     categoryInfo,
     addCategory,
     addCategoryOffer,
