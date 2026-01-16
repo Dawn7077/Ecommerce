@@ -488,21 +488,21 @@
                 swal("Success", "Order retried successfully with Wallet!", "success")
                 .then(()=> window.location.href =`/order/success?orderId=${data.orderId}`)
             }else if(paymentMethod === 'Stripe'){  
+                if(data.proceedToStripe){
+                    const stripeRes = await fetch('/payment/stripe/create-session',{
+                        method:'POST',
+                        headers:{"Content-type":'application/json'},
+                        body:JSON.stringify({ orderId:data.orderId })
+                    })
 
-                const stripeRes = await fetch('/payment/stripe/create-session',{
-                    method:'POST',
-                    headers:{"Content-type":'application/json'},
-                    body:JSON.stringify({ orderId:data.orderId })
-                })
+                    const stripeData = await stripeRes.json()
 
-                const stripeData = await stripeRes.json()
-
-                if(stripeData.success && stripeData.url){
-                    window.location.href = stripeData.url
-                }else{
-                    swal('Payment Error',stripeData.message || 'Failed to create a payment session','error')
+                    if(stripeData.success && stripeData.url){
+                        window.location.href = stripeData.url
+                    }else{
+                        swal('Payment Error',stripeData.message || 'Failed to create a payment session','error')
+                    }
                 }
-  
             } 
 
         } catch (error) { 

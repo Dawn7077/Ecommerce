@@ -18,7 +18,7 @@ import express from 'express'
 const router = express.Router()
 
 import { loadHomePage, loadSignUp, signup, getVerifyOtp, verifyOtp, resendOtp, pageNotFound,
-loadlogin, login, logout, loadShoppingPage, filterProduct, filterByPrice, searchProducts, loadShop} 
+loadlogin, login, logout, loadShop} 
 from '../controllers/user/userController.js'
 
 import { getForgotPassPage, forgotEmailValid, verifyForgotPassOtp, getResetPassPage,

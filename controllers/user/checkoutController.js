@@ -802,10 +802,10 @@ const placeorder = async (req, res) => {
         const endOfDay = new Date(nowDate.setHours(23, 59, 59, 999))
 
         const orderlist = await Order.find({userId,createdAt:{$gte:startDate,$lte:endOfDay}})
-        if(orderlist.length >= 10 ){
+        if(orderlist.length > 10 ){
             return res.status(400).json({
                 success: false,
-                message: 'User cannot order more than 2 '
+                message: 'User cannot order more than 10 '
             });
         }
 
@@ -860,84 +860,6 @@ const placeorder = async (req, res) => {
             await product.save();
         }
 
-// ===================================
-
-        // let couponDiscount = 0;
-        // let appliedCoupon = false;
-        // let referralUserId = null;
-        // let subtotal = 0;
-        // let discount = 0;
-
-        // //   coupon/referral discount
-        // if (req.session.appliedCoupon) {
-        //     appliedCoupon = true;
-        //     const appliedData = req.session.appliedCoupon;
-
-        //     if (appliedData.type === 'referral') {
-        //         // Referral code
-        //         couponDiscount = Math.min(appliedData.discount, subtotal - discount);
-        //         referralUserId = appliedData.referredUserId;
-        //     } else if (appliedData.type === 'coupon') {
-        //         //   coupon code
-        //         const coupon = await Coupon.findById(appliedData.id);
-        //         if (coupon) {
-        //             couponDiscount = Math.min(coupon.offerPrice, subtotal - discount);
-        //         }
-        //     }
-        // }
-
-
-        // // Calculate totals
-        
-
-        // const orderItems = cart.items.map(item => {
-        //     const itemTotal = item.price * item.quantity;
-        //     subtotal += itemTotal;
-
-        //     //  
-        //     // item discount
-        //     let itemDiscount = (item.productId.regularPrice - item.productId.salesPrice) * item.quantity;
-
-        //     // prorate coupon
-        //     const totalItemsAmount = cart.items.reduce((sum, i) => i.price * i.quantity, 0);
-        //     let itemCouponDiscount = 0;
-        //     if(req.session.appliedCoupon){
-        //         itemCouponDiscount = (itemTotal / totalItemsAmount) * couponDiscount;
-        //     }
-
-        //     // final per item
-        //     const finalAmountPerItem = itemTotal - itemDiscount - itemCouponDiscount;
-
-        //     //
-
-        //     if (item.productId.salesPrice && item.productId.salesPrice <= item.productId.regularPrice) {
-        //         discount += (item.productId.regularPrice - item.productId.salesPrice) * item.quantity;
-        //     }
-
-        //     return {
-        //         product: item.productId._id,
-        //         quantity: item.quantity,
-        //         price: item.productId.salesPrice,
-        //         productName: item.productId.productName,
-        //         productImage: item.productId.productImage[0],
-        //         variant: {
-        //             color: item.variant.color,
-        //             size: item.variant.size,
-        //         },
-        //         totalPrice: itemTotal,
-        //         finalAmount: finalAmountPerItem,
-        //         address: selectedAddress._id,
-        //         status: "Pending",
-        //         statusHistory: [{
-        //             status: 'Pending',
-        //             date: new Date(),
-        //             note: 'Order placed'
-        //         }]
-        //     };
-        // });
-
-        
-// ===============
         // subtotal and product offer/discount
         let subtotal = 0
         let discount = 0
@@ -1019,6 +941,40 @@ const placeorder = async (req, res) => {
         const shipping = subtotal >= 3000 ? 0 : 500;
         const totalPrice = subtotal - discount 
         const finalAmount = totalPrice - couponDiscount + shipping;
+
+
+        if(paymentMethod === 'Stripe'){
+            req.session.pendingOrder = {
+                userId,
+                orderedItems: orderItems, 
+                subtotal,
+                totalPrice,
+                discount,
+                finalAmount,
+                address:{
+                    addressType: selectedAddress.addressType,
+                    name: selectedAddress.name,
+                    city: selectedAddress.city,
+                    landMark: selectedAddress.landMark,
+                    state: selectedAddress.state,
+                    pincode: selectedAddress.pincode,
+                    phone: selectedAddress.phone,
+                    altPhone: selectedAddress.altPhone
+                },
+                paymentMethod,
+                couponApplied:appliedCoupon,
+                couponDiscount,
+                couponId,
+                referralUserId,
+                cartId:cart._id
+            }
+
+            return res.json({
+                success:true,
+                amount:finalAmount,
+                proceedToStripe:true
+            })
+        }
 
         // Check wallet balance  
         if (paymentMethod === 'Wallet') {
@@ -1140,13 +1096,13 @@ const placeorder = async (req, res) => {
             });
         }
 
-        if (paymentMethod === 'Stripe') {
-            return res.json({
-                success: true,
-                orderId: newOrder._id,
-                amount: finalAmount
-            });
-        }
+        // if (paymentMethod === 'Stripe') {
+        //     return res.json({
+        //         success: true,
+        //         orderId: newOrder._id,
+        //         amount: finalAmount
+        //     });
+        // }
 
         return res.json({
             success: false,
@@ -1193,6 +1149,9 @@ async function finalizeOrder(order, cart, req) {
 
 const retryCancelledOrder = async (req,res) =>{
     try {
+
+        
+
         const {orderId,paymentMethod} = req.body
         const userId = req.session.user._id
 
@@ -1351,14 +1310,14 @@ const retryCancelledOrder = async (req,res) =>{
 
 
             //payment === stripe forward to stripe session
-            if(paymentMethod === 'Stripe'){
-                return res.json({
-                    success:true,
-                    message:'Ready for stripe payment',
-                    orderId:order._id,
-                    stripeCheckout:true
-                });
-            }
+            // if(paymentMethod === 'Stripe'){
+            //     return res.json({
+            //         success:true,
+            //         message:'Ready for stripe payment',
+            //         orderId:order._id,
+            //         stripeCheckout:true
+            //     });
+            // }
 
 
             //when wallet order is complete
@@ -1420,11 +1379,26 @@ const getOrderDetailsForRetry = async(req,res)=>{
 //new code-------------------
 const createStripeSession = async (req,res)=>{
     try {
-        const {orderId} = req.body
-        console.log('stripe requested payment order:',orderId)
+        // const {orderId} = req.body
+        // console.log('stripe requested payment order:',orderId)
         
-        const order = await Order.findById(orderId)
-        if(!order) return  res.json({ success: false, message: "Order not found" });
+        // const order = await Order.findById(orderId)
+        // if(!order) return  res.json({ success: false, message: "Order not found" });
+
+        const userId = req.session.user._id
+
+        const pendingOrder = req.session.pendingOrder
+
+        if(!pendingOrder){
+            return  res.json({ success: false, message: "No pending order not found" });
+        }
+
+        if (!pendingOrder.orderedItems || pendingOrder.orderedItems.length === 0) {
+            return res.json({ 
+                success: false, 
+                message: "Invalid order data" 
+            });
+        }
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types:['card'],
@@ -1434,16 +1408,21 @@ const createStripeSession = async (req,res)=>{
                     price_data:{
                         currency:'inr',
                         product_data:{
-                            name:`Order #${orderId}`
+                            // name:`Order #${orderId}`
+                            name:`Order Payment`,
+                            description:`${pendingOrder.orderedItems.length} items`
                         },
-                        unit_amount:order.finalAmount*100,
+                        // unit_amount:order.finalAmount*100,
+                        unit_amount:Math.round(pendingOrder.finalAmount *100)
                     },
                     quantity:1,
                 }
             ],
-            success_url:`${process.env.BASE_URL}/payment/stripe/success?orderId=${orderId}`,
-            cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel?orderId=${orderId}`,
-        })
+            // success_url:`${process.env.BASE_URL}/payment/stripe/success?orderId=${orderId}`,
+            // cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel?orderId=${orderId}`,
+            success_url:`${process.env.BASE_URL}/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel`,
+        })  
 
         return res.json({
             success:true,
@@ -1457,15 +1436,14 @@ const createStripeSession = async (req,res)=>{
     }
 }
 
-const stripeSuccess = async (req,res)=>{ 
+const stripeSuccess1 = async (req,res)=>{ 
     try {
          const { orderId } = req.query;
 
         if (!orderId) return res.redirect('/checkout');
 
         const order = await Order.findById(orderId);
-        if (!order) return res.redirect('/checkout');
-        // if (!order) return res.redirect('/order');
+        if (!order) return res.redirect('/checkout'); 
 
         // Update order status
         order.status = 'Processing';
@@ -1491,48 +1469,154 @@ const stripeSuccess = async (req,res)=>{
         return res.redirect('/checkout');
     }
 }
+const stripeSuccess = async (req,res)=>{ 
+    try {
+        const {session_id} = req.query
+        
+        if(!session_id){
+            return res.redirect('/checkout')
+        }
+
+        const session = await stripe.checkout.sessions.retrieve(session_id)
+
+        if(session.payment_status !== 'paid'){
+            console.log('Payment not completed');
+            return res.redirect('/checkout');
+        }
+        const pendingOrder = req.session.pendingOrder
+
+        if(!pendingOrder){
+            console.log('No pending order found');
+            return res.redirect('/checkout');
+        }
+
+
+        const newOrder = new Order({
+            userId: pendingOrder.userId,
+            orderedItems: pendingOrder.orderItems,
+            subtotal: pendingOrder.subtotal,
+            totalPrice: pendingOrder.totalPrice,
+            discount: pendingOrder.discount,
+            finalAmount: pendingOrder.finalAmount,
+            address: pendingOrder.address,
+            paymentMethod: 'Stripe',
+            status: 'Processing',
+            paymentStatus: 'Paid',
+            invoiceDate: new Date(),
+            couponApplied: pendingOrder.couponApplied,
+            couponDiscount: pendingOrder.couponDiscount,
+            couponId: pendingOrder.couponId,
+            stripeSessionId: session_id  
+        });
+
+        newOrder.orderStatusHistory.push({
+            status:'Processing',
+            date:new Date(),
+            note:'Payment successful via Stripe'
+        })
+
+        await newOrder.save()
+
+        if(pendingOrder.referralUserId){
+            try {
+                let referredWallet = await Wallet.findOne({
+                    userId:pendingOrder.referralUserId
+                })
+
+                if(!referredWallet){
+                    referredWallet = new Wallet({
+                        userId:pendingOrder.referralUserId,
+                        balance:0,
+                        transactions:[]
+                    })
+                }
+
+                referredWallet.balance += 100 
+                referredWallet.transactions.push({
+                    date:new Date(),
+                    type:"credit",
+                    amount:100,
+                    reason:`Referral reward`
+                })
+
+                await referredWallet.save()
+
+                await User.findByIdAndUpdate(pendingOrder.userId,{ // to update on user side that referal has been used 
+                    $addToSet:{redeemedUser:pendingOrder.referralUserId}
+                })
+
+                await User.findByIdAndUpdate(pendingOrder.referralUserId,{
+                    $addToSet:{redeemedUser:pendingOrder.userId} ,// recording on referer side about the user redeemed their code
+                    $set:{redeemed:true}
+                })
+
+            } catch (error) {
+                console.log('Referral reward error:',error)
+            }
+        }
+
+ 
+        const cart = await Cart.findById( pendingOrder.cartId ).populate('items.productId');
+        
+        if (cart) {
+            await finalizeOrder(newOrder, cart, req);
+        }
+        
+        delete req.session.pendingOrder
+
+        return res.redirect(`/order/success?orderId=${newOrder._id}`); 
+
+        
+    } catch (error) {
+        console.log('Stripe success error:', error);
+        return res.redirect('/checkout');
+    }
+}
 
 const stripeCancel = async (req, res) => {
      try {
-        const { orderId } = req.query;
+        // const { orderId } = req.query;
 
-        if (orderId) {
-            // await Order.findByIdAndUpdate(orderId, {
-            //     status: "Payment Failed",
-            //     paymentStatus: "Failed"
-            // });
+        // if (orderId) {
+        //     // await Order.findByIdAndUpdate(orderId, {
+        //     //     status: "Payment Failed",
+        //     //     paymentStatus: "Failed"
+        //     // });
 
-            const order = await Order.findById(orderId)
+        //     const order = await Order.findById(orderId)
             
-            if(order && order.status === 'Pending'){
-                for(const item of order.orderItems){
-                    const product = await Product.findById(item.product)
-                    if(product){
-                        const variant  = product.variants.find(v=>
-                            v.color === item.variant.color &&
-                            v.size === item.variant.size
-                        )
-                        if(variant){
-                            variant.stock += item.quantity
-                            await product.save()
-                        }
-                    } 
-                }
+        //     if(order && order.status === 'Pending'){
+        //         for(const item of order.orderItems){
+        //             const product = await Product.findById(item.product)
+        //             if(product){
+        //                 const variant  = product.variants.find(v=>
+        //                     v.color === item.variant.color &&
+        //                     v.size === item.variant.size
+        //                 )
+        //                 if(variant){
+        //                     variant.stock += item.quantity
+        //                     await product.save()
+        //                 }
+        //             } 
+        //         }
 
-                order.status = 'Cancelled'
-                order.paymentStatus = 'Failed'
-                order.orderStatusHistory.push({
-                    status:'Cancelled',
-                    date:new Date()
-                })
+        //         order.status = 'Cancelled'
+        //         order.paymentStatus = 'Failed'
+        //         order.orderStatusHistory.push({
+        //             status:'Cancelled',
+        //             date:new Date()
+        //         })
 
-                await order.save()
-            }
+        //         await order.save()
+        //     }
  
-        } 
+        // } 
 
-        return res.redirect(`/order/failed?orderId=${orderId}&reason=payment_canceled`);
+        // return res.redirect(`/order/failed?orderId=${orderId}&reason=payment_canceled`);
 
+        delete req.session.pendingOrder
+
+        return res.redirect(`/order/failed?reason=payment_canceled`) 
 
     } catch (error) {
         console.log('Stripe cancel error:', error);
@@ -1568,7 +1652,8 @@ const orderFailedPage = async(req,res) =>{
         });
 
     } catch (error) {
-        
+        console.log(error)
+
     }
 }
  
