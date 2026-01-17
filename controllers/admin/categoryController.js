@@ -1,5 +1,6 @@
 import Category from '../../models/categorySchema.js'
 import Product from '../../models/productSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const categoryInfo = async (req, res) => {
     try {
@@ -40,7 +41,7 @@ const addCategory = async (req, res) => {
             name: {$regex: new RegExp('^' + name + '$', 'i')} 
         })
         if (existingCategory) {
-            return res.status(400).json({ error: "Category already exists" })
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: "Category already exists" })
         }
 
         const newCategory = new Category({
@@ -51,7 +52,7 @@ const addCategory = async (req, res) => {
         return res.json({ message: 'Category added successfully' })
     } catch (error) {
         console.log("Error in addCategory", error);
-        return res.status(500).json({ error: "Internal server error" })
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" })
     }
 }
 
@@ -62,14 +63,14 @@ const addCategoryOffer = async (req, res) => {
         const category = await Category.findById(categoryId)
 
         if(!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 status: false, 
                 message: 'Percentage must be between 1 and 90' 
             });
         }
 
         if (!category) {
-            return res.status(404).json({ status: false, message: 'Category not found' })
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: 'Category not found' })
         }
         const products = await Product.find({ category: category._id })
         const hasProductOffer = products.some((product) => product.productOffer > percentage)
@@ -85,7 +86,8 @@ const addCategoryOffer = async (req, res) => {
         }
         return res.json({ status: true, message: 'Category Offer added succesfully' })
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Internal server error' })
+        console.log(error)
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal server error' })
     }
 }
 
@@ -94,7 +96,7 @@ const removeCategoryOffer = async (req, res) => {
         const categoryId = req.body.categoryId
         const category = await Category.findById(categoryId)
         if (!category) {
-            return res.status(404).json({ status: false, message: 'Category not found' })
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: 'Category not found' })
         }
         const percentage = category.categoryOffer
         const products = await Product.find({ category: { $in: [category._id] } })
@@ -109,7 +111,8 @@ const removeCategoryOffer = async (req, res) => {
         await category.save()
         res.json({ status: true, message: 'Category offer removed successfully' })
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Internal server error' })
+        console.log(error)
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal server error' })
     }
 }
 
@@ -152,7 +155,7 @@ const editCategory = async (req, res) => {
         })
 
         if (existingCategory) {
-            return res.status(400).json({ error: 'Category name exists,please choose another name' })
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Category name exists,please choose another name' })
         }
         const updateCategory = await Category.findByIdAndUpdate(id, {
             name: categoryName,
@@ -161,11 +164,11 @@ const editCategory = async (req, res) => {
         if (updateCategory) {
             return res.json({ success: true, message: 'Category updated successfully' })
         } else {
-            res.status(404).status({ error: 'Category not found' })
+            res.status(StatusCodes.NOT_FOUND).status({ error: 'Category not found' })
         }
     } catch (error) {
         console.log('Error in editCategory', error);
-        return res.status(500).status({ error: 'Internal server error' })
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).status({ error: 'Internal server error' })
     }
 
 }
@@ -174,14 +177,14 @@ const deleteCategory = async (req, res) => {
     try {
         const { id } = req.query
         if (!id) {
-            return res.status(400).redirect('/admin/pageError')
+            return res.status(StatusCodes.BAD_REQUEST).redirect('/admin/pageError')
         }
         await Category.deleteOne({ _id: id })
         // res.redirect('/admin/category')
         return res.json({ success: true, message: 'Category deleted successfully' })
     } catch (error) {
         console.log("Error deletiing the category", error);
-        return res.status(500).redirect('/admin/pageError')
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).redirect('/admin/pageError')
     }
 }
 

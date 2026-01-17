@@ -1,5 +1,6 @@
 import Brand from '../../models/brandSchema.js'
 import Product from '../../models/productSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const getBrandPage = async(req,res)=>{
     try {
@@ -73,7 +74,7 @@ const addBrand = async(req,res)=>{
         }
     } catch (error) {
         console.error(error);
-            res.status(500).json({
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 message: 'Server error'
             });
@@ -102,13 +103,13 @@ const deleteBrand =async (req,res)=> {
     try {
         const {id} = req.query
         if(!id){
-            return res.status(400).redirect('/admin/pageError')
+            return res.status(StatusCodes.BAD_REQUEST).redirect('/admin/pageError')
         }
         await Brand.deleteOne({_id:id})
         res.redirect('/admin/brands')
     } catch (error) {
         console.log("Error deletiing the brand",error); 
-        return res.status(500).redirect('/admin/pageError')
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).redirect('/admin/pageError')
     }
 }
 const editBrand = async(req,res)=>{

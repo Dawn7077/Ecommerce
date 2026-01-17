@@ -13,8 +13,10 @@ import Coupon from '../../models/couponSchema.js'
 import Order from '../../models/orderSchema.js' 
 import Product from '../../models/productSchema.js'
 import Wallet from '../../models/walletSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 import Stripe from 'stripe'
+import { json } from 'express'
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 const getCheckout1 = async(req,res)=>{
@@ -215,7 +217,7 @@ const placeorder1 = async (req,res)=>{
         const userId = req.session.user._id
  
         if(!addressId ||!paymentMethod){
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 success: false, 
                 message: 'Address and payment method are required' 
             });
@@ -223,7 +225,7 @@ const placeorder1 = async (req,res)=>{
         
         const cart = await Cart.findOne({userId}).populate('items.productId')
         if(!cart || cart.items.length === 0 ){
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 success: false, 
                 message: 'Cart is empty' 
             });
@@ -233,7 +235,7 @@ const placeorder1 = async (req,res)=>{
         const userAddress =  await Address.findOne({userId})
         const selectedAddress = userAddress.address.id(addressId)
         if(!selectedAddress){
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 success: false, 
                 message: 'Address not found' 
             });
@@ -247,14 +249,14 @@ const placeorder1 = async (req,res)=>{
                       v.size === item.variant.size
             )
             if(!variant){
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Variant ${item.variant.color}/ ${item.variant.size} not found for ${product.productName}.`
                 });
             }
 
             if(variant.stock < item.quantity){
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Insufficient stock for ${product.productName} (${item.variant.color}/${item.variant.size}). Only ${variant.stock} available.`
                 });
@@ -320,7 +322,7 @@ const placeorder1 = async (req,res)=>{
             const wallet = await Wallet.findOne({ userId });
 
             if (!wallet || wallet.balance < total) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: "Insufficient wallet balance",
                     redirect: "/wallet"
@@ -409,7 +411,7 @@ const placeorder1 = async (req,res)=>{
 
     } catch (error) {
         console.log("Place order error:", error);
-        return res.status(500).json({ 
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             success: false, 
             message: 'Server error' 
         });
@@ -470,7 +472,7 @@ const addNewAddress = async (req,res)=>{
 
     } catch (error) {
         console.log("New Address Add ERROR →", error);
-      return res.status(500).json({ success: false, message: "Server error" });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
     }
 }
 
@@ -484,7 +486,7 @@ const updateAddress = async (req,res)=>{
         const userAddress = await Address.findOne({userId})
 
         if(!userAddress){
-            return res.status(404).json({success:false,message:'Address not found'})
+            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
         }
 
         const addressIndex = userAddress.address.findIndex(
@@ -492,7 +494,7 @@ const updateAddress = async (req,res)=>{
         )
 
         if(addressIndex === -1){
-            return res.status(404).json({success:false,message:'Address not found'})
+            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
         }
         
         userAddress.address[addressIndex] = {
@@ -502,11 +504,11 @@ const updateAddress = async (req,res)=>{
         
         await userAddress.save()
         console.log("Address updated")
-        return res.status(200).json({success:true})
+        return res.status(StatusCodes.OK).json({success:true})
  
     } catch (error) { 
         console.log("Edit address error:",error)
-        return res.status(500).json({success:false,message:'Server Error'})
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Server Error'})
     }
 }
 
@@ -516,7 +518,7 @@ const deleteCheckoutAddress =  async (req,res)=>{
         const addressId = req.params.id
         const userAddress = await Address.findOne({userId})
         if(!userAddress){
-            return res.status(404).json({success:false,message:'Address not found'})
+            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
         }
 
         userAddress.address =userAddress.address.filter(
@@ -524,11 +526,11 @@ const deleteCheckoutAddress =  async (req,res)=>{
         )
         await userAddress.save()
         console.log("Address deleted")
-        return res.status(200).json({success:true})
+        return res.status(StatusCodes.OK).json({success:true})
 
     } catch (error) {
         console.log("delete address error:",error)
-        return res.status(500).json({success:false,message:'Server Error'})
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Server Error'})
         
     }
 }
@@ -803,7 +805,7 @@ const placeorder = async (req, res) => {
 
         const orderlist = await Order.find({userId,createdAt:{$gte:startDate,$lte:endOfDay}})
         if(orderlist.length > 10 ){
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'User cannot order more than 10 '
             });
@@ -811,7 +813,7 @@ const placeorder = async (req, res) => {
 
 
         if (!addressId || !paymentMethod) {
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Address and payment method are required'
             });
@@ -819,7 +821,7 @@ const placeorder = async (req, res) => {
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Cart is empty'
             });
@@ -828,7 +830,7 @@ const placeorder = async (req, res) => {
         const userAddress = await Address.findOne({ userId });
         const selectedAddress = userAddress.address.id(addressId);
         if (!selectedAddress) {
-            return res.status(404).json({
+            return res.status(StatusCodes.NOT_FOUND).json({
                 success: false,
                 message: 'Address not found'
             });
@@ -842,14 +844,14 @@ const placeorder = async (req, res) => {
             );
 
             if (!variant) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Variant ${item.variant.color}/${item.variant.size} not found for ${product.productName}.`
                 });
             }
 
             if (variant.stock < item.quantity) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Insufficient stock for ${product.productName} (${item.variant.color}/${item.variant.size}). Only ${variant.stock} available.`
                 });
@@ -909,6 +911,26 @@ const placeorder = async (req, res) => {
             }
         }
 
+
+         //final amount calculation
+
+        // const shipping = subtotal >= 1000 ? 0 : 100;
+        const shipping = subtotal >= 3000 ? 0 : 500;
+        const totalPrice = subtotal - discount 
+        const finalAmount = totalPrice - couponDiscount + shipping;
+
+
+
+        if (paymentMethod === 'cod' && totalPrice < 3000) {
+            console.log('Bad request:',StatusCodes.BAD_REQUEST)
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Total amount must be greater than 3000 for COD'
+            });
+        }
+
+
+
         // orderitems
 
         const orderItems = cart.items.map(item => {
@@ -935,13 +957,7 @@ const placeorder = async (req, res) => {
         });
 
 
-        //final amount calculation
-
-        // const shipping = subtotal >= 1000 ? 0 : 100;
-        const shipping = subtotal >= 3000 ? 0 : 500;
-        const totalPrice = subtotal - discount 
-        const finalAmount = totalPrice - couponDiscount + shipping;
-
+       
 
         if(paymentMethod === 'Stripe'){
             req.session.pendingOrder = {
@@ -980,7 +996,7 @@ const placeorder = async (req, res) => {
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
             if (!wallet || wallet.balance < finalAmount) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: "Insufficient wallet balance",
                     redirect: "/wallet"
@@ -1111,7 +1127,7 @@ const placeorder = async (req, res) => {
 
     } catch (error) {
         console.log("Place order error:", error);
-        return res.status(500).json({
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Server error'
         });
@@ -1158,14 +1174,14 @@ const retryCancelledOrder = async (req,res) =>{
         // validations
         
         if (!orderId || !paymentMethod) {
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Order ID and payment method required'
             });
         }
         
         if(!["Wallet",'Stripe'].includes(paymentMethod)){
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Only Wallet and Stripe allowed for retry'
             });
@@ -1175,14 +1191,14 @@ const retryCancelledOrder = async (req,res) =>{
         const order = await Order.findOne({_id: orderId,userId})
         
         if(!order){
-            return res.status(404).json({
+            return res.status(StatusCodes.NOT_FOUND).json({
                 success:false,
                 message:'Order not found'
             })
         }
 
         if(order.status !== 'Cancelled'){
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success:false,
                 message:'Only Cancelled orders can be retried '
             })
@@ -1191,34 +1207,64 @@ const retryCancelledOrder = async (req,res) =>{
         //stock availability 
 
         for(const item of order.orderedItems){
+
+            if (!item.variant || !item.variant.color || !item.variant.size) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Invalid variant data for product "${item.productName}". Please reorder.`
+                });
+            }
+
             const product = await Product.findById(item.product)
 
             if(!product){
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success:false,
                     message:`Product "${item.productName}" is no longer available`
                 })
-            }
-
-            const variant = product.variants.find(v=>
+            } 
+            const variant = product.variants.find(v =>
                 v.color === item.variant.color &&
                 v.size === item.variant.size
-            )
+            );
 
             if(!variant){
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success:false,
-                    message:`Variant "${item.variant.color/item.variant.size}" not found for Product "${item.productName}" `
+                    message:`Variant "${item.variant.color}/${item.variant.size}" not found for Product "${item.productName}" `
                 })
             }
             if(variant.stock < item.quantity){
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success:false,
-                    message:`Insufficient stock for "${item.variants.color/item.variants.size}", only  "${variant.stock}" available `
+                    message:`Insufficient stock for "${item.variant.color}/${item.variant.size}", only  "${variant.stock}" available `
                 })
             }
         } //==============
-        
+
+
+            if(paymentMethod === 'Stripe'){
+                req.session.pendingRetryOrder = {
+                    originalOrderId: order._id.toString(),
+                    userId: userId.toString(),
+                    orderedItems: order.orderedItems,
+                    subtotal: order.subtotal,
+                    totalPrice: order.totalPrice,
+                    discount: order.discount,
+                    finalAmount: order.finalAmount,
+                    address: order.address,
+                    paymentMethod: 'Stripe',
+                    couponApplied: order.couponApplied,
+                    couponDiscount: order.couponDiscount,
+                    couponId: order.couponId
+                }
+
+                return res.json({
+                    success:true,
+                    message:'Ready for Stripe payment',
+                    proceedToStripe:true
+                })
+            }
 
             
 
@@ -1227,7 +1273,7 @@ const retryCancelledOrder = async (req,res) =>{
                 const wallet = await Wallet.findOne({userId})
                 if(!wallet || wallet.balance < order.finalAmount){
                     
-                    return res.status(400).json({
+                    return res.status(StatusCodes.BAD_REQUEST).json({
                         success:false,
                         message:`Insufficient wallet balance `,
                         redirect:'/wallet'
@@ -1242,15 +1288,31 @@ const retryCancelledOrder = async (req,res) =>{
                     reason:`Retry payment for Order#${order.orderId}`
                 })
                 await wallet.save()
-            }
+            
             //stock update
             for(const item of order.orderedItems){
+
+                if (!item.variant || !item.variant.color || !item.variant.size) {
+                    return res.status(StatusCodes.BAD_REQUEST).json({
+                        success: false,
+                        message: `Invalid variant data for product "${item.productName}". Please reorder.`
+                    });
+                }
+
+
                 const product = await Product.findById(item.product)
                 const variant = product.variants.find(v=>
                     v.color  === item.variant.color &&
                     v.size  === item.variant.size
                 )
 
+                if (!product || !variant) {
+                    return res.status(StatusCodes.BAD_REQUEST).json({
+                        success: false,
+                        message: `Product or variant no longer available for "${item.productName}"`
+                    });
+                }
+ 
                 variant.stock -= item.quantity;
 
                 const totalStock = product.variants.reduce((sum,v)=> sum + v.stock,0)
@@ -1307,31 +1369,19 @@ const retryCancelledOrder = async (req,res) =>{
             }
 
             await order.save()
-
-
-            //payment === stripe forward to stripe session
-            // if(paymentMethod === 'Stripe'){
-            //     return res.json({
-            //         success:true,
-            //         message:'Ready for stripe payment',
-            //         orderId:order._id,
-            //         stripeCheckout:true
-            //     });
-            // }
-
-
-            //when wallet order is complete
-            res.json({
+ 
+             
+            return res.json({
                 success:true,
                 message:'Order successfully retried',
                 OrderId:order._id, 
             }) 
         
-
+        }
 
     } catch (error) {
         console.error('Retry order error:', error);
-        res.status(500).json({ 
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             success: false, 
             message: 'Server error' 
         });
@@ -1387,8 +1437,14 @@ const createStripeSession = async (req,res)=>{
 
         const userId = req.session.user._id
 
-        const pendingOrder = req.session.pendingOrder
-
+        let pendingOrder = req.session.pendingOrder
+        let isRetry = false
+        //to check if its a normal order
+        if(!pendingOrder){
+            pendingOrder = req.session.pendingRetryOrder;
+            isRetry = true
+        }
+        //if retry order not available 
         if(!pendingOrder){
             return  res.json({ success: false, message: "No pending order not found" });
         }
@@ -1409,7 +1465,7 @@ const createStripeSession = async (req,res)=>{
                         currency:'inr',
                         product_data:{
                             // name:`Order #${orderId}`
-                            name:`Order Payment`,
+                            name:isRetry?`Retry Order Payment`:`Order Payment`,
                             description:`${pendingOrder.orderedItems.length} items`
                         },
                         // unit_amount:order.finalAmount*100,
@@ -1418,6 +1474,11 @@ const createStripeSession = async (req,res)=>{
                     quantity:1,
                 }
             ],
+            metadata:{
+                userId:userId.toString(),
+                isRetry:isRetry.toString(),
+                originalOrderId:isRetry?pendingOrder.originalOrderId:'new'
+            },
             // success_url:`${process.env.BASE_URL}/payment/stripe/success?orderId=${orderId}`,
             // cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel?orderId=${orderId}`,
             success_url:`${process.env.BASE_URL}/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -1474,97 +1535,169 @@ const stripeSuccess = async (req,res)=>{
         const {session_id} = req.query
         
         if(!session_id){
-            return res.redirect('/checkout')
+            return res.redirect('/order')
         }
 
         const session = await stripe.checkout.sessions.retrieve(session_id)
 
         if(session.payment_status !== 'paid'){
             console.log('Payment not completed');
-            return res.redirect('/checkout');
-        }
-        const pendingOrder = req.session.pendingOrder
-
-        if(!pendingOrder){
-            console.log('No pending order found');
-            return res.redirect('/checkout');
+            return res.redirect('/order');
         }
 
 
-        const newOrder = new Order({
-            userId: pendingOrder.userId,
-            orderedItems: pendingOrder.orderItems,
-            subtotal: pendingOrder.subtotal,
-            totalPrice: pendingOrder.totalPrice,
-            discount: pendingOrder.discount,
-            finalAmount: pendingOrder.finalAmount,
-            address: pendingOrder.address,
-            paymentMethod: 'Stripe',
-            status: 'Processing',
-            paymentStatus: 'Paid',
-            invoiceDate: new Date(),
-            couponApplied: pendingOrder.couponApplied,
-            couponDiscount: pendingOrder.couponDiscount,
-            couponId: pendingOrder.couponId,
-            stripeSessionId: session_id  
-        });
+        const isRetry = session.metadata.isRetry === 'true'
 
-        newOrder.orderStatusHistory.push({
-            status:'Processing',
-            date:new Date(),
-            note:'Payment successful via Stripe'
-        })
+        let pendingOrder
+        let existingOrder = null 
 
-        await newOrder.save()
+        if(isRetry){
+            pendingOrder = req.session.pendingRetryOrder
 
-        if(pendingOrder.referralUserId){
-            try {
-                let referredWallet = await Wallet.findOne({
-                    userId:pendingOrder.referralUserId
-                })
-
-                if(!referredWallet){
-                    referredWallet = new Wallet({
-                        userId:pendingOrder.referralUserId,
-                        balance:0,
-                        transactions:[]
-                    })
-                }
-
-                referredWallet.balance += 100 
-                referredWallet.transactions.push({
-                    date:new Date(),
-                    type:"credit",
-                    amount:100,
-                    reason:`Referral reward`
-                })
-
-                await referredWallet.save()
-
-                await User.findByIdAndUpdate(pendingOrder.userId,{ // to update on user side that referal has been used 
-                    $addToSet:{redeemedUser:pendingOrder.referralUserId}
-                })
-
-                await User.findByIdAndUpdate(pendingOrder.referralUserId,{
-                    $addToSet:{redeemedUser:pendingOrder.userId} ,// recording on referer side about the user redeemed their code
-                    $set:{redeemed:true}
-                })
-
-            } catch (error) {
-                console.log('Referral reward error:',error)
+            if(!pendingOrder){
+                console.log('No pending retry order found')
+                return res.redirect('/order')
             }
-        }
 
+            existingOrder = await Order.findById(pendingOrder.originalOrderId)
+
+            if(!existingOrder){
+                console.log('Original order not found')
+                return res.redirect('/order')
+            }
+
+            //Update for stock for retry
+
+            for (const item of pendingOrder.orderedItems){
+                const product = await Product.findById(item.product)
+                const variant = product.variants.find(v=>
+                    v.color === item.variant.color &&
+                    v.size === item.variant.size
+                )
+                variant.stock -= item.quantity
+
+                const totalStock = product.variants.reduce((sum,v)=> sum + v.stock , 0 )
+                product.status = totalStock > 0 ? 'Available' : 'out of stock';
+
+                await product.save()
+            }
+
+            existingOrder.status = 'Processing'
+            existingOrder.paymentStatus = 'Paid'
+            existingOrder.paymentMethod = 'Stripe'
+            existingOrder.stripeSessionId = session_id
+
+            existingOrder.orderStatusHistory = []
+            existingOrder.orderStatusHistory.push({
+                status: 'Processing',
+                date: new Date(),
+                note: 'Order retried - Payment successful via Stripe'
+            })
+
+            for(const item of existingOrder.orderedItems){
+                item.status = 'Processing'
+                item.cancellationReason = undefined
+                item.returnReason = undefined
+                item.refunded = false
+                item.restocked = false
+
+                item.statusHistory = [{
+                    status:"Processing",
+                    date:new Date(),
+                    note : 'Order retried via Stripe'
+                }]
+            }
+            await existingOrder.save()
+
+            delete req.session.pendingRetryOrder
+
+            return res.redirect(`/order/success?orderId=${existingOrder._id}`)
+
+        } 
+        else {
+            pendingOrder = req.session.pendingOrder
+
+            if(!pendingOrder){
+                console.log('No pending order found');
+                return res.redirect('/checkout');
+            }
+
+            const newOrder = new Order({
+                userId: pendingOrder.userId,
+                orderedItems: pendingOrder.orderedItems,
+                subtotal: pendingOrder.subtotal,
+                totalPrice: pendingOrder.totalPrice,
+                discount: pendingOrder.discount,
+                finalAmount: pendingOrder.finalAmount,
+                address: pendingOrder.address,
+                paymentMethod: 'Stripe',
+                status: 'Processing',
+                paymentStatus: 'Paid',
+                invoiceDate: new Date(),
+                couponApplied: pendingOrder.couponApplied,
+                couponDiscount: pendingOrder.couponDiscount,
+                couponId: pendingOrder.couponId,
+                stripeSessionId: session_id  
+            });
+
+            newOrder.orderStatusHistory.push({
+                status:'Processing',
+                date:new Date(),
+                note:'Payment successful via Stripe'
+            })
+
+            await newOrder.save()
+         
+
+            if(pendingOrder.referralUserId){
+                try {
+                    let referredWallet = await Wallet.findOne({
+                        userId:pendingOrder.referralUserId
+                    })
+
+                    if(!referredWallet){
+                        referredWallet = new Wallet({
+                            userId:pendingOrder.referralUserId,
+                            balance:0,
+                            transactions:[]
+                        })
+                    }
+
+                    referredWallet.balance += 100 
+                    referredWallet.transactions.push({
+                        date:new Date(),
+                        type:"credit",
+                        amount:100,
+                        reason:`Referral reward`
+                    })
+
+                    await referredWallet.save()
+
+                    await User.findByIdAndUpdate(pendingOrder.userId,{ // to update on user side that referal has been used 
+                        $addToSet:{redeemedUser:pendingOrder.referralUserId}
+                    })
+
+                    await User.findByIdAndUpdate(pendingOrder.referralUserId,{
+                        $addToSet:{redeemedUser:pendingOrder.userId} ,// recording on referer side about the user redeemed their code
+                        $set:{redeemed:true}
+                    })
+
+                } catch (error) {
+                    console.log('Referral reward error:',error)
+                }
+            }
  
-        const cart = await Cart.findById( pendingOrder.cartId ).populate('items.productId');
-        
-        if (cart) {
-            await finalizeOrder(newOrder, cart, req);
-        }
-        
-        delete req.session.pendingOrder
+            const cart = await Cart.findById( pendingOrder.cartId ).populate('items.productId');
+            
+            if (cart) {
+                await finalizeOrder(newOrder, cart, req);
+            }
+            
+            delete req.session.pendingOrder
 
-        return res.redirect(`/order/success?orderId=${newOrder._id}`); 
+            return res.redirect(`/order/success?orderId=${newOrder._id}`); 
+
+        }
 
         
     } catch (error) {
@@ -1615,6 +1748,7 @@ const stripeCancel = async (req, res) => {
         // return res.redirect(`/order/failed?orderId=${orderId}&reason=payment_canceled`);
 
         delete req.session.pendingOrder
+        delete req.session.pendingRetryOrder;
 
         return res.redirect(`/order/failed?reason=payment_canceled`) 
 

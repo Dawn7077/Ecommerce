@@ -13,6 +13,7 @@ import Wallet from '../../models/walletSchema.js'
 import nodemailer from 'nodemailer'
 import bcrypt from 'bcrypt'
 import dotenv  from 'dotenv' 
+import StatusCodes from '../../utils/httpStatus.js'
 dotenv.config()
 
 
@@ -21,7 +22,7 @@ const securePassword = async(password)=>{
         const passwordHash = await bcrypt.hash(password,10)
         return passwordHash
     } catch (error) { 
-
+        console.log(error)
     }
 }
 
@@ -71,6 +72,7 @@ const getForgotPassPage = async(req,res)=>{
     try {
         res.render('user/forgot-password')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -96,6 +98,7 @@ const forgotEmailValid = async(req,res)=>{
             })
         }
     } catch (error) { 
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -109,7 +112,8 @@ const verifyForgotPassOtp = async(req,res)=>{
             res.json({success:false,message:'Otp not matching'})
          }
     } catch (error) {
-        res.status(500).json({success:false,message:'An error occured ,Please try again'})
+        console.log(error)
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'An error occured ,Please try again'})
     }
 }
 
@@ -117,6 +121,7 @@ const getResetPassPage = async(req,res)=>{
     try {
         res.render('user/reset-password')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -130,13 +135,13 @@ const resendForgotOtp = async(req,res)=>{
         const emailSent = await sendVerification(email,otp)
         if(emailSent){
             console.log("Resend Otp:",otp);
-            res.status(200).json({success:true,message:'Resend Otp Successfully'})
+            res.status(StatusCodes.OK).json({success:true,message:'Resend Otp Successfully'})
             
         }
         
     } catch (error) {
         console.error('error in resentOTp', error) 
-        res.status(500).json({success:false,message:'Internal server error'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Internal server error'})
     }
 }
 
@@ -156,6 +161,7 @@ const postNewPassword = async(req,res)=>{
         }
 
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -198,6 +204,7 @@ const getChangeEmail = async(req,res)=>{
     try {
         res.render('user/changeEmail')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -248,6 +255,7 @@ const verifyEmailOtp = async(req,res)=>{
             })
         }
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -296,6 +304,7 @@ const updateEmail = async(req,res)=>{
             })
         // res.redirect('/user-profile')
     } catch (error) {
+        console.log(error)
         res.redirect("/pageNotFound")
     }
 }
@@ -305,6 +314,7 @@ const getChangePassword = async (req,res)=>{
         // res.render('user/changePassword')
         res.render('user/confirmCurrentPaswd')
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -312,6 +322,7 @@ const forgotCurrentPswd = async (req,res)=>{
     try {
         res.render('user/changePassword') 
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -411,7 +422,8 @@ const verifyPasswordOtp = async(req,res)=>{
             })
         }
     } catch (error) {
-        res.status(500).json({success:false,message:'Erron occured in verifyOtp, Please try again later'})
+        console.log(error)
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Erron occured in verifyOtp, Please try again later'})
     }
 }
 
@@ -422,6 +434,7 @@ const getAddAddress = async (req,res)=>{
             user:user
         })
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 }
@@ -512,7 +525,7 @@ const deleteAddress = async (req,res)=>{
         const addressId = req.query.id
         const findAddress = await Address.findOne({'address._id':addressId})
         if(!findAddress){
-            return res.status(404).send('Address not found')
+            return res.status(StatusCodes.NOT_FOUND).send('Address not found')
         }
         await Address.updateOne( 
             {'address._id':addressId},

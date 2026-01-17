@@ -492,7 +492,7 @@
                     const stripeRes = await fetch('/payment/stripe/create-session',{
                         method:'POST',
                         headers:{"Content-type":'application/json'},
-                        body:JSON.stringify({ orderId:data.orderId })
+                        // body:JSON.stringify({ orderId:data.orderId })
                     })
 
                     const stripeData = await stripeRes.json()

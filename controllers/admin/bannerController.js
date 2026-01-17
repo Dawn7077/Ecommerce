@@ -46,6 +46,7 @@ const bannerDelete = async (req,res)=>{
 
         res.redirect('/admin/banner')
     } catch (error) {
+        console.log(error)
         res.redirect('/admin/pageError')
     }
 }

@@ -13,6 +13,7 @@ import bcrypt from 'bcrypt'
 import Category from '../../models/categorySchema.js'
 import Product from '../../models/productSchema.js'
 import Brand from '../../models/brandSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 
 const loadlogin = (req,res)=>{
@@ -59,7 +60,7 @@ const login= async(req,res)=>{
     } catch (error) {
         console.log("login Error",error);
         // return res.redirect('/pageError')
-        return res.status(500).json({
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Server error. Please try again."
         });
@@ -453,7 +454,7 @@ const getSalesTimeline = async(req,res)=>{
 
     } catch (error) {
         console.log(error)
-        res.status(500).json({ error: "Sales timeline error" })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Sales timeline error" })
     }
 }
 

@@ -4,6 +4,7 @@ import Category from '../../models/categorySchema.js'
 import Order from '../../models/orderSchema.js'
 import Brand from '../../models/brandSchema.js'
 import User from '../../models/userSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 import fs from 'fs'
 import path from 'path'
 import sharp from 'sharp'
@@ -71,7 +72,7 @@ const addProducts = async(req,res)=>{
 
             const categoryId = await Category.findOne({name:products.category})
             if(!categoryId){
-                return res.status(400).json('Invalid category name')
+                return res.status(StatusCodes.BAD_REQUEST).json('Invalid category name')
             }
 
             //adding variants
@@ -128,7 +129,7 @@ const addProducts = async(req,res)=>{
 
         }
         else{
-           return res.status(400).json({status:false,message:'Product already exists, please try with another name'})
+           return res.status(StatusCodes.BAD_REQUEST).json({status:false,message:'Product already exists, please try with another name'})
         }
     } catch (error) {
         console.error("Error saving product",error);
@@ -253,12 +254,12 @@ const getAllProducts = async(req,res)=>{
 
     //total sales on each pg
 
-    const order = await Order.find()
-    order.orderedItems.forEach(ord=>{
-      if(ord._id === productData._id){
+    // const order = await Order.find()
+    // order.orderedItems.forEach(ord=>{
+    //   if(ord._id === productData._id){
         
-      }
-    })
+    //   }
+    // })
 
 
 
@@ -270,7 +271,7 @@ const getAllProducts = async(req,res)=>{
       res.render('admin/products',{
         data:productData,
         currentPage:page,
-        totalPages:page,
+        // totalPages:page,
         totalPages:Math.ceil((count/limit)),
         cat:category,
         brand:brand,
@@ -283,6 +284,7 @@ const getAllProducts = async(req,res)=>{
     
 
   } catch (error) {
+    console.log('All products page:',error)
     res.redirect('/admin/pageError')
   }
 }
@@ -305,8 +307,9 @@ const addProductOffer = async(req,res)=>{
     // await findCategory.save()
     res.json({status:true})
   } catch (error) {
+    console.log('All products page:',error)
     res.redirect('/pageError')
-    res.status(500).json({status:false,message:"Internal server error"})
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({status:false,message:"Internal server error"})
   }
 }
 const removeProductOffer= async(req,res)=>{
@@ -321,7 +324,7 @@ const removeProductOffer= async(req,res)=>{
   }
    catch (error) {
     res.redirect('/pageError')
-    res.status(500).json({status:false,message:"Internal server error"})
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({status:false,message:"Internal server error"})
   }
 }
 const blockProduct = async(req,res)=>{
@@ -372,7 +375,7 @@ const editProduct =async(req,res)=>{
       _id:{$ne:id}
     })
     if(existingProduct){
-      return res.status(400).json({error:'Product with this name already exists, please try with another one'})
+      return res.status(StatusCodes.BAD_REQUEST).json({error:'Product with this name already exists, please try with another one'})
     }
 
     let highlights =[]
@@ -467,7 +470,7 @@ const deleteProduct = async(req,res)=>{
   try {
     const id = req.query.id
     if(!id){
-      return res.status(400).json({status:false,message:'Product id is required'})
+      return res.status(StatusCodes.BAD_REQUEST).json({status:false,message:'Product id is required'})
     }
     await Product.deleteOne({_id:id})
     res.json({status:true,message:'Product deleted successfully'})

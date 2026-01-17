@@ -1,6 +1,7 @@
 import Order from '../../models/orderSchema.js'
 import PDFDocument from 'pdfkit' 
 import ExcelJS from 'exceljs' 
+import StatusCodes from '../../utils/httpStatus.js';
 
 
 
@@ -468,7 +469,7 @@ const downloadSalesExcel = async (req,res)=>{
 
     } catch (error) {
         console.log("Excel Download Error:", error);
-        res.status(500).send("Error generating Excel file");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Error generating Excel file");
     }
 }
 const downloadSalesPDF = async (req,res) => {
@@ -621,7 +622,7 @@ const downloadSalesPDF = async (req,res) => {
 
     } catch (error) {
         console.log("PDF Download Error:", error);
-        res.status(500).send("Error generating PDF file");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Error generating PDF file");
     }
 }
 
