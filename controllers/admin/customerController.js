@@ -6,7 +6,7 @@ const customerInfo = async(req,res)=>{
     try {
         
         const search = req.query.search || ''
-        const page = req.query.page || 1
+        const page = parseInt(req.query.page )|| 1
         const limit = 3
 
         const query = {
@@ -26,6 +26,8 @@ const customerInfo = async(req,res)=>{
 
         const totalPages = Math.ceil(count/limit)
         const deleted = req.query.deleted === 'true'
+        
+                    
 
         res.render('admin/customers',{
             data:userData,
@@ -37,6 +39,7 @@ const customerInfo = async(req,res)=>{
 
     } catch (error) {
         console.log(error)
+        res.redirect('/admin/pageError')
     }
 }
 const customerBlocked = async(req,res)=>{

@@ -13,6 +13,7 @@ const getProductAddPage= async(req,res)=>{
     try {
         const category = await Category.find({isListed:true})
         const brand = await Brand.find({isBlocked:false})
+        
         res.render('admin/product-add',{
             cat:category,
             brand
@@ -215,7 +216,7 @@ const addProducts = async(req,res)=>{
 const getAllProducts = async(req,res)=>{
   try {
     const search = req.query.search || ''
-    const page = req.query.page || 1
+    const page = parseInt(req.query.page) || 1
     const updated = req.query.updated === 'true' 
     const limit = 4
     const productData = await Product.find({
@@ -262,7 +263,7 @@ const getAllProducts = async(req,res)=>{
     // })
 
 
-
+  
 
 
 

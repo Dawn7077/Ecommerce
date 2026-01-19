@@ -30,7 +30,7 @@ const categoryInfo = async (req, res) => {
         })
     } catch (error) {
         console.log("Error in categoryInfo", error);
-        res.redirect('/pageError')
+        res.redirect('/admin/pageError')
     }
 }
 

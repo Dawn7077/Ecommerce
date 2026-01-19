@@ -122,6 +122,11 @@ router.post('/login', login)
 router.get('/logout', logout)
 //Error page
 router.get('/pageNotFound', pageNotFound)
+router.get('/page', pageNotFound)
+router.get('/blog', pageNotFound)
+router.get('/contact', pageNotFound)
+router.get('/about', pageNotFound) 
+
 //profile management
 router.get('/user-profile', userAuth, userProfile)
 router.get('/forgot-password', getForgotPassPage)

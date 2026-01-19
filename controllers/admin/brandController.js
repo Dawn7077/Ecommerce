@@ -7,7 +7,7 @@ const getBrandPage = async(req,res)=>{
         const updated = req.query.updated
         const page = parseInt(req.query.page)||1
         const search = req.query.search || ''
-        const limit = 4 
+        const limit = 2 
         const skip = (page-1)*limit
 
         const brandData = await Brand.find({
@@ -23,6 +23,7 @@ const getBrandPage = async(req,res)=>{
         })
         const totalPages = Math.ceil(totalBrands/limit)
         const reverseBrand = brandData.reverse()
+         
 
         res.render('admin/brands',{
             data:reverseBrand,
@@ -34,6 +35,7 @@ const getBrandPage = async(req,res)=>{
             
         })
     } catch (error) {
+        console.log(error)
         res.redirect('/admin/pageError')
     }
 }
@@ -87,6 +89,7 @@ const blockBrand =async (req,res)=> {
         await Brand.updateOne({_id:id},{$set:{isBlocked:true}})
         res.redirect('/admin/brands')
     } catch (error) {
+        console.log(error); 
         res.redirect('/admin/pageError')
     }
 }
@@ -96,6 +99,7 @@ const unBlockBrand =async (req,res)=> {
         await Brand.updateOne({_id:id},{$set:{isBlocked:false}})
         res.redirect('/admin/brands')
     } catch (error) {
+        console.log(error); 
         res.redirect('/admin/pageError')
     }
 }

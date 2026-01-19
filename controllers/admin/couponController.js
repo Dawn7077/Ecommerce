@@ -3,13 +3,33 @@ import mongoose from 'mongoose'
 import StatusCodes from '../../utils/httpStatus.js'
 
 const loadCoupon = async(req,res)=>{
-    try {
-        const findCoupon = await Coupon.find({})
+    try { 
 
-        return res.render('admin/coupon',{coupons:findCoupon})
+        const search = req.query.search || ''
+        const page = parseInt(req.query.page)  || 1
+        const limit = 5
+        const skip = (page-1)*limit
+
+        const findCoupon = await Coupon.find({
+            name:{$regex : new RegExp('.*'+search+'.*','i')}
+        })
+        .sort({createdAt:-1})
+        .skip(skip)
+        .limit((limit))
+
+        const totalCoupon = await Coupon.countDocuments({
+            name:{$regex : new RegExp('.*'+search+'.*','i')}
+        })
+        const totalPages = Math.ceil(totalCoupon/limit)
+
+        return res.render('admin/coupon',{coupons:findCoupon,
+            currentPage: page,
+            totalPages,
+            search
+        })
     } catch (error) {
         console.log(error)
-        res.redirect('/pageError')
+        res.redirect('/admin/pageError')
     }
 }
 const createCoupon = async(req,res)=>{

@@ -4,17 +4,20 @@ import fs from 'fs'
 
 const getBannerPage = async (req,res)=>{
     try {
-        const findBanner = await Banner.find({})
+        const findBanner = await Banner.find({}) 
         res.render('admin/banner',{data:findBanner})
     } catch (error) {
-        res.redirect('/pageError')
+        console.log(error)
+        res.redirect('/admin/pageError')
     }
 }
 const getAddBannerPage = async (req,res)=>{
     try { 
+
         res.render('admin/addBanner')
     } catch (error) {
-        res.redirect('/pageError')
+        console.log(error)
+        res.redirect('/admin/pageError')
     }
 }
 const addBanner = async (req,res)=>{
