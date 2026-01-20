@@ -7,6 +7,7 @@ import Order from '../../models/orderSchema.js'
 import Product from '../../models/productSchema.js'  
 import Wallet from '../../models/walletSchema.js' 
 import Coupon from '../../models/couponSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const loadOrderPage = async(req,res)=>{
     try {
@@ -22,7 +23,7 @@ const loadOrderPage = async(req,res)=>{
             user:req.session.user
         })
     } catch (error) {
-         
+        console.log(error)
     }
 }
 
@@ -67,7 +68,7 @@ const getOrderDetails = async (req, res) => {
             .populate('orderedItems.product');
         
         if (!order) {
-            return res.status(404).send('Order not found');
+            return res.status(StatusCodes.NOT_FOUND).send('Order not found');
         }
         order.orderedItems.forEach(item=>{
             console.log('===status=',item.status,'\n===previous status[-1]=',item.statusHistory[item.statusHistory.length-2])
@@ -98,10 +99,10 @@ const cancelOrder = async (req,res)=>{
         const order = await Order.findOne({_id:orderId, userId})
 
         if(!order){
-            return res.status(404).json({ success: false, message: 'Order not found' })
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Order not found' })
         }
         if (order.status === 'Cancelled') {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 success: false, 
                 message: 'Order is already cancelled' 
             });
@@ -115,17 +116,17 @@ const cancelOrder = async (req,res)=>{
             console.log(item)
 
             if(!item){
-                return res.status(404).json({ success: false, message: 'Item not found' });
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Item not found' });
             }
             if(!['Pending','Processing',].includes(item.status)){
-                 return res.status(400).json({ 
+                 return res.status(StatusCodes.BAD_REQUEST).json({ 
                     success: false, 
                     message: 'Item cannot be cancelled at this stage' 
                 });
             }
 
             if (item.refunded || item.restocked) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: 'Refund already processed for this item'
                 });
@@ -147,7 +148,7 @@ const cancelOrder = async (req,res)=>{
                 const coupon = await Coupon.findById(order.couponId)  
                 //checking coupon eligibility new amount > coupon min price 
                 if(order.couponApplied && newSubtotal < coupon.minimumPrice){
-                        return res.status(400).json({ 
+                        return res.status(StatusCodes.BAD_REQUEST).json({ 
                         success: false, 
                         message: `COUPON APPLIED : Item cannot be cancelled due to remaining total ${newSubtotal} is less than coupon min price ${coupon.minimumPrice}`
                     });
@@ -218,7 +219,7 @@ const cancelOrder = async (req,res)=>{
         else{        
 
             if(!['Pending','Processing'].includes(order.status)){
-                return res.status(400).json({ 
+                return res.status(StatusCodes.BAD_REQUEST).json({ 
                     success: false, 
                     message: 'Order cannot be cancelled at this stage' 
                 });
@@ -309,7 +310,7 @@ const cancelOrder = async (req,res)=>{
 
     } catch (error) {
         console.log('Cancel order error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
     }
 }
 
@@ -379,16 +380,16 @@ const requestReturn = async (req,res)=>{
         const order = await Order.findOne({_id:orderId,userId})
 
         if (!order) {
-            return res.status(404).json({ success: false, message: 'Order not found' })
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Order not found' })
         }
 
         const item = order.orderedItems.id(itemId)
         if(!item){
-             return res.status(404).json({ success: false, message: 'Item not found' })
+             return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Item not found' })
         }
 
         if(item.status !== "Delivered"){
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 success:false,
                 message:'Only delivered items can be returned'
             })
@@ -398,7 +399,7 @@ const requestReturn = async (req,res)=>{
         if(deliveryDate){
             const daysAfterDelivery = Math.floor((Date.now()-deliveryDate)/(1000 * 60 * 60 * 24))
             if(daysAfterDelivery > 7){
-                return res.status(400).json({ 
+                return res.status(StatusCodes.BAD_REQUEST).json({ 
                     success: false, 
                     message: 'Return window has expired (7 days from delivery)' 
                 });
@@ -423,7 +424,7 @@ const requestReturn = async (req,res)=>{
 
     } catch (error) {
         console.log('Request return error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
     }
 }
 import PDFDocument from 'pdfkit'
@@ -437,7 +438,7 @@ const generateOrderInvoice = async (req, res) => {
             .populate("orderedItems.product");
 
         if (!order) {
-            return res.status(404).send("Order not found");
+            return res.status(StatusCodes.BAD_REQUEST).send("Order not found");
         }
 
         // Prepare filename
@@ -517,7 +518,7 @@ const generateOrderInvoice = async (req, res) => {
 
     } catch (error) {
         console.error("PDF Generation Error:", error);
-        res.status(500).send("Error generating invoice PDF");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Error generating invoice PDF");
     }
 };
 

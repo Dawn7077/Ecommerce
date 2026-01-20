@@ -1,6 +1,7 @@
 const Order = require('../../models/orderSchema');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+import StatusCodes from '../../utils/httpStatus';
 
 // Helper function to get date range based on filter type
 function getDateRange(filterType, customFrom, customTo) {
@@ -266,7 +267,7 @@ const downloadSalesExcel = async (req, res) => {
 
     } catch (error) {
         console.log("Excel Download Error:", error);
-        res.status(500).send("Error generating Excel file");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Error generating Excel file");
     }
 };
 
@@ -390,7 +391,7 @@ const downloadSalesPDF = async (req, res) => {
 
     } catch (error) {
         console.log("PDF Download Error:", error);
-        res.status(500).send("Error generating PDF file");
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send("Error generating PDF file");
     }
 };
 

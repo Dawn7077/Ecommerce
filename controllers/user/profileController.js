@@ -13,6 +13,7 @@ import Wallet from '../../models/walletSchema.js'
 import nodemailer from 'nodemailer'
 import bcrypt from 'bcrypt'
 import dotenv  from 'dotenv' 
+import StatusCodes from '../../utils/httpStatus.js'
 dotenv.config()
 
 
@@ -112,7 +113,7 @@ const verifyForgotPassOtp = async(req,res)=>{
          }
     } catch (error) {
         console.log(error)
-        res.status(500).json({success:false,message:'An error occured ,Please try again'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'An error occured ,Please try again'})
     }
 }
 
@@ -134,13 +135,13 @@ const resendForgotOtp = async(req,res)=>{
         const emailSent = await sendVerification(email,otp)
         if(emailSent){
             console.log("Resend Otp:",otp);
-            res.status(200).json({success:true,message:'Resend Otp Successfully'})
+            res.status(StatusCodes.OK).json({success:true,message:'Resend Otp Successfully'})
             
         }
         
     } catch (error) {
         console.error('error in resentOTp', error) 
-        res.status(500).json({success:false,message:'Internal server error'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Internal server error'})
     }
 }
 
@@ -422,7 +423,7 @@ const verifyPasswordOtp = async(req,res)=>{
         }
     } catch (error) {
         console.log(error)
-        res.status(500).json({success:false,message:'Erron occured in verifyOtp, Please try again later'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Erron occured in verifyOtp, Please try again later'})
     }
 }
 
@@ -524,7 +525,7 @@ const deleteAddress = async (req,res)=>{
         const addressId = req.query.id
         const findAddress = await Address.findOne({'address._id':addressId})
         if(!findAddress){
-            return res.status(404).send('Address not found')
+            return res.status(StatusCodes.NOT_FOUND).send('Address not found')
         }
         await Address.updateOne( 
             {'address._id':addressId},

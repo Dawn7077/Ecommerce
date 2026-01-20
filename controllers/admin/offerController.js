@@ -1,12 +1,13 @@
 import Product from '../../models/productSchema.js'
 import Category from '../../models/categorySchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const addProductOffer1 = async (req,res)=>{
     try {
         const {productId,percentage}  = req.body
 
         if (!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 status: false, 
                 message: 'Percentage must be between 1 and 90' 
             });
@@ -14,7 +15,7 @@ const addProductOffer1 = async (req,res)=>{
 
         const findProduct = await Product.findById(productId);
         if (!findProduct) {
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 status: false, 
                 message: 'Product not found' 
             });
@@ -43,7 +44,7 @@ const addProductOffer1 = async (req,res)=>{
           
     } catch (error) {
         console.error("Add Product Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" });
     }
 }
 
@@ -158,7 +159,7 @@ const addProductOffer = async (req, res) => {
         const { productId, percentage } = req.body;
 
         if (!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 status: false,
                 message: "Percentage must be between 1 and 90"
             });
@@ -166,7 +167,7 @@ const addProductOffer = async (req, res) => {
 
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ status: false, message: "Product not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "Product not found" });
         }
 
         const category = await Category.findById(product.category);
@@ -184,7 +185,7 @@ const addProductOffer = async (req, res) => {
 
     } catch (error) {
         console.error("Add Product Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" });
     }
 };
 
@@ -194,7 +195,7 @@ const removeProductOfferPage =  async (req, res) => {
 
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ status: false, message: "Product not found" });
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "Product not found" });
         }
 
         const category = await Category.findById(product.category);
@@ -210,7 +211,7 @@ const removeProductOfferPage =  async (req, res) => {
         });
     } catch (error) {
         console.error("Remove Product Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" })
     }
 }
 
@@ -219,14 +220,14 @@ const addCategoryOffer =  async (req,res) => {
         const { percentage, categoryId } = req.body;
 
         if (!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 status: false, 
                 message: 'Percentage must be between 1 and 90' 
             });
         }
         const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 status: false, 
                 message: 'Category not found' 
             });
@@ -249,7 +250,7 @@ const addCategoryOffer =  async (req,res) => {
 
     } catch (error) {
         console.error("Add Category Offer Error:", error);
-        res.status(500).json({ status: false, message: 'Internal server error' })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal server error' })
     }
 }
  
@@ -259,7 +260,7 @@ const removeCategoryOfferPage = async (req, res) => {
 
         const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 status: false, 
                 message: 'Category not found' 
             });
@@ -282,7 +283,7 @@ const removeCategoryOfferPage = async (req, res) => {
 
     } catch (error) {
         console.error("Remove Category Offer Error:", error);
-        res.status(500).json({ status: false, message: 'Internal server error' })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal server error' })
     }
 }
 
@@ -291,7 +292,7 @@ const editProductOffer = async (req,res) => {
         const {productId,percentage} = req.body
         
         if (!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 status: false, 
                 message: 'Percentage must be between 1 and 90' 
             });
@@ -299,7 +300,7 @@ const editProductOffer = async (req,res) => {
 
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 status: false, 
                 message: 'Product not found' 
             });
@@ -321,7 +322,7 @@ const editProductOffer = async (req,res) => {
 
     } catch (error) {
         console.error("Edit Product Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" })
     }
 }
 
@@ -330,7 +331,7 @@ const editCategoryOffer = async (req, res) => {
         const { categoryId, percentage } = req.body
 
         if(!percentage || percentage < 1 || percentage > 90) {
-            return res.status(400).json({ 
+            return res.status(StatusCodes.BAD_REQUEST).json({ 
                 status: false, 
                 message: 'Percentage must be between 1 and 90' 
             });
@@ -338,7 +339,7 @@ const editCategoryOffer = async (req, res) => {
 
         const category = await Category.findById(categoryId);
         if (!category) {
-            return res.status(404).json({ 
+            return res.status(StatusCodes.NOT_FOUND).json({ 
                 status: false, 
                 message: 'Category not found' 
             });
@@ -362,7 +363,7 @@ const editCategoryOffer = async (req, res) => {
 
     } catch (error) {
         console.error("Edit Category Offer Error:", error);
-        res.status(500).json({ status: false, message: "Internal server error" })
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" })
     }
 }
 

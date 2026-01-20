@@ -1,13 +1,35 @@
 import Coupon from '../../models/couponSchema.js'
 import mongoose from 'mongoose'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const loadCoupon = async(req,res)=>{
-    try {
-        const findCoupon = await Coupon.find({})
+    try { 
 
-        return res.render('admin/coupon',{coupons:findCoupon})
+        const search = req.query.search || ''
+        const page = parseInt(req.query.page)  || 1
+        const limit = 5
+        const skip = (page-1)*limit
+
+        const findCoupon = await Coupon.find({
+            name:{$regex : new RegExp('.*'+search+'.*','i')}
+        })
+        .sort({createdAt:-1})
+        .skip(skip)
+        .limit((limit))
+
+        const totalCoupon = await Coupon.countDocuments({
+            name:{$regex : new RegExp('.*'+search+'.*','i')}
+        })
+        const totalPages = Math.ceil(totalCoupon/limit)
+
+        return res.render('admin/coupon',{coupons:findCoupon,
+            currentPage: page,
+            totalPages,
+            search
+        })
     } catch (error) {
-        res.redirect('/pageError')
+        console.log(error)
+        res.redirect('/admin/pageError')
     }
 }
 const createCoupon = async(req,res)=>{
@@ -32,6 +54,7 @@ const createCoupon = async(req,res)=>{
         return res.redirect('/admin/coupon')
 
     } catch (error) {
+        console.log(error)
         res.redirect('/pageError')
     }
 }
@@ -65,11 +88,12 @@ const editCoupon = async(req,res)=>{
         if(updateCoupon!==null){
                 res.send('Coupon updated successfully')
         }else{
-            res.status(500).send('Coupon updated Failed')
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Coupon updated Failed')
         }
          
          
     } catch (error) {
+        console.log(error)
         res.redirect('/pageError')
     }
 }
@@ -95,11 +119,12 @@ const editCoupon1 = async(req,res)=>{
             if(updateCoupon!==null){
                  res.send('Coupon updated successfully')
             }else{
-                res.status(500).send('Coupon updated Failed')
+                res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Coupon updated Failed')
             }
         }
          
     } catch (error) {
+        console.log(error)
         res.redirect('/pageError')
     }
 }
@@ -109,13 +134,13 @@ const deleteCoupon = async(req,res)=>{
         const couponId = req.params.id
         const deletedCoupon = await Coupon.findByIdAndDelete(couponId)
         if(!deletedCoupon){
-            return res.status(404).send({success:false,message:'coupon not found'})
+            return res.status(StatusCodes.NOT_FOUND).send({success:false,message:'coupon not found'})
         }
  
-        res.status(200).send({success:true,message:'coupon deleted successfully'})
+        res.status(StatusCodes.OK).send({success:true,message:'coupon deleted successfully'})
     } catch (error) { 
         console.log('error deleting coupon',error)
-        res.status(500).send({success:false,message:'coupon deleted failed'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({success:false,message:'coupon deleted failed'})
     }
 }
 

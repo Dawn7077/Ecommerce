@@ -24,6 +24,7 @@ import Brand from '../../models/brandSchema.js'
 import WishLish from '../../models/wishlistSchema.js'
 import bcrypt from 'bcrypt'
 import { productDetails } from "./productController.js"
+import StatusCodes from '../../utils/httpStatus.js'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -69,7 +70,7 @@ const loadHomePage = async (req,res)=>{
 
     } catch (error) {
         console.log("home page not found");
-        res.status(500).send('server error')
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('server error')
     }
 }
 const pageNotFound = async(req,res)=>{
@@ -84,7 +85,7 @@ const loadSignUp = async(req,res)=>{
         return res.render('user/signup')
     } catch (error) {
         console.log('Home page not loading',error)
-        res.status(500).send('Server Error')
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Server Error')
     }
 }
 
@@ -193,11 +194,11 @@ const verifyOtp = async(req,res)=>{
             }
             res.json({success:true,redirectUrl:'/'})
         }else{
-            res.status(400).json({success:false,message:'Invalid OTP, Please try again'})
+            res.status(StatusCodes.BAD_REQUEST).json({success:false,message:'Invalid OTP, Please try again'})
         }
     } catch (error) {
         console.error("Error verifying OTP",error);
-        res.status(500).json({success:false,message:"An error has occured"})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:"An error has occured"})
         
     }
 }
@@ -205,7 +206,7 @@ const resendOtp = async(req,res)=>{
     try {
         const {email}= req.session.userData
         if(!email){
-            return res.status(400).json({success:false,message:'Email not found in session'})
+            return res.status(StatusCodes.BAD_REQUEST).json({success:false,message:'Email not found in session'})
         }
         const otp = generateOtp()
         req.session.userOtp = otp
@@ -213,16 +214,16 @@ const resendOtp = async(req,res)=>{
         const emailSent =await sendVerificationEmail(email,otp)
         if(emailSent){
             console.log('Resent OTP',otp);
-            res.status(200).json({success:true,message:'OTP Resent Successfully'})
+            res.status(StatusCodes.OK).json({success:true,message:'OTP Resent Successfully'})
             
         }else{
-             res.status(500).json({success:false,message:'Failed to Resent OTP, Please try again'})
+             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Failed to Resent OTP, Please try again'})
            
         }
     } catch (error) {
-        console.error("Error resending OTP");
+        console.error("Error resending OTP",error);
         
-        res.status(500).json({success:false,message:'Internal Server Error'})
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Internal Server Error'})
            
     }
 }
@@ -237,6 +238,7 @@ const loadlogin = async(req,res)=>{
         }
 
     } catch (error) {
+        console.log(error)
         res.redirect('/pageNotFound')
     }
 } 

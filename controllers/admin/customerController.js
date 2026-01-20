@@ -6,7 +6,7 @@ const customerInfo = async(req,res)=>{
     try {
         
         const search = req.query.search || ''
-        const page = req.query.page || 1
+        const page = parseInt(req.query.page )|| 1
         const limit = 3
 
         const query = {
@@ -26,6 +26,8 @@ const customerInfo = async(req,res)=>{
 
         const totalPages = Math.ceil(count/limit)
         const deleted = req.query.deleted === 'true'
+        
+                    
 
         res.render('admin/customers',{
             data:userData,
@@ -36,7 +38,8 @@ const customerInfo = async(req,res)=>{
         })
 
     } catch (error) {
-        
+        console.log(error)
+        res.redirect('/admin/pageError')
     }
 }
 const customerBlocked = async(req,res)=>{
@@ -45,6 +48,7 @@ const customerBlocked = async(req,res)=>{
         await User.updateOne({_id:id},{$set:{isBlocked:true}})
         res.redirect('/admin/users')
     } catch (error) {
+        console.log(error)
         req.redirect('/pageError')
     }
 }
@@ -55,6 +59,7 @@ const customerUnBlocked = async(req,res)=>{
         await User.updateOne({_id:id},{$set:{isBlocked:false}})
         res.redirect('/admin/users')
     } catch (error) {
+        console.log(error)
         req.redirect('/pageError')
     }
 }

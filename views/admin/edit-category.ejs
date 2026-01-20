@@ -41,10 +41,25 @@
         const name = document.getElementById('edit-category-name').value.trim()
         const description = document.getElementById('edit-category-description').value.trim()
 
-        if(name ===''||description ===""){
-            Swal.fire('Error','Please fill all the fields','error')
-            return false
+        if(name === '' || description === ''){
+        Swal.fire('Error', 'Please fill all the fields', 'error');
+        return false;
+        } 
+        if(name.length > 15){
+            Swal.fire('Error', 'Category Name must be 15 characters or less', 'error');
+            return false;
         }
+
+        if(!/^[a-zA-Z\s]+$/.test(name)){
+            Swal.fire('Error', 'Category Name should only contain alphabetic characters and spaces', 'error');
+            return false;
+        }
+
+        if(description.length > 20){
+            Swal.fire('Error', 'Description must be 20 characters or less', 'error');
+            return false;
+        }
+
         try {
             const response = await fetch(`/admin/editCategory/${categoryId}`,{
                 method:'POST',

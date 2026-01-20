@@ -7,6 +7,7 @@ import User from '../../models/userSchema.js'
 import Wallet from '../../models/walletSchema.js'
 import Stripe from 'stripe'
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+import StatusCodes from '../../utils/httpStatus.js'
 
 const getWallet = async (req,res)=>{
     try {
@@ -40,7 +41,7 @@ const addWalletMoney = async (req,res)=>{
         const MIN_TOPUP_AMOUNT = 50;  
 
         if(!amount || amount < MIN_TOPUP_AMOUNT || amount > 9999999){
-            return res.status(400).json({ success: false, message: `Amount must be between ₹${MIN_TOPUP_AMOUNT} and ₹9,999,999` });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: `Amount must be between ₹${MIN_TOPUP_AMOUNT} and ₹9,999,999` });
         }
 
         const session = await stripe.checkout.sessions.create({
@@ -64,7 +65,7 @@ const addWalletMoney = async (req,res)=>{
         res.json({success:true,url:session.url})
     } catch (error) {
         console.log("Stripe wallet session error:", error);
-        res.status(500).json({ success: false, message: "Stripe session failed" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Stripe session failed" });
     }
 }
 

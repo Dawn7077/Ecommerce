@@ -1091,22 +1091,26 @@ function allowOnlyNumbers(e) {
         }
 
         if (selectedPayment === 'Stripe') { 
-            const stripeRes = await fetch('/payment/stripe/create-session', {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderId: data.orderId })
-            });
-            
-            const stripeData = await stripeRes.json();
-            
-            if (stripeData.success && stripeData.url) {
-                // Redirect to Stripe checkout
-                window.location.href = stripeData.url;
-            } else {
-                swal("Payment Error", stripeData.message || "Failed to create payment session", "error");
-                btn.disabled = false;
-                btn.innerHTML = "Place Order";
+            if(data.proceedToStripe){
+                const stripeRes = await fetch('/payment/stripe/create-session', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    // body: JSON.stringify({ orderId: data.orderId })
+                });
+
+                const stripeData = await stripeRes.json();
+                
+                if (stripeData.success && stripeData.url) {
+                    // Redirect to Stripe checkout
+                    window.location.href = stripeData.url;
+                } else {
+                    swal("Payment Error", stripeData.message || "Failed to create payment session", "error");
+                    btn.disabled = false;
+                    btn.innerHTML = "Place Order";
+                }
+                
             }
+            
             return;
         }
 

@@ -18,7 +18,7 @@ import express from 'express'
 const router = express.Router()
 
 import { loadHomePage, loadSignUp, signup, getVerifyOtp, verifyOtp, resendOtp, pageNotFound,
-loadlogin, login, logout, loadShoppingPage, filterProduct, filterByPrice, searchProducts, loadShop} 
+loadlogin, login, logout, loadShop} 
 from '../controllers/user/userController.js'
 
 import { getForgotPassPage, forgotEmailValid, verifyForgotPassOtp, getResetPassPage,
@@ -122,6 +122,11 @@ router.post('/login', login)
 router.get('/logout', logout)
 //Error page
 router.get('/pageNotFound', pageNotFound)
+router.get('/page', pageNotFound)
+router.get('/blog', pageNotFound)
+router.get('/contact', pageNotFound)
+router.get('/about', pageNotFound) 
+
 //profile management
 router.get('/user-profile', userAuth, userProfile)
 router.get('/forgot-password', getForgotPassPage)

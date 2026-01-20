@@ -3,6 +3,7 @@ import User from '../../models/userSchema.js'
 import Product from '../../models/productSchema.js'
 import Wallet from '../../models/walletSchema.js'
 import Coupon from '../../models/couponSchema.js'
+import StatusCodes from '../../utils/httpStatus.js'
 
 const getOrderList = async (req, res) => {
     try {
@@ -108,7 +109,7 @@ const changeOrderStatus1 = async (req, res) => {
         const order = await Order.findById(orderId);
         console.log('=========>',order)
         if (!order) {
-            return res.status(404).json({ status: false, message: 'Order not found' });
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: 'Order not found' });
         }
 
 
@@ -176,7 +177,7 @@ const changeOrderStatus1 = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating order status:", error);
-        res.status(500).json({ status: false, message: 'Internal Server Error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal Server Error' });
     }
 }; 
 
@@ -186,7 +187,7 @@ const changeOrderStatus = async (req, res) => {
 
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ status: false, message: 'Order not found' });
+            return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: 'Order not found' });
         }
 
         const terminalStatuses = ['Cancelled', 'Returned'];
@@ -276,7 +277,7 @@ const changeOrderStatus = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating order status:", error);
-        res.status(500).json({ status: false, message: 'Internal Server Error' });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Internal Server Error' });
     }
 };
 

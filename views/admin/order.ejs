@@ -45,7 +45,7 @@
 
                 <div class="col-md-2">
                     <select class="form-select" name="status">
-                        <option value="">All Status</option>
+                        <option value="">All Order Status</option>
                         <option value="Pending" <%= statusFilter === 'Pending' ? 'selected' : '' %>>Pending</option>
                         <option value="Processing" <%= statusFilter === 'Processing' ? 'selected' : '' %>>Processing</option>
                         <option value="Shipped" <%= statusFilter === 'Shipped' ? 'selected' : '' %>>Shipped</option>
@@ -61,7 +61,7 @@
                         <option value="Pending" <%= paymentFilter === 'Pending' ? 'selected' : '' %>>Pending</option>
                         <option value="Completed" <%= paymentFilter === 'Completed' ? 'selected' : '' %>>Completed</option>
                         <option value="Failed" <%= paymentFilter === 'Failed' ? 'selected' : '' %>>Failed</option>
-                        <option value="Refunded" <%= paymentFilter === 'Refunded' ? 'selected' : '' %>>Refunded</option>
+                        <!-- <option value="Refunded" <%= paymentFilter === 'Refunded' ? 'selected' : '' %>>Refunded</option> -->
                     </select>
                 </div>
 
