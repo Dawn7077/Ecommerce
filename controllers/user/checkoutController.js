@@ -717,6 +717,18 @@ const getCheckout = async (req, res) => {
         const userId = req.session.user._id;
         const user = await User.findById(userId);
 
+         if (req.session.pendingOrder && req.session.pendingOrder.stockReductions) {
+            console.log('User returned to checkout - restoring reserved stock');
+            await rollbackStockReductions(req.session.pendingOrder.stockReductions);
+            delete req.session.pendingOrder;
+        }
+        
+        if (req.session.pendingRetryOrder && req.session.pendingRetryOrder.stockReductions) {
+            console.log('User returned to checkout - restoring retry order stock');
+            await rollbackStockReductions(req.session.pendingRetryOrder.stockReductions);
+            delete req.session.pendingRetryOrder;
+        }
+
         let addressDoc = await Address.findOne({ userId });
         if (!addressDoc) {
             addressDoc = new Address({ userId, address: [] });
@@ -829,6 +841,7 @@ const getCheckout = async (req, res) => {
 };
 
 const placeorder = async (req, res) => {
+    console.log('test-branch:placeorder()-------------->')
     try {
         const { addressId, paymentMethod } = req.body;
         const userId = req.session.user._id;
@@ -991,6 +1004,7 @@ const placeorder = async (req, res) => {
 
         if (paymentMethod === 'cod' && totalPrice < 3000) {
             console.log('Bad request:', StatusCodes.BAD_REQUEST)
+            await rollbackStockReductions(stockReductions);
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Total amount must be greater than 3000 for COD'
@@ -1051,7 +1065,8 @@ const placeorder = async (req, res) => {
                 couponId,
                 referralUserId,
                 cartId: cart._id,
-                stockReductions
+                stockReductions,
+                timestamp: Date.now()
             }
 
             return res.json({
@@ -1204,16 +1219,17 @@ const placeorder = async (req, res) => {
     }
 };
 
-async function rollbackStockReductions(items) {
-    for (const item of items) {
+async function rollbackStockReductions(stockReductions) {
+    console.log('Rolling back stock reductions:', stockReductions);
+    for (const reduction  of stockReductions) {
         await Product.findOneAndUpdate(
             {
-                _id: item.productId._id,
-                'variants.color': item.variant.color,
-                'variants.size': item.variant.size
+                _id: reduction .productId ,
+                'variants.color': reduction.color,
+                'variants.size': reduction.size
             },
             {
-                $inc: { 'variants.$.stock': item.quantity }
+                $inc: { 'variants.$.stock': reduction .quantity }
             }
         );
     }
@@ -1652,7 +1668,9 @@ const retryCancelledOrder = async (req, res) => {
                 paymentMethod: 'Stripe',
                 couponApplied: order.couponApplied,
                 couponDiscount: order.couponDiscount,
-                couponId: order.couponId
+                couponId: order.couponId,
+                stockReductions,
+                timestamp: Date.now()  
             }
 
             return res.json({
@@ -1667,7 +1685,8 @@ const retryCancelledOrder = async (req, res) => {
         //payment 
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId })
-            if (!wallet || wallet.balance < order.finalAmount) {
+            if (!wallet || wallet.balance < order.finalAmount) { 
+                await rollbackStockReductions(stockReductions);
 
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -1686,69 +1705,81 @@ const retryCancelledOrder = async (req, res) => {
             await wallet.save()
 
             //stock update
-            for (const item of order.orderedItems) {
+            // for (const item of order.orderedItems) {
 
-                if (!item.variant || !item.variant.color || !item.variant.size) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({
-                        success: false,
-                        message: `Invalid variant data for product "${item.productName}". Please reorder.`
-                    });
-                }
+            //     if (!item.variant || !item.variant.color || !item.variant.size) {
+            //         return res.status(StatusCodes.BAD_REQUEST).json({
+            //             success: false,
+            //             message: `Invalid variant data for product "${item.productName}". Please reorder.`
+            //         });
+            //     }
 
 
-                const product = await Product.findById(item.product)
-                const variant = product.variants.find(v =>
-                    v.color === item.variant.color &&
-                    v.size === item.variant.size
-                )
+            //     const product = await Product.findById(item.product)
+            //     const variant = product.variants.find(v =>
+            //         v.color === item.variant.color &&
+            //         v.size === item.variant.size
+            //     )
 
-                if (!product || !variant) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({
-                        success: false,
-                        message: `Product or variant no longer available for "${item.productName}"`
-                    });
-                }
+            //     if (!product || !variant) {
+            //         return res.status(StatusCodes.BAD_REQUEST).json({
+            //             success: false,
+            //             message: `Product or variant no longer available for "${item.productName}"`
+            //         });
+            //     }
 
-                variant.stock -= item.quantity;
+            //     variant.stock -= item.quantity;
 
-                const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0)
-                product.status = totalStock > 0 ? "Available" : 'out of stock';
+            //     const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0)
+            //     product.status = totalStock > 0 ? "Available" : 'out of stock';
 
-                await product.save()
+            //     await product.save()
 
-            }
+            // }
 
             //reset order and history
 
-            order.status = paymentMethod === 'Wallet' ? 'Processing' : 'Pending'
-            order.paymentStatus = paymentMethod === 'Wallet' ? 'Paid' : 'Payment Pending'
-            order.paymentMethod = paymentMethod
+            // order.status = paymentMethod === 'Wallet' ? 'Processing' : 'Pending'
+            // order.paymentStatus = paymentMethod === 'Wallet' ? 'Paid' : 'Payment Pending'
+            // order.paymentMethod = paymentMethod
+            
 
             //cleaning status history 
+            // order.orderStatusHistory = [];
+
+            // // starts at Pending on retry
+            // order.orderStatusHistory.push({
+            //     status: 'Pending',
+            //     date: new Date(),
+            //     note: 'Order retried after cancellation'
+            // });
+
+            // //  If wallet payment, 
+            // if (paymentMethod === 'Wallet') {
+            //     order.orderStatusHistory.push({
+            //         status: 'Processing',
+            //         date: new Date(),
+            //         note: 'Wallet payment successful'
+            //     });
+            // }
+
+
+            order.status = 'Processing';
+            order.paymentStatus = 'Paid';
+            order.paymentMethod = paymentMethod;
+
             order.orderStatusHistory = [];
-
-            // starts at Pending on retry
             order.orderStatusHistory.push({
-                status: 'Pending',
+                status: 'Processing',
                 date: new Date(),
-                note: 'Order retried after cancellation'
+                note: 'Order retried with Wallet payment'
             });
-
-            //  If wallet payment, 
-            if (paymentMethod === 'Wallet') {
-                order.orderStatusHistory.push({
-                    status: 'Processing',
-                    date: new Date(),
-                    note: 'Wallet payment successful'
-                });
-            }
-
 
 
 
             //reset item status in order
             for (const item of order.orderedItems) {
-                item.status = paymentMethod === 'Wallet' ? 'Processing' : 'Pending'
+                item.status =  'Processing'
                 item.cancellationReason = undefined;
                 item.returnReason = undefined;
                 item.returnRequestDate = undefined;
