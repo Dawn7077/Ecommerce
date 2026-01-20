@@ -10,7 +10,7 @@ import User from '../../models/userSchema.js'
 import Address from '../../models/addressSchema.js'
 import Cart from '../../models/cartSchema.js'
 import Coupon from '../../models/couponSchema.js'
-import Order from '../../models/orderSchema.js' 
+import Order from '../../models/orderSchema.js'
 import Product from '../../models/productSchema.js'
 import Wallet from '../../models/walletSchema.js'
 import StatusCodes from '../../utils/httpStatus.js'
@@ -19,53 +19,53 @@ import Stripe from 'stripe'
 import { json } from 'express'
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
-const getCheckout1 = async(req,res)=>{
+const getCheckout1 = async (req, res) => {
     try {
         const userId = req.session.user._id
         const user = await User.findById(userId)
-        let addressDoc = await Address.findOne({userId})
-        if(!addressDoc){
-            addressDoc = new Address({userId, address:[]})
+        let addressDoc = await Address.findOne({ userId })
+        if (!addressDoc) {
+            addressDoc = new Address({ userId, address: [] })
             await addressDoc.save()
         }
         const userAddresses = addressDoc.address // array of address[]
 
         const todayDate = new Date()
-        const coupons = await Coupon.find({isList:true,expireOn:{$gte:todayDate}})
+        const coupons = await Coupon.find({ isList: true, expireOn: { $gte: todayDate } })
         // console.log(todayDate,'==>',coupons)
         let grandTotal = 0
 
-        const cart = await Cart.findOne({userId}).populate('items.productId')
-        if(!cart || cart.items.length === 0){
-            return res.render('user/checkout',{
-                user,  
+        const cart = await Cart.findOne({ userId }).populate('items.productId')
+        if (!cart || cart.items.length === 0) {
+            return res.render('user/checkout', {
+                user,
                 cart: cart ? cart.items : [],
                 itemCount: cart ? cart.items.length : 0,
-                addresses:userAddresses,
+                addresses: userAddresses,
                 subtotal: "0.00",
                 discount: "0.00",
                 couponDiscount: "0.00",
-                appliedCoupon:req.session.appliedCoupon?req.session.appliedCoupon:null,
+                appliedCoupon: req.session.appliedCoupon ? req.session.appliedCoupon : null,
                 shipping: "0.00",
-                total: "0.00", 
-                grandTotal, 
-                coupons:coupons,
+                total: "0.00",
+                grandTotal,
+                coupons: coupons,
             })
         }
 
-        const validItems = cart.items.filter(item=>{
+        const validItems = cart.items.filter(item => {
             const product = item.productId
             return product && !product.isBlocked && product.status === "Available";
-        }) 
+        })
 
-        
 
-        let subtotal = 0 
+
+        let subtotal = 0
         let totalDiscount = 0
-        
-        validItems.forEach(item=>{
+
+        validItems.forEach(item => {
             const p = item.productId
-            
+
             const regular = p.regularPrice
             const sale = p.salesPrice
             const qty = item.quantity
@@ -80,22 +80,22 @@ const getCheckout1 = async(req,res)=>{
             // item.totalPrice = sale * qty;
         })
 
-        if(validItems.length !== cart.items.length){
+        if (validItems.length !== cart.items.length) {
             cart.items = validItems
             await cart.save()
         }
-        const cartAmount = subtotal - totalDiscount 
-        const shipping = subtotal >= 1000? 0  :50;
+        const cartAmount = subtotal - totalDiscount
+        const shipping = subtotal >= 1000 ? 0 : 50;
 
-        let couponDiscount = 0 
+        let couponDiscount = 0
         let appliedCoupon = null
 
-        if(req.session.appliedCoupon){
+        if (req.session.appliedCoupon) {
             const coupon = await Coupon.findById(req.session.appliedCoupon)
-            if(coupon && coupon.isList && cartAmount>= coupon.minimumPrice) {
-                couponDiscount = Math.min(coupon.offerPrice , cartAmount)
+            if (coupon && coupon.isList && cartAmount >= coupon.minimumPrice) {
+                couponDiscount = Math.min(coupon.offerPrice, cartAmount)
                 appliedCoupon = coupon
-            }else{
+            } else {
                 delete req.session.appliedCoupon
             }
         }
@@ -110,25 +110,25 @@ const getCheckout1 = async(req,res)=>{
         //     productDetails:[item.productId],
         //     quantity:item.quantity
         // }))
-        
+
         // for(let item of cart.items){
         //     grandTotal+= item.quantity * item.productId.salesPrice
         // }
 
 
 
-        res.render('user/checkout',{
-            user, 
-            addresses:userAddresses,
-            cart:cart.items,    
+        res.render('user/checkout', {
+            user,
+            addresses: userAddresses,
+            cart: cart.items,
             coupons,
             appliedCoupon,
-            subtotal:subtotal.toFixed(2),
-            discount:totalDiscount.toFixed(2), 
-            couponDiscount:couponDiscount.toFixed(2),
+            subtotal: subtotal.toFixed(2),
+            discount: totalDiscount.toFixed(2),
+            couponDiscount: couponDiscount.toFixed(2),
             shipping,
-            total:total.toFixed(2),
-            itemCount:cart.items.length
+            total: total.toFixed(2),
+            itemCount: cart.items.length
 
         })
     } catch (error) {
@@ -136,16 +136,16 @@ const getCheckout1 = async(req,res)=>{
         res.redirect("/cart");
     }
 }
-const applyCoupon1 = async(req,res)=>{
+const applyCoupon1 = async (req, res) => {
     try {
-        const {couponCode} = req.body
+        const { couponCode } = req.body
         const userId = req.session.user._id
 
         const coupon = await Coupon.findOne({
-            name:couponCode.trim().toUpperCase(),
-            isList:true
+            name: couponCode.trim().toUpperCase(),
+            isList: true
         })
-        if(req.session.appliedCoupon){
+        if (req.session.appliedCoupon) {
             return res.json({
                 success: false,
                 message: 'A coupon is already applied. Please remove it first.'
@@ -153,33 +153,33 @@ const applyCoupon1 = async(req,res)=>{
         }
 
 
-        if(!coupon){
-            return res.json({success:false,message:'Invalid Coupon code'})
+        if (!coupon) {
+            return res.json({ success: false, message: 'Invalid Coupon code' })
         }
 
         const now = new Date()
-        if(now < coupon.createdOn || now > coupon.expireOn){
-            return res.json({success:false,message:'This coupon has expired'})
+        if (now < coupon.createdOn || now > coupon.expireOn) {
+            return res.json({ success: false, message: 'This coupon has expired' })
         }
 
-        const cart = await Cart.findOne({userId}).populate('items.productId')
-        if(!cart || cart.items.length === 0){
-            return res.json({success:false,message:'Your Cart is empty'})
+        const cart = await Cart.findOne({ userId }).populate('items.productId')
+        if (!cart || cart.items.length === 0) {
+            return res.json({ success: false, message: 'Your Cart is empty' })
         }
 
-        let cartAmount = 0 
-        cart.items.forEach(item=>{
+        let cartAmount = 0
+        cart.items.forEach(item => {
             const product = item.productId
-            if(product && !product.isBlocked && product.status === 'Available'){
+            if (product && !product.isBlocked && product.status === 'Available') {
                 cartAmount += product.salesPrice * item.quantity
             }
         })
 
-        if(cartAmount < coupon.minimumPrice){
-            return res.json({success:false,message:`Minimum purchase of ${coupon.minimumPrice} required for this coupon`})
+        if (cartAmount < coupon.minimumPrice) {
+            return res.json({ success: false, message: `Minimum purchase of ${coupon.minimumPrice} required for this coupon` })
         }
 
-         // Check if user already used this coupon
+        // Check if user already used this coupon
         // const order = await Order.findOne({
         //     userId: userId,
         //     coupon: coupon._id
@@ -192,109 +192,108 @@ const applyCoupon1 = async(req,res)=>{
         //     })
         // }
 
-        const discount = Math.min(coupon.offerPrice , cartAmount)
+        const discount = Math.min(coupon.offerPrice, cartAmount)
 
         req.session.appliedCoupon = coupon._id
-        return res.json({ 
-                success: true, 
-                message: 'Coupon applied successfully' ,
-                discount,
-                couponCode:coupon.name
-            })
-        
+        return res.json({
+            success: true,
+            message: 'Coupon applied successfully',
+            discount,
+            couponCode: coupon.name
+        })
+
     } catch (error) {
-        console.log('Error in applying coupon',error)
-        return res.json({ 
-                success: false, 
-                message: 'Error in applying coupon' 
-            })
+        console.log('Error in applying coupon', error)
+        return res.json({
+            success: false,
+            message: 'Error in applying coupon'
+        })
     }
 }
-//new placeorder
-const placeorder1 = async (req,res)=>{
+const placeorder1 = async (req, res) => {
     try {
-        const {addressId,paymentMethod} = req.body
+        const { addressId, paymentMethod } = req.body
         const userId = req.session.user._id
- 
-        if(!addressId ||!paymentMethod){
-            return res.status(StatusCodes.BAD_REQUEST).json({ 
-                success: false, 
-                message: 'Address and payment method are required' 
-            });
-        }
-        
-        const cart = await Cart.findOne({userId}).populate('items.productId')
-        if(!cart || cart.items.length === 0 ){
-            return res.status(StatusCodes.BAD_REQUEST).json({ 
-                success: false, 
-                message: 'Cart is empty' 
+
+        if (!addressId || !paymentMethod) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Address and payment method are required'
             });
         }
 
-        
-        const userAddress =  await Address.findOne({userId})
+        const cart = await Cart.findOne({ userId }).populate('items.productId')
+        if (!cart || cart.items.length === 0) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Cart is empty'
+            });
+        }
+
+
+        const userAddress = await Address.findOne({ userId })
         const selectedAddress = userAddress.address.id(addressId)
-        if(!selectedAddress){
-            return res.status(StatusCodes.NOT_FOUND).json({ 
-                success: false, 
-                message: 'Address not found' 
+        if (!selectedAddress) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Address not found'
             });
         }
         //--> checking variant stock
 
-        for(const item of cart.items){ 
+        for (const item of cart.items) {
             const product = await Product.findById(item.productId._id)
             const variant = product.variants.find(
-                (v)=> v.color === item.variant.color &&
-                      v.size === item.variant.size
+                (v) => v.color === item.variant.color &&
+                    v.size === item.variant.size
             )
-            if(!variant){
+            if (!variant) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Variant ${item.variant.color}/ ${item.variant.size} not found for ${product.productName}.`
                 });
             }
 
-            if(variant.stock < item.quantity){
+            if (variant.stock < item.quantity) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: `Insufficient stock for ${product.productName} (${item.variant.color}/${item.variant.size}). Only ${variant.stock} available.`
                 });
             }
 
-            
-            const total = product.variants.reduce((sum,v)=> sum + v.stock,0)
+
+            const total = product.variants.reduce((sum, v) => sum + v.stock, 0)
             product.status = total > 0 ? "Available" : 'out of stock'
             await product.save()
         }
 
         //total calculation
 
-        let subtotal = 0 
+        let subtotal = 0
         let discount = 0
-        
-        const orderItems = cart.items.map(item=>{
+
+        const orderItems = cart.items.map(item => {
             const itemTotal = item.price * item.quantity
             subtotal += itemTotal
 
-            if(item.productId.salesPrice && item.productId.salesPrice < item.productId.regularPrice){
+            if (item.productId.salesPrice && item.productId.salesPrice < item.productId.regularPrice) {
                 discount += (item.productId.regularPrice - item.productId.salesPrice) * item.quantity
             }
 
             return {
-                product:item.productId._id,
-                quantity:item.quantity,
-                price:item.productId.salesPrice, 
-                productName:item.productId.productName,
-                productImage:item.productId.productImage[0],
-                variant:{
-                    color:item.variant.color,
-                    size:item.variant.size,
+                product: item.productId._id,
+                quantity: item.quantity,
+                price: item.productId.salesPrice,
+                productName: item.productId.productName,
+                productImage: item.productId.productImage[0],
+                variant: {
+                    color: item.variant.color,
+                    size: item.variant.size,
                 },
-                totalPrice: itemTotal, 
-                finalAmount:itemTotal,
-                address:selectedAddress._id,
-                status: "Pending",    
+                totalPrice: itemTotal,
+                finalAmount: itemTotal,
+                address: selectedAddress._id,
+                status: "Pending",
                 statusHistory: [{
                     status: 'Pending',
                     date: new Date(),
@@ -305,7 +304,7 @@ const placeorder1 = async (req,res)=>{
         let couponDiscount = 0;
         let appliedCoupon = false
 
-        if(req.session.appliedCoupon){ 
+        if (req.session.appliedCoupon) {
             appliedCoupon = true;
             const coupon = await Coupon.findById(req.session.appliedCoupon);
             if (coupon) {
@@ -313,11 +312,11 @@ const placeorder1 = async (req,res)=>{
             }
         }
 
-        const shipping = subtotal> 1000? 0: 100;
+        const shipping = subtotal > 1000 ? 0 : 100;
         const total = subtotal - discount - couponDiscount + shipping
 
-       
-         //wallet update if(wallet selected) and checking insufficient fund
+
+        //wallet update if(wallet selected) and checking insufficient fund
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
 
@@ -330,14 +329,14 @@ const placeorder1 = async (req,res)=>{
             }
         }
 
-    
+
         // Create order
         const newOrder = new Order({
             userId,
-            orderedItems:orderItems,
-            totalPrice:total,
+            orderedItems: orderItems,
+            totalPrice: total,
             discount,
-            finalAmount:total,
+            finalAmount: total,
             address: {
                 addressType: selectedAddress.addressType,
                 name: selectedAddress.name,
@@ -347,28 +346,28 @@ const placeorder1 = async (req,res)=>{
                 pincode: selectedAddress.pincode,
                 phone: selectedAddress.phone,
                 altPhone: selectedAddress.altPhone
-            }, 
-            paymentMethod:paymentMethod,
-            status: 'Pending',  
+            },
+            paymentMethod: paymentMethod,
+            status: 'Pending',
             paymentStatus: paymentMethod === 'cod' ? 'Completed' : 'Payment Pending',
             invoiceDate: new Date(),
-            couponApplied:appliedCoupon,
+            couponApplied: appliedCoupon,
             couponDiscount: couponDiscount
         })
 
         await newOrder.save()
         //cod selected
-        if(paymentMethod === 'cod'){
+        if (paymentMethod === 'cod') {
             await finalizeOrder(newOrder, cart, req);
             return res.json({
-                success:true,
-                orderId:newOrder._id,
+                success: true,
+                orderId: newOrder._id,
                 redirect: `/order/success?orderId=${newOrder._id}`
             })
         }
 
         //wallet balance updated if selected 
-        if(paymentMethod === 'Wallet'){
+        if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
 
             wallet.balance -= total;
@@ -384,14 +383,14 @@ const placeorder1 = async (req,res)=>{
 
             newOrder.status = "Processing";
             newOrder.paymentStatus = "Paid";
-            await newOrder.save(); 
+            await newOrder.save();
 
             await finalizeOrder(newOrder, cart, req);
 
             return res.json({
                 success: true,
                 orderId: newOrder._id,
-                redirect: `/order/success?orderId=${newOrder._id}` 
+                redirect: `/order/success?orderId=${newOrder._id}`
             });
         }
         //stripe selected
@@ -411,59 +410,93 @@ const placeorder1 = async (req,res)=>{
 
     } catch (error) {
         console.log("Place order error:", error);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-            success: false, 
-            message: 'Server error' 
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Server error'
         });
     }
 }
-async function finalizeOrder1(order,cart,req) {
+async function finalizeOrder1(order, cart, req) {
     //stock managing
-        for(const item of cart.items){
-            const product = await Product.findById(item.productId._id)
-            const variant = product.variants.find(v=>
-                v.color === item.variant.color &&
-                v.size === item.variant.size
-            )
+    for (const item of cart.items) {
+        const product = await Product.findById(item.productId._id)
+        const variant = product.variants.find(v =>
+            v.color === item.variant.color &&
+            v.size === item.variant.size
+        )
 
-            variant.stock -= item.quantity
+        variant.stock -= item.quantity
 
-            if(variant.stock <=0 ) {
-                variant.stock =0 
-            }
-            
-            const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-            product.status = totalStock > 0 ? "Available" : 'out of stock';
- 
-            await product.save()
+        if (variant.stock <= 0) {
+            variant.stock = 0
         }
 
-        //clear cart 
-        cart.items = []
-        await cart.save()
+        const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+        product.status = totalStock > 0 ? "Available" : 'out of stock';
 
-        //coupon delete
-        if(req.session.appliedCoupon){
-            delete req.session.appliedCoupon
-        } 
-    
+        await product.save()
+    }
+
+    //clear cart 
+    cart.items = []
+    await cart.save()
+
+    //coupon delete
+    if (req.session.appliedCoupon) {
+        delete req.session.appliedCoupon
+    }
+
+}
+const stripeSuccess1 = async (req, res) => {
+    try {
+        const { orderId } = req.query;
+
+        if (!orderId) return res.redirect('/checkout');
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.redirect('/checkout');
+
+        // Update order status
+        order.status = 'Processing';
+        order.paymentStatus = 'Paid';
+        order.orderStatusHistory.push({
+            status: 'Processing',
+            date: new Date()
+        })
+        await order.save();
+
+        const userId = order.userId;
+        const cart = await Cart.findOne({ userId }).populate('items.productId');
+
+        if (cart) {
+            await finalizeOrder(order, cart, req);
+        }
+
+        return res.redirect(`/order/success?orderId=${orderId}`);
+
+
+    } catch (error) {
+        console.log('Stripe success error:', error);
+        return res.redirect('/checkout');
+    }
 }
 
+//new code
 
-const addNewAddress = async (req,res)=>{
+const addNewAddress = async (req, res) => {
     try {
         const userId = req.session.user._id
         const userData = await User.findById(userId)
-        const{addressType,name,city,landMark,state,pincode,phone,altPhone} = req.body
-        const userAddress = await Address.findOne({userId:userData._id})
-        if(!userAddress){
+        const { addressType, name, city, landMark, state, pincode, phone, altPhone } = req.body
+        const userAddress = await Address.findOne({ userId: userData._id })
+        if (!userAddress) {
             const newAddress = new Address({
-                userId:userData._id,
-                address:[{addressType,name,city,landMark,state,pincode,phone,altPhone}]
+                userId: userData._id,
+                address: [{ addressType, name, city, landMark, state, pincode, phone, altPhone }]
             })
             await newAddress.save()
-        }else{
-            userAddress.address.push({addressType,name,city,landMark,state,pincode,phone,altPhone})
+        } else {
+            userAddress.address.push({ addressType, name, city, landMark, state, pincode, phone, altPhone })
             await userAddress.save()
         }
         console.log('address added')
@@ -472,89 +505,89 @@ const addNewAddress = async (req,res)=>{
 
     } catch (error) {
         console.log("New Address Add ERROR →", error);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
     }
 }
 
-const updateAddress = async (req,res)=>{
+const updateAddress = async (req, res) => {
     try {
-        const userId =req.session.user._id
+        const userId = req.session.user._id
         const addressId = req.params.id
-        const {addressType,name,city,landMark,
-              state,pincode,phone,altPhone} = req.body
+        const { addressType, name, city, landMark,
+            state, pincode, phone, altPhone } = req.body
 
-        const userAddress = await Address.findOne({userId})
+        const userAddress = await Address.findOne({ userId })
 
-        if(!userAddress){
-            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
+        if (!userAddress) {
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Address not found' })
         }
 
         const addressIndex = userAddress.address.findIndex(
-            add=> add._id.toString() === addressId
+            add => add._id.toString() === addressId
         )
 
-        if(addressIndex === -1){
-            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
+        if (addressIndex === -1) {
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Address not found' })
         }
-        
+
         userAddress.address[addressIndex] = {
             ...userAddress.address[addressIndex]._doc,
-            addressType,name,city,landMark,state,pincode,phone,altPhone
+            addressType, name, city, landMark, state, pincode, phone, altPhone
         }
-        
+
         await userAddress.save()
         console.log("Address updated")
-        return res.status(StatusCodes.OK).json({success:true})
- 
-    } catch (error) { 
-        console.log("Edit address error:",error)
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Server Error'})
+        return res.status(StatusCodes.OK).json({ success: true })
+
+    } catch (error) {
+        console.log("Edit address error:", error)
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server Error' })
     }
 }
 
-const deleteCheckoutAddress =  async (req,res)=>{
+const deleteCheckoutAddress = async (req, res) => {
     try {
-        const userId =req.session.user._id
+        const userId = req.session.user._id
         const addressId = req.params.id
-        const userAddress = await Address.findOne({userId})
-        if(!userAddress){
-            return res.status(StatusCodes.NOT_FOUND).json({success:false,message:'Address not found'})
+        const userAddress = await Address.findOne({ userId })
+        if (!userAddress) {
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Address not found' })
         }
 
-        userAddress.address =userAddress.address.filter(
-            addr=> addr._id.toString()!== addressId
+        userAddress.address = userAddress.address.filter(
+            addr => addr._id.toString() !== addressId
         )
         await userAddress.save()
         console.log("Address deleted")
-        return res.status(StatusCodes.OK).json({success:true})
+        return res.status(StatusCodes.OK).json({ success: true })
 
     } catch (error) {
-        console.log("delete address error:",error)
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({success:false,message:'Server Error'})
-        
+        console.log("delete address error:", error)
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server Error' })
+
     }
 }
-  
-const removeCoupon = async(req,res)=>{
+
+const removeCoupon = async (req, res) => {
     try {
         delete req.session.appliedCoupon
 
-        return res.json({ 
-                success: true, 
-                message: 'Coupon removed successfully' , 
-            })
-        
+        return res.json({
+            success: true,
+            message: 'Coupon removed successfully',
+        })
+
     } catch (error) {
-        console.log('Error in removing coupon',error)
-        return res.json({ 
-                success: false, 
-                message: 'Error in removing coupon' 
-            })
+        console.log('Error in removing coupon', error)
+        return res.json({
+            success: false,
+            message: 'Error in removing coupon'
+        })
     }
 }
 
 //new placeorder-----------
- 
+
 const applyCoupon = async (req, res) => {
     try {
         const { couponCode } = req.body;
@@ -584,7 +617,7 @@ const applyCoupon = async (req, res) => {
 
             // Check if user already redeemed this referral code
             const currentUser = await User.findById(userId);
-            
+
             if (currentUser.redeemedUser && currentUser.redeemedUser.includes(userWithReferral._id)) {
                 return res.json({
                     success: false,
@@ -617,29 +650,29 @@ const applyCoupon = async (req, res) => {
         });
 
         if (!coupon) {
-            return res.json({ 
-                success: false, 
-                message: 'Invalid Coupon or Referral code' 
+            return res.json({
+                success: false,
+                message: 'Invalid Coupon or Referral code'
             });
         }
 
         //  coupon expiry
         const now = new Date();
         if (now < coupon.createdOn || now > coupon.expireOn) {
-            return res.json({ 
-                success: false, 
-                message: 'This coupon has expired' 
+            return res.json({
+                success: false,
+                message: 'This coupon has expired'
             });
         }
- 
+
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
-            return res.json({ 
-                success: false, 
-                message: 'Your Cart is empty' 
+            return res.json({
+                success: false,
+                message: 'Your Cart is empty'
             });
         }
- 
+
         let cartAmount = 0;
         cart.items.forEach(item => {
             const product = item.productId;
@@ -647,16 +680,16 @@ const applyCoupon = async (req, res) => {
                 cartAmount += product.salesPrice * item.quantity;
             }
         });
- 
+
         if (cartAmount < coupon.minimumPrice) {
-            return res.json({ 
-                success: false, 
-                message: `Minimum purchase of ₹${coupon.minimumPrice} required for this coupon` 
+            return res.json({
+                success: false,
+                message: `Minimum purchase of ₹${coupon.minimumPrice} required for this coupon`
             });
         }
 
         const discount = Math.min(coupon.offerPrice, cartAmount);
- 
+
         req.session.appliedCoupon = {
             type: 'coupon',
             id: coupon._id.toString(),
@@ -678,12 +711,24 @@ const applyCoupon = async (req, res) => {
         });
     }
 };
- 
+
 const getCheckout = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const user = await User.findById(userId);
+
+         if (req.session.pendingOrder && req.session.pendingOrder.stockReductions) {
+            console.log('User returned to checkout - restoring reserved stock');
+            await rollbackStockReductions(req.session.pendingOrder.stockReductions);
+            delete req.session.pendingOrder;
+        }
         
+        if (req.session.pendingRetryOrder && req.session.pendingRetryOrder.stockReductions) {
+            console.log('User returned to checkout - restoring retry order stock');
+            await rollbackStockReductions(req.session.pendingRetryOrder.stockReductions);
+            delete req.session.pendingRetryOrder;
+        }
+
         let addressDoc = await Address.findOne({ userId });
         if (!addressDoc) {
             addressDoc = new Address({ userId, address: [] });
@@ -692,13 +737,13 @@ const getCheckout = async (req, res) => {
         const userAddresses = addressDoc.address;
 
         const todayDate = new Date();
-        const coupons = await Coupon.find({ 
-            isList: true, 
-            expireOn: { $gte: todayDate } 
+        const coupons = await Coupon.find({
+            isList: true,
+            expireOn: { $gte: todayDate }
         });
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
-        
+
         if (!cart || cart.items.length === 0) {
             return res.render('user/checkout', {
                 user,
@@ -718,7 +763,8 @@ const getCheckout = async (req, res) => {
         // filter valid items
         const validItems = cart.items.filter(item => {
             const product = item.productId;
-            return product && !product.isBlocked && product.status === "Available";
+            // Use totalStock (virtual) or consistent check with cart
+            return product && !product.isBlocked && product.totalStock > 0 && product.status !== "Discontinued";
         });
 
         if (validItems.length !== cart.items.length) {
@@ -738,7 +784,7 @@ const getCheckout = async (req, res) => {
             const discount = regular - sale;
 
             subtotal += regular * qty;
-            totalDiscount += Math.max(0,(regular - sale) * qty);
+            totalDiscount += Math.max(0, (regular - sale) * qty);
         });
 
         const cartAmount = subtotal - totalDiscount;
@@ -752,20 +798,20 @@ const getCheckout = async (req, res) => {
         if (req.session.appliedCoupon) {
             const appliedData = req.session.appliedCoupon;
 
-            if (appliedData.type === 'referral') { 
+            if (appliedData.type === 'referral') {
                 couponDiscount = Math.min(appliedData.discount, cartAmount);
                 appliedCoupon = {
                     name: appliedData.code,
                     offerPrice: appliedData.discount,
                     isReferral: true
                 };
-            } else if (appliedData.type === 'coupon') { 
+            } else if (appliedData.type === 'coupon') {
                 const coupon = await Coupon.findById(appliedData.id);
-                
+
                 if (coupon && coupon.isList && cartAmount >= coupon.minimumPrice) {
                     couponDiscount = Math.min(coupon.offerPrice, cartAmount);
                     appliedCoupon = coupon;
-                } else { 
+                } else {
                     delete req.session.appliedCoupon;
                 }
             }
@@ -793,18 +839,19 @@ const getCheckout = async (req, res) => {
         res.redirect("/cart");
     }
 };
- 
+
 const placeorder = async (req, res) => {
+    console.log('test-branch:placeorder()-------------->')
     try {
         const { addressId, paymentMethod } = req.body;
         const userId = req.session.user._id;
         //limit order per day 
         const nowDate = new Date()
-        const startDate = new Date(nowDate.setHours(0,0,0,0))
+        const startDate = new Date(nowDate.setHours(0, 0, 0, 0))
         const endOfDay = new Date(nowDate.setHours(23, 59, 59, 999))
 
-        const orderlist = await Order.find({userId,createdAt:{$gte:startDate,$lte:endOfDay}})
-        if(orderlist.length > 10 ){
+        const orderlist = await Order.find({ userId, createdAt: { $gte: startDate, $lte: endOfDay } })
+        if (orderlist.length > 10) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'User cannot order more than 10 '
@@ -837,29 +884,63 @@ const placeorder = async (req, res) => {
         }
 
         // Check variant stock
+        const stockReductions = []
         for (const item of cart.items) {
-            const product = await Product.findById(item.productId._id);
-            const variant = product.variants.find(
-                (v) => v.color === item.variant.color && v.size === item.variant.size
+            // const product = await Product.findById(item.productId._id);
+            // const variant = product.variants.find(
+            //     (v) => v.color === item.variant.color && v.size === item.variant.size
+            // );
+
+            // if (!variant) {
+            //     return res.status(StatusCodes.BAD_REQUEST).json({
+            //         success: false,
+            //         message: `Variant ${item.variant.color}/${item.variant.size} not found for ${product.productName}.`
+            //     });
+            // }
+
+            // if (variant.stock < item.quantity) {
+            //     return res.status(StatusCodes.BAD_REQUEST).json({
+            //         success: false,
+            //         message: `Insufficient stock for ${product.productName} (${item.variant.color}/${item.variant.size}). Only ${variant.stock} available.`
+            //     });
+            // }
+
+            // const total = product.variants.reduce((sum, v) => sum + v.stock, 0);
+            // product.status = total > 0 ? "Available" : 'out of stock';
+            // await product.save();
+
+            const updatedProduct = await Product.findOneAndUpdate(
+                {
+                    _id: item.productId._id,
+                    'variants.color': item.variant.color,
+                    'variants.size': item.variant.size,
+                    'variants.stock': { $gte: item.quantity }
+                },
+                {
+                    $inc: { 'variants.$.stock': -item.quantity }
+                },
+                { new: true }
             );
 
-            if (!variant) {
+            if (!updatedProduct) {
+                await rollbackStockReductions(stockReductions);
+
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: `Variant ${item.variant.color}/${item.variant.size} not found for ${product.productName}.`
+                    message: `Insufficient stock for ${item.productId.productName} (${item.variant.color}/${item.variant.size}). Please refresh and try again.`
                 });
             }
 
-            if (variant.stock < item.quantity) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: `Insufficient stock for ${product.productName} (${item.variant.color}/${item.variant.size}). Only ${variant.stock} available.`
-                });
-            }
+            stockReductions.push({
+                productId: item.productId._id,
+                color: item.variant.color,
+                size: item.variant.size,
+                quantity: item.quantity
+            });
 
-            const total = product.variants.reduce((sum, v) => sum + v.stock, 0);
-            product.status = total > 0 ? "Available" : 'out of stock';
-            await product.save();
+            const totalStock = updatedProduct.variants.reduce((sum, v) => sum + v.stock, 0);
+            updatedProduct.status = totalStock > 0 ? "Available" : 'out of stock';
+            await updatedProduct.save();
         }
 
         // subtotal and product offer/discount
@@ -871,10 +952,10 @@ const placeorder = async (req, res) => {
             const sale = item.productId.salesPrice;
             const qty = item.quantity;
 
-            subtotal +=  regular * qty
+            subtotal += regular * qty
 
-            if(sale < regular) {
-                discount += (regular- sale) * qty
+            if (sale < regular) {
+                discount += (regular - sale) * qty
             }
 
         })
@@ -885,12 +966,12 @@ const placeorder = async (req, res) => {
         let referralUserId = null;
         let couponId
 
-        if(req.session.appliedCoupon){
+        if (req.session.appliedCoupon) {
             appliedCoupon = true
 
             const appliedData = req.session.appliedCoupon;
-            couponId= req.session.appliedCoupon.id 
-            
+            couponId = req.session.appliedCoupon.id
+
 
             if (appliedData.type === 'referral') {
                 couponDiscount = Math.min(
@@ -912,17 +993,18 @@ const placeorder = async (req, res) => {
         }
 
 
-         //final amount calculation
+        //final amount calculation
 
         // const shipping = subtotal >= 1000 ? 0 : 100;
         const shipping = subtotal >= 3000 ? 0 : 500;
-        const totalPrice = subtotal - discount 
+        const totalPrice = subtotal - discount
         const finalAmount = totalPrice - couponDiscount + shipping;
 
 
 
         if (paymentMethod === 'cod' && totalPrice < 3000) {
-            console.log('Bad request:',StatusCodes.BAD_REQUEST)
+            console.log('Bad request:', StatusCodes.BAD_REQUEST)
+            await rollbackStockReductions(stockReductions);
             return res.status(StatusCodes.BAD_REQUEST).json({
                 success: false,
                 message: 'Total amount must be greater than 3000 for COD'
@@ -942,8 +1024,8 @@ const placeorder = async (req, res) => {
                 price: item.productId.salesPrice,
                 productName: item.productId.productName,
                 productImage: item.productId.productImage[0],
-                brand:item.productId.brand,
-                category: Array.isArray(item.productId.category)?item.productId.category[0]:item.productId.category,
+                brand: item.productId.brand,
+                category: Array.isArray(item.productId.category) ? item.productId.category[0] : item.productId.category,
                 variant: item.variant,
                 totalPrice: itemTotal,
                 address: selectedAddress._id,
@@ -957,17 +1039,17 @@ const placeorder = async (req, res) => {
         });
 
 
-       
 
-        if(paymentMethod === 'Stripe'){
+
+        if (paymentMethod === 'Stripe') {
             req.session.pendingOrder = {
                 userId,
-                orderedItems: orderItems, 
+                orderedItems: orderItems,
                 subtotal,
                 totalPrice,
                 discount,
                 finalAmount,
-                address:{
+                address: {
                     addressType: selectedAddress.addressType,
                     name: selectedAddress.name,
                     city: selectedAddress.city,
@@ -978,17 +1060,19 @@ const placeorder = async (req, res) => {
                     altPhone: selectedAddress.altPhone
                 },
                 paymentMethod,
-                couponApplied:appliedCoupon,
+                couponApplied: appliedCoupon,
                 couponDiscount,
                 couponId,
                 referralUserId,
-                cartId:cart._id
+                cartId: cart._id,
+                stockReductions,
+                timestamp: Date.now()
             }
 
             return res.json({
-                success:true,
-                amount:finalAmount,
-                proceedToStripe:true
+                success: true,
+                amount: finalAmount,
+                proceedToStripe: true
             })
         }
 
@@ -996,6 +1080,7 @@ const placeorder = async (req, res) => {
         if (paymentMethod === 'Wallet') {
             const wallet = await Wallet.findOne({ userId });
             if (!wallet || wallet.balance < finalAmount) {
+                await rollbackStockReductions(stockReductions);
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: "Insufficient wallet balance",
@@ -1028,10 +1113,10 @@ const placeorder = async (req, res) => {
             invoiceDate: new Date(),
             couponApplied: appliedCoupon,
             couponDiscount: couponDiscount,
-            couponId:couponId
+            couponId: couponId
         });
         newOrder.orderStatusHistory.push({ // order history update 
-            status:'Pending',
+            status: 'Pending',
             date: new Date()
         })
 
@@ -1039,7 +1124,7 @@ const placeorder = async (req, res) => {
 
         // referral code redemption
         if (referralUserId) {
-            try { 
+            try {
                 let referredWallet = await Wallet.findOne({ userId: referralUserId });
                 if (!referredWallet) {
                     referredWallet = new Wallet({
@@ -1056,23 +1141,23 @@ const placeorder = async (req, res) => {
                     reason: `Referral reward`
                 });
                 await referredWallet.save();
- 
+
                 await User.findByIdAndUpdate(userId, {
                     $addToSet: { redeemedUser: referralUserId }
                 });
- 
+
                 await User.findByIdAndUpdate(referralUserId, {
                     $addToSet: { redeemedUser: userId },
                     $set: { redeemed: true }
                 });
             } catch (referralError) {
-                console.log('Referral reward error (non-critical):', referralError);  
+                console.log('Referral reward error (non-critical):', referralError);
             }
         }
 
         //   payment methods
         if (paymentMethod === 'cod') {
-            if(newOrder.totalPrice<3000){
+            if (newOrder.totalPrice < 3000) {
                 return res.json({
                     success: false,
                     message: 'Total amount must be greater than 3000 for COD'
@@ -1134,453 +1219,177 @@ const placeorder = async (req, res) => {
     }
 };
 
-async function finalizeOrder(order, cart, req) { 
-    for (const item of cart.items) {
-        const product = await Product.findById(item.productId._id);
-        const variant = product.variants.find(v =>
-            v.color === item.variant.color &&
-            v.size === item.variant.size
+async function rollbackStockReductions(stockReductions) {
+    console.log('Rolling back stock reductions:', stockReductions);
+    for (const reduction  of stockReductions) {
+        await Product.findOneAndUpdate(
+            {
+                _id: reduction .productId ,
+                'variants.color': reduction.color,
+                'variants.size': reduction.size
+            },
+            {
+                $inc: { 'variants.$.stock': reduction .quantity }
+            }
         );
+    }
+}
 
-        variant.stock -= item.quantity;
+async function processReferralReward(referralUserId, currentUserId) {
+    try {
+        let referredWallet = await Wallet.findOne({ userId: referralUserId });
 
-        if (variant.stock <= 0) {
-            variant.stock = 0;
+        if (!referredWallet) {
+            referredWallet = new Wallet({
+                userId: referralUserId,
+                balance: 0,
+                transactions: []
+            });
         }
 
-        const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-        product.status = totalStock > 0 ? "Available" : 'out of stock';
+        referredWallet.balance += 100;
+        referredWallet.transactions.push({
+            date: new Date(),
+            type: "credit",
+            amount: 100,
+            reason: `Referral reward`
+        });
+        await referredWallet.save();
 
-        await product.save();
+        await User.findByIdAndUpdate(currentUserId, {
+            $addToSet: { redeemedUser: referralUserId }
+        });
+
+        await User.findByIdAndUpdate(referralUserId, {
+            $addToSet: { redeemedUser: currentUserId },
+            $set: { redeemed: true }
+        });
+    } catch (error) {
+        console.log('Referral reward error (non-critical):', error);
     }
- 
+}
+
+
+async function finalizeOrder(order, cart, req) {
+    // for (const item of cart.items) {
+
+    //     // const product = await Product.findById(item.productId._id);
+    //     // const variant = product.variants.find(v =>
+    //     //     v.color === item.variant.color &&
+    //     //     v.size === item.variant.size
+    //     // );
+
+    //     // variant.stock -= item.quantity;
+
+    //     // if (variant.stock <= 0) {
+    //     //     variant.stock = 0;
+    //     // }
+
+    //     // const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+    //     // product.status = totalStock > 0 ? "Available" : 'out of stock';
+
+    //     // await product.save();
+
+
+    //     const updatedProduct = await Product.findOneAndUpdate(
+    //         {
+    //             _id:item.productId._id,
+    //             'variants.color':item.variant.color,
+    //             'variants.size':item.variant.size,
+    //             'variants.stock':{$gte:item.quantity},
+    //         },
+    //         {
+    //             $inc:{'variants.$.stock':-item.quantity}
+    //         },
+    //         {new:true}
+    //     )
+
+    //     if(!updatedProduct){
+    //         throw new Error(
+    //             `Insufficient stock for ${item.productId.productName} (${item.variant.color}/${item.variant.size})`
+    //         )
+    //     }
+
+    //     const totalStock = updatedProduct.variants.reduce((sum,v)=> sum + v.stock, 0)
+    //     updatedProduct.status = totalStock > 0 ? 'Available':'out of stock'
+
+    //     await updatedProduct.save()
+
+    // }
+
     cart.items = [];
     await cart.save();
- 
+
     if (req.session.appliedCoupon) {
         delete req.session.appliedCoupon;
     }
 }
 
-
-const retryCancelledOrder = async (req,res) =>{
+const stripeSuccess = async (req, res) => {
     try {
+        const { session_id } = req.query
 
-        
-
-        const {orderId,paymentMethod} = req.body
-        const userId = req.session.user._id
-
-        // validations
-        
-        if (!orderId || !paymentMethod) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                success: false,
-                message: 'Order ID and payment method required'
-            });
-        }
-        
-        if(!["Wallet",'Stripe'].includes(paymentMethod)){
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                success: false,
-                message: 'Only Wallet and Stripe allowed for retry'
-            });
-        }
-
-
-        const order = await Order.findOne({_id: orderId,userId})
-        
-        if(!order){
-            return res.status(StatusCodes.NOT_FOUND).json({
-                success:false,
-                message:'Order not found'
-            })
-        }
-
-        if(order.status !== 'Cancelled'){
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                success:false,
-                message:'Only Cancelled orders can be retried '
-            })
-        }
-
-        //stock availability 
-
-        for(const item of order.orderedItems){
-
-            if (!item.variant || !item.variant.color || !item.variant.size) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: `Invalid variant data for product "${item.productName}". Please reorder.`
-                });
-            }
-
-            const product = await Product.findById(item.product)
-
-            if(!product){
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success:false,
-                    message:`Product "${item.productName}" is no longer available`
-                })
-            } 
-            const variant = product.variants.find(v =>
-                v.color === item.variant.color &&
-                v.size === item.variant.size
-            );
-
-            if(!variant){
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success:false,
-                    message:`Variant "${item.variant.color}/${item.variant.size}" not found for Product "${item.productName}" `
-                })
-            }
-            if(variant.stock < item.quantity){
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success:false,
-                    message:`Insufficient stock for "${item.variant.color}/${item.variant.size}", only  "${variant.stock}" available `
-                })
-            }
-        } //==============
-
-
-            if(paymentMethod === 'Stripe'){
-                req.session.pendingRetryOrder = {
-                    originalOrderId: order._id.toString(),
-                    userId: userId.toString(),
-                    orderedItems: order.orderedItems,
-                    subtotal: order.subtotal,
-                    totalPrice: order.totalPrice,
-                    discount: order.discount,
-                    finalAmount: order.finalAmount,
-                    address: order.address,
-                    paymentMethod: 'Stripe',
-                    couponApplied: order.couponApplied,
-                    couponDiscount: order.couponDiscount,
-                    couponId: order.couponId
-                }
-
-                return res.json({
-                    success:true,
-                    message:'Ready for Stripe payment',
-                    proceedToStripe:true
-                })
-            }
-
-            
-
-            //payment 
-            if( paymentMethod === 'Wallet'){
-                const wallet = await Wallet.findOne({userId})
-                if(!wallet || wallet.balance < order.finalAmount){
-                    
-                    return res.status(StatusCodes.BAD_REQUEST).json({
-                        success:false,
-                        message:`Insufficient wallet balance `,
-                        redirect:'/wallet'
-                    })
-                }
-
-                wallet.balance -= order.finalAmount
-                wallet.transactions.push({
-                    date:new Date(),
-                    type:'debit',
-                    amount:order.finalAmount,
-                    reason:`Retry payment for Order#${order.orderId}`
-                })
-                await wallet.save()
-            
-            //stock update
-            for(const item of order.orderedItems){
-
-                if (!item.variant || !item.variant.color || !item.variant.size) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({
-                        success: false,
-                        message: `Invalid variant data for product "${item.productName}". Please reorder.`
-                    });
-                }
-
-
-                const product = await Product.findById(item.product)
-                const variant = product.variants.find(v=>
-                    v.color  === item.variant.color &&
-                    v.size  === item.variant.size
-                )
-
-                if (!product || !variant) {
-                    return res.status(StatusCodes.BAD_REQUEST).json({
-                        success: false,
-                        message: `Product or variant no longer available for "${item.productName}"`
-                    });
-                }
- 
-                variant.stock -= item.quantity;
-
-                const totalStock = product.variants.reduce((sum,v)=> sum + v.stock,0)
-                product.status = totalStock > 0 ? "Available" : 'out of stock';
-                
-                await product.save()
- 
-            }
-
-            //reset order and history
-
-            order.status = paymentMethod === 'Wallet' ? 'Processing':'Pending'
-            order.paymentStatus = paymentMethod === 'Wallet'?'Paid':'Payment Pending'
-            order.paymentMethod = paymentMethod
-
-            //cleaning status history 
-            order.orderStatusHistory = [];
-
-            // starts at Pending on retry
-            order.orderStatusHistory.push({
-            status: 'Pending',
-            date: new Date(),
-            note: 'Order retried after cancellation'
-            });
-
-            //  If wallet payment, 
-            if (paymentMethod === 'Wallet') {
-            order.orderStatusHistory.push({
-                status: 'Processing',
-                date: new Date(),
-                note: 'Wallet payment successful'
-            });
-            }
-
-
-            
-            
-            //reset item status in order
-            for(const item of order.orderedItems){
-                item.status = paymentMethod === 'Wallet' ? 'Processing':'Pending'
-                item.cancellationReason = undefined;
-                item.returnReason = undefined;
-                item.returnRequestDate = undefined;
-
-                item.refunded = false;
-                item.restocked = false;
-
-                item.statusHistory= [{
-                    status: paymentMethod === 'Wallet' ? 'Processing':'Pending',
-                    date: new Date(),
-                    note:'Order retried after cancellation'
-                }]
-
-            }
-
-            await order.save()
- 
-             
-            return res.json({
-                success:true,
-                message:'Order successfully retried',
-                OrderId:order._id, 
-            }) 
-        
-        }
-
-    } catch (error) {
-        console.error('Retry order error:', error);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-            success: false, 
-            message: 'Server error' 
-        });
-    }
-} 
-
-const getOrderDetailsForRetry = async(req,res)=>{
-    try {
-        const orderId = req.params.id
-        const userId = req.session.user._id
-
-        const order = await Order.findOne({_id:orderId,userId})
-
-        if(!order){
-            return res.json({
-                success:false,
-                message:'Order not found'
-            })
-        }
-
-        res.json({
-            success:true,
-            order:{
-                _id:order._id,
-                orderId:order.orderId,
-                status:order.status,
-                finalAmount:order.finalAmount,
-                orderedItems:order.orderedItems
-            }
-        })
-    } catch (error) {
-        console.log('Error fetching order',error);
-         res.json({
-                success:false,
-                message:'Server error'
-            })
-        
-    }
-}
-
-
-
-
-
-//new code-------------------
-const createStripeSession = async (req,res)=>{
-    try {
-        // const {orderId} = req.body
-        // console.log('stripe requested payment order:',orderId)
-        
-        // const order = await Order.findById(orderId)
-        // if(!order) return  res.json({ success: false, message: "Order not found" });
-
-        const userId = req.session.user._id
-
-        let pendingOrder = req.session.pendingOrder
-        let isRetry = false
-        //to check if its a normal order
-        if(!pendingOrder){
-            pendingOrder = req.session.pendingRetryOrder;
-            isRetry = true
-        }
-        //if retry order not available 
-        if(!pendingOrder){
-            return  res.json({ success: false, message: "No pending order not found" });
-        }
-
-        if (!pendingOrder.orderedItems || pendingOrder.orderedItems.length === 0) {
-            return res.json({ 
-                success: false, 
-                message: "Invalid order data" 
-            });
-        }
-
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types:['card'],
-            mode:'payment',
-            line_items:[
-                {
-                    price_data:{
-                        currency:'inr',
-                        product_data:{
-                            // name:`Order #${orderId}`
-                            name:isRetry?`Retry Order Payment`:`Order Payment`,
-                            description:`${pendingOrder.orderedItems.length} items`
-                        },
-                        // unit_amount:order.finalAmount*100,
-                        unit_amount:Math.round(pendingOrder.finalAmount *100)
-                    },
-                    quantity:1,
-                }
-            ],
-            metadata:{
-                userId:userId.toString(),
-                isRetry:isRetry.toString(),
-                originalOrderId:isRetry?pendingOrder.originalOrderId:'new'
-            },
-            // success_url:`${process.env.BASE_URL}/payment/stripe/success?orderId=${orderId}`,
-            // cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel?orderId=${orderId}`,
-            success_url:`${process.env.BASE_URL}/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel`,
-        })  
-
-        return res.json({
-            success:true,
-            url:session.url
-        })
-
-    } catch (error) {
-        console.log('Stripe session error:',error);
-        return res.json({ success: false, message: "Stripe session failed" });
-     
-    }
-}
-
-const stripeSuccess1 = async (req,res)=>{ 
-    try {
-         const { orderId } = req.query;
-
-        if (!orderId) return res.redirect('/checkout');
-
-        const order = await Order.findById(orderId);
-        if (!order) return res.redirect('/checkout'); 
-
-        // Update order status
-        order.status = 'Processing';
-        order.paymentStatus = 'Paid';
-        order.orderStatusHistory.push({
-            status:'Processing',
-            date:new Date()
-        })
-        await order.save();
- 
-        const userId = order.userId;
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-        
-        if (cart) {
-            await finalizeOrder(order, cart, req);
-        }
-        
-        return res.redirect(`/order/success?orderId=${orderId}`);
-
-        
-    } catch (error) {
-        console.log('Stripe success error:', error);
-        return res.redirect('/checkout');
-    }
-}
-const stripeSuccess = async (req,res)=>{ 
-    try {
-        const {session_id} = req.query
-        
-        if(!session_id){
+        if (!session_id) {
             return res.redirect('/order')
         }
 
         const session = await stripe.checkout.sessions.retrieve(session_id)
 
-        if(session.payment_status !== 'paid'){
-            console.log('Payment not completed');
-            return res.redirect('/order');
+        // if(session.payment_status !== 'paid'){
+        //     console.log('Payment not completed');
+        //     return res.redirect('/order');
+        // }
+
+        if (session.payment_status !== 'paid') {
+            console.log('Payment not completed - rolling back stock');
+
+            const pendingOrder = req.session.pendingOrder || req.session.pendingRetryOrder;
+            if (pendingOrder && pendingOrder.stockReductions) {
+                await rollbackStockReductions(pendingOrder.stockReductions);
+            }
+
+            delete req.session.pendingOrder;
+            delete req.session.pendingRetryOrder;
+
+            return res.redirect('/order/failed?reason=payment_failed');
         }
 
 
         const isRetry = session.metadata.isRetry === 'true'
 
         let pendingOrder
-        let existingOrder = null 
+        let existingOrder = null
 
-        if(isRetry){
+        if (isRetry) {
             pendingOrder = req.session.pendingRetryOrder
 
-            if(!pendingOrder){
+            if (!pendingOrder) {
                 console.log('No pending retry order found')
                 return res.redirect('/order')
             }
 
             existingOrder = await Order.findById(pendingOrder.originalOrderId)
 
-            if(!existingOrder){
+            if (!existingOrder) {
                 console.log('Original order not found')
                 return res.redirect('/order')
             }
 
             //Update for stock for retry
 
-            for (const item of pendingOrder.orderedItems){
-                const product = await Product.findById(item.product)
-                const variant = product.variants.find(v=>
-                    v.color === item.variant.color &&
-                    v.size === item.variant.size
-                )
-                variant.stock -= item.quantity
+            // for (const item of pendingOrder.orderedItems){
+            //     const product = await Product.findById(item.product)
+            //     const variant = product.variants.find(v=>
+            //         v.color === item.variant.color &&
+            //         v.size === item.variant.size
+            //     )
+            //     variant.stock -= item.quantity
 
-                const totalStock = product.variants.reduce((sum,v)=> sum + v.stock , 0 )
-                product.status = totalStock > 0 ? 'Available' : 'out of stock';
+            //     const totalStock = product.variants.reduce((sum,v)=> sum + v.stock , 0 )
+            //     product.status = totalStock > 0 ? 'Available' : 'out of stock';
 
-                await product.save()
-            }
+            //     await product.save()
+            // }
 
             existingOrder.status = 'Processing'
             existingOrder.paymentStatus = 'Paid'
@@ -1594,7 +1403,7 @@ const stripeSuccess = async (req,res)=>{
                 note: 'Order retried - Payment successful via Stripe'
             })
 
-            for(const item of existingOrder.orderedItems){
+            for (const item of existingOrder.orderedItems) {
                 item.status = 'Processing'
                 item.cancellationReason = undefined
                 item.returnReason = undefined
@@ -1602,9 +1411,9 @@ const stripeSuccess = async (req,res)=>{
                 item.restocked = false
 
                 item.statusHistory = [{
-                    status:"Processing",
-                    date:new Date(),
-                    note : 'Order retried via Stripe'
+                    status: "Processing",
+                    date: new Date(),
+                    note: 'Order retried via Stripe'
                 }]
             }
             await existingOrder.save()
@@ -1613,11 +1422,11 @@ const stripeSuccess = async (req,res)=>{
 
             return res.redirect(`/order/success?orderId=${existingOrder._id}`)
 
-        } 
+        }
         else {
             pendingOrder = req.session.pendingOrder
 
-            if(!pendingOrder){
+            if (!pendingOrder) {
                 console.log('No pending order found');
                 return res.redirect('/checkout');
             }
@@ -1637,77 +1446,489 @@ const stripeSuccess = async (req,res)=>{
                 couponApplied: pendingOrder.couponApplied,
                 couponDiscount: pendingOrder.couponDiscount,
                 couponId: pendingOrder.couponId,
-                stripeSessionId: session_id  
+                stripeSessionId: session_id
             });
 
             newOrder.orderStatusHistory.push({
-                status:'Processing',
-                date:new Date(),
-                note:'Payment successful via Stripe'
+                status: 'Processing',
+                date: new Date(),
+                note: 'Payment successful via Stripe'
             })
 
             await newOrder.save()
-         
 
-            if(pendingOrder.referralUserId){
-                try {
-                    let referredWallet = await Wallet.findOne({
-                        userId:pendingOrder.referralUserId
-                    })
 
-                    if(!referredWallet){
-                        referredWallet = new Wallet({
-                            userId:pendingOrder.referralUserId,
-                            balance:0,
-                            transactions:[]
-                        })
-                    }
+            if (pendingOrder.referralUserId) {
+                // try {
+                //     let referredWallet = await Wallet.findOne({
+                //         userId:pendingOrder.referralUserId
+                //     })
 
-                    referredWallet.balance += 100 
-                    referredWallet.transactions.push({
-                        date:new Date(),
-                        type:"credit",
-                        amount:100,
-                        reason:`Referral reward`
-                    })
+                //     if(!referredWallet){
+                //         referredWallet = new Wallet({
+                //             userId:pendingOrder.referralUserId,
+                //             balance:0,
+                //             transactions:[]
+                //         })
+                //     }
 
-                    await referredWallet.save()
+                //     referredWallet.balance += 100 
+                //     referredWallet.transactions.push({
+                //         date:new Date(),
+                //         type:"credit",
+                //         amount:100,
+                //         reason:`Referral reward`
+                //     })
 
-                    await User.findByIdAndUpdate(pendingOrder.userId,{ // to update on user side that referal has been used 
-                        $addToSet:{redeemedUser:pendingOrder.referralUserId}
-                    })
+                //     await referredWallet.save()
 
-                    await User.findByIdAndUpdate(pendingOrder.referralUserId,{
-                        $addToSet:{redeemedUser:pendingOrder.userId} ,// recording on referer side about the user redeemed their code
-                        $set:{redeemed:true}
-                    })
+                //     await User.findByIdAndUpdate(pendingOrder.userId,{ // to update on user side that referal has been used 
+                //         $addToSet:{redeemedUser:pendingOrder.referralUserId}
+                //     })
 
-                } catch (error) {
-                    console.log('Referral reward error:',error)
-                }
+                //     await User.findByIdAndUpdate(pendingOrder.referralUserId,{
+                //         $addToSet:{redeemedUser:pendingOrder.userId} ,// recording on referer side about the user redeemed their code
+                //         $set:{redeemed:true}
+                //     })
+
+                // } catch (error) {
+                //     console.log('Referral reward error:',error)
+                // }
+
+                await processReferralReward(pendingOrder.referralUserId, pendingOrder.userId);
             }
- 
-            const cart = await Cart.findById( pendingOrder.cartId ).populate('items.productId');
-            
+
+            const cart = await Cart.findById(pendingOrder.cartId).populate('items.productId');
+
             if (cart) {
-                await finalizeOrder(newOrder, cart, req);
+                // await finalizeOrder(newOrder, cart, req);
+                cart.items = [];
+                await cart.save();
             }
-            
+
+            if (req.session.appliedCoupon) {
+                delete req.session.appliedCoupon;
+            }
+
             delete req.session.pendingOrder
 
-            return res.redirect(`/order/success?orderId=${newOrder._id}`); 
+            return res.redirect(`/order/success?orderId=${newOrder._id}`);
 
         }
 
-        
+
     } catch (error) {
         console.log('Stripe success error:', error);
+        const pendingOrder = req.session.pendingOrder || req.session.pendingRetryOrder;
+        if (pendingOrder && pendingOrder.stockReductions) {
+            await rollbackStockReductions(pendingOrder.stockReductions);
+        }
         return res.redirect('/checkout');
     }
 }
 
+const retryCancelledOrder = async (req, res) => {
+    try {
+
+
+
+        const { orderId, paymentMethod } = req.body
+        const userId = req.session.user._id
+
+        // validations
+
+        if (!orderId || !paymentMethod) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Order ID and payment method required'
+            });
+        }
+
+        if (!["Wallet", 'Stripe'].includes(paymentMethod)) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Only Wallet and Stripe allowed for retry'
+            });
+        }
+
+
+        const order = await Order.findOne({ _id: orderId, userId })
+
+        if (!order) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                success: false,
+                message: 'Order not found'
+            })
+        }
+
+        if (order.status !== 'Cancelled') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Only Cancelled orders can be retried '
+            })
+        }
+
+        //stock availability 
+
+        // for(const item of order.orderedItems){
+
+        //     if (!item.variant || !item.variant.color || !item.variant.size) {
+        //         return res.status(StatusCodes.BAD_REQUEST).json({
+        //             success: false,
+        //             message: `Invalid variant data for product "${item.productName}". Please reorder.`
+        //         });
+        //     }
+
+        //     const product = await Product.findById(item.product)
+
+        //     if(!product){
+        //         return res.status(StatusCodes.BAD_REQUEST).json({
+        //             success:false,
+        //             message:`Product "${item.productName}" is no longer available`
+        //         })
+        //     } 
+        //     const variant = product.variants.find(v =>
+        //         v.color === item.variant.color &&
+        //         v.size === item.variant.size
+        //     );
+
+        //     if(!variant){
+        //         return res.status(StatusCodes.BAD_REQUEST).json({
+        //             success:false,
+        //             message:`Variant "${item.variant.color}/${item.variant.size}" not found for Product "${item.productName}" `
+        //         })
+        //     }
+        //     if(variant.stock < item.quantity){
+        //         return res.status(StatusCodes.BAD_REQUEST).json({
+        //             success:false,
+        //             message:`Insufficient stock for "${item.variant.color}/${item.variant.size}", only  "${variant.stock}" available `
+        //         })
+        //     }
+        // } 
+
+        const stockReductions = [];
+
+        for (const item of order.orderedItems) {
+            if (!item.variant || !item.variant.color || !item.variant.size) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Invalid variant data for product "${item.productName}". Please reorder.`
+                });
+            }
+
+            const updatedProduct = await Product.findOneAndUpdate(
+                {
+                    _id: item.product,
+                    'variants.color': item.variant.color,
+                    'variants.size': item.variant.size,
+                    'variants.stock': { $gte: item.quantity }
+                },
+                {
+                    $inc: { 'variants.$.stock': -item.quantity }
+                },
+                { new: true }
+            );
+
+            if (!updatedProduct) {
+                await rollbackStockReductions(stockReductions);
+
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Insufficient stock for "${item.productName}" (${item.variant.color}/${item.variant.size})`
+                });
+            }
+
+            stockReductions.push({
+                productId: item.product,
+                color: item.variant.color,
+                size: item.variant.size,
+                quantity: item.quantity
+            });
+
+            const totalStock = updatedProduct.variants.reduce((sum, v) => sum + v.stock, 0);
+            updatedProduct.status = totalStock > 0 ? 'Available' : 'out of stock';
+            await updatedProduct.save();
+        }
+
+
+
+        //==============
+
+
+        if (paymentMethod === 'Stripe') {
+            req.session.pendingRetryOrder = {
+                originalOrderId: order._id.toString(),
+                userId: userId.toString(),
+                orderedItems: order.orderedItems,
+                subtotal: order.subtotal,
+                totalPrice: order.totalPrice,
+                discount: order.discount,
+                finalAmount: order.finalAmount,
+                address: order.address,
+                paymentMethod: 'Stripe',
+                couponApplied: order.couponApplied,
+                couponDiscount: order.couponDiscount,
+                couponId: order.couponId,
+                stockReductions,
+                timestamp: Date.now()  
+            }
+
+            return res.json({
+                success: true,
+                message: 'Ready for Stripe payment',
+                proceedToStripe: true
+            })
+        }
+
+
+
+        //payment 
+        if (paymentMethod === 'Wallet') {
+            const wallet = await Wallet.findOne({ userId })
+            if (!wallet || wallet.balance < order.finalAmount) { 
+                await rollbackStockReductions(stockReductions);
+
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Insufficient wallet balance `,
+                    redirect: '/wallet'
+                })
+            }
+
+            wallet.balance -= order.finalAmount
+            wallet.transactions.push({
+                date: new Date(),
+                type: 'debit',
+                amount: order.finalAmount,
+                reason: `Retry payment for Order#${order.orderId}`
+            })
+            await wallet.save()
+
+            //stock update
+            // for (const item of order.orderedItems) {
+
+            //     if (!item.variant || !item.variant.color || !item.variant.size) {
+            //         return res.status(StatusCodes.BAD_REQUEST).json({
+            //             success: false,
+            //             message: `Invalid variant data for product "${item.productName}". Please reorder.`
+            //         });
+            //     }
+
+
+            //     const product = await Product.findById(item.product)
+            //     const variant = product.variants.find(v =>
+            //         v.color === item.variant.color &&
+            //         v.size === item.variant.size
+            //     )
+
+            //     if (!product || !variant) {
+            //         return res.status(StatusCodes.BAD_REQUEST).json({
+            //             success: false,
+            //             message: `Product or variant no longer available for "${item.productName}"`
+            //         });
+            //     }
+
+            //     variant.stock -= item.quantity;
+
+            //     const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0)
+            //     product.status = totalStock > 0 ? "Available" : 'out of stock';
+
+            //     await product.save()
+
+            // }
+
+            //reset order and history
+
+            // order.status = paymentMethod === 'Wallet' ? 'Processing' : 'Pending'
+            // order.paymentStatus = paymentMethod === 'Wallet' ? 'Paid' : 'Payment Pending'
+            // order.paymentMethod = paymentMethod
+            
+
+            //cleaning status history 
+            // order.orderStatusHistory = [];
+
+            // // starts at Pending on retry
+            // order.orderStatusHistory.push({
+            //     status: 'Pending',
+            //     date: new Date(),
+            //     note: 'Order retried after cancellation'
+            // });
+
+            // //  If wallet payment, 
+            // if (paymentMethod === 'Wallet') {
+            //     order.orderStatusHistory.push({
+            //         status: 'Processing',
+            //         date: new Date(),
+            //         note: 'Wallet payment successful'
+            //     });
+            // }
+
+
+            order.status = 'Processing';
+            order.paymentStatus = 'Paid';
+            order.paymentMethod = paymentMethod;
+
+            order.orderStatusHistory = [];
+            order.orderStatusHistory.push({
+                status: 'Processing',
+                date: new Date(),
+                note: 'Order retried with Wallet payment'
+            });
+
+
+
+            //reset item status in order
+            for (const item of order.orderedItems) {
+                item.status =  'Processing'
+                item.cancellationReason = undefined;
+                item.returnReason = undefined;
+                item.returnRequestDate = undefined;
+
+                item.refunded = false;
+                item.restocked = false;
+
+                item.statusHistory = [{
+                    status: paymentMethod === 'Wallet' ? 'Processing' : 'Pending',
+                    date: new Date(),
+                    note: 'Order retried after cancellation'
+                }]
+
+            }
+
+            await order.save()
+
+
+            return res.json({
+                success: true,
+                message: 'Order successfully retried',
+                OrderId: order._id,
+            })
+
+        }
+
+    } catch (error) {
+        console.error('Retry order error:', error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+}
+
+const getOrderDetailsForRetry = async (req, res) => {
+    try {
+        const orderId = req.params.id
+        const userId = req.session.user._id
+
+        const order = await Order.findOne({ _id: orderId, userId })
+
+        if (!order) {
+            return res.json({
+                success: false,
+                message: 'Order not found'
+            })
+        }
+
+        res.json({
+            success: true,
+            order: {
+                _id: order._id,
+                orderId: order.orderId,
+                status: order.status,
+                finalAmount: order.finalAmount,
+                orderedItems: order.orderedItems
+            }
+        })
+    } catch (error) {
+        console.log('Error fetching order', error);
+        res.json({
+            success: false,
+            message: 'Server error'
+        })
+
+    }
+}
+
+
+
+
+
+//new code-------------------
+const createStripeSession = async (req, res) => {
+    try {
+        // const {orderId} = req.body
+        // console.log('stripe requested payment order:',orderId)
+
+        // const order = await Order.findById(orderId)
+        // if(!order) return  res.json({ success: false, message: "Order not found" });
+
+        const userId = req.session.user._id
+
+        let pendingOrder = req.session.pendingOrder
+        let isRetry = false
+        //to check if its a normal order
+        if (!pendingOrder) {
+            pendingOrder = req.session.pendingRetryOrder;
+            isRetry = true
+        }
+        //if retry order not available 
+        if (!pendingOrder) {
+            return res.json({ success: false, message: "No pending order not found" });
+        }
+
+        if (!pendingOrder.orderedItems || pendingOrder.orderedItems.length === 0) {
+            return res.json({
+                success: false,
+                message: "Invalid order data"
+            });
+        }
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'inr',
+                        product_data: {
+                            // name:`Order #${orderId}`
+                            name: isRetry ? `Retry Order Payment` : `Order Payment`,
+                            description: `${pendingOrder.orderedItems.length} items`
+                        },
+                        // unit_amount:order.finalAmount*100,
+                        unit_amount: Math.round(pendingOrder.finalAmount * 100)
+                    },
+                    quantity: 1,
+                }
+            ],
+            metadata: {
+                userId: userId.toString(),
+                isRetry: isRetry.toString(),
+                originalOrderId: isRetry ? pendingOrder.originalOrderId : 'new'
+            },
+            // success_url:`${process.env.BASE_URL}/payment/stripe/success?orderId=${orderId}`,
+            // cancel_url:`${process.env.BASE_URL}/payment/stripe/cancel?orderId=${orderId}`,
+            success_url: `${process.env.BASE_URL}/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.BASE_URL}/payment/stripe/cancel`,
+        })
+
+        return res.json({
+            success: true,
+            url: session.url
+        })
+
+    } catch (error) {
+        console.log('Stripe session error:', error);
+        return res.json({ success: false, message: "Stripe session failed" });
+
+    }
+}
+
+
+
+
 const stripeCancel = async (req, res) => {
-     try {
+    try {
         // const { orderId } = req.query;
 
         // if (orderId) {
@@ -1717,7 +1938,7 @@ const stripeCancel = async (req, res) => {
         //     // });
 
         //     const order = await Order.findById(orderId)
-            
+
         //     if(order && order.status === 'Pending'){
         //         for(const item of order.orderItems){
         //             const product = await Product.findById(item.product)
@@ -1742,15 +1963,22 @@ const stripeCancel = async (req, res) => {
 
         //         await order.save()
         //     }
- 
+
         // } 
 
         // return res.redirect(`/order/failed?orderId=${orderId}&reason=payment_canceled`);
 
+        console.log('Payment cancelled - restoring stock')
+        const pendingOrder = req.session.pendingOrder || req.session.pendingRetryOrder;
+
+        if (pendingOrder && pendingOrder.stockReductions) {
+            await rollbackStockReductions(pendingOrder.stockReductions)
+        }
+
         delete req.session.pendingOrder
         delete req.session.pendingRetryOrder;
 
-        return res.redirect(`/order/failed?reason=payment_canceled`) 
+        return res.redirect(`/order/failed?reason=payment_canceled`)
 
     } catch (error) {
         console.log('Stripe cancel error:', error);
@@ -1758,10 +1986,10 @@ const stripeCancel = async (req, res) => {
     }
 };
 
-const orderSuccessPage = async(req,res) => {
+const orderSuccessPage = async (req, res) => {
     try {
-        const {orderId} = req.query
-        if(!orderId)  return res.redirect('/order');
+        const { orderId } = req.query
+        if (!orderId) return res.redirect('/order');
 
         res.render("user/order-success", {
             title: "Order Success",
@@ -1774,7 +2002,7 @@ const orderSuccessPage = async(req,res) => {
     }
 }
 
-const orderFailedPage = async(req,res) =>{
+const orderFailedPage = async (req, res) => {
     try {
         const userId = req.session.user._id
         const { orderId, reason } = req.query
@@ -1790,8 +2018,8 @@ const orderFailedPage = async(req,res) =>{
 
     }
 }
- 
-export  {
+
+export {
     getCheckout,
     addNewAddress,
     updateAddress,
@@ -1800,7 +2028,7 @@ export  {
     removeCoupon,
     placeorder,
     createStripeSession,
-    stripeSuccess,stripeCancel,
+    stripeSuccess, stripeCancel,
     orderSuccessPage,
     orderFailedPage,
     retryCancelledOrder,

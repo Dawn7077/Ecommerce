@@ -536,8 +536,22 @@ function validateForm() {
         document.getElementById('input3'),
         document.getElementById('input4')
     ]
-    imgInputs.forEach(input => {
+    imgInputs.forEach((input, index) => {
         if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!allowedTypes.includes(file.type)) {
+                showError('images-error', `Invalid file type for image ${index + 1}. Only JPG, PNG, and WEBP allowed.`);
+                valid = false;
+            }
+
+            if (file.size > maxSize) {
+                showError('images-error', `Image ${index + 1} is too large. Max size is 5MB.`);
+                valid = false;
+            }
+
             totalImages ++;
         }
     }); 

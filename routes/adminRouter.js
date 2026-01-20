@@ -6,29 +6,31 @@
 
 
 
-import express from 'express' 
+import express from 'express'
 const router = express.Router()
-import multer from 'multer'
-import storage from '../helpers/multer.js' 
-const uploads = multer({ storage: storage })
+import uploads from '../helpers/multer.js'
+// const uploads = multer({ storage: storage })
 
 
 
 import { getBrandPage, addBrand, blockBrand, unBlockBrand, deleteBrand, editBrand } from '../controllers/admin/brandController.js'
-import { loadlogin, login, loadDashboard, getLoadDashboard, getSalesTimeline, pageError,
+import {
+    loadlogin, login, loadDashboard, getLoadDashboard, getSalesTimeline, pageError,
     logout,
 } from '../controllers/admin/adminController.js'
-import { customerInfo, customerBlocked, customerUnBlocked,deleteCustomer } from '../controllers/admin/customerController.js'
-import { categoryInfo, addCategory, addCategoryOffer, removeCategoryOffer, getListCategory, 
+import { customerInfo, customerBlocked, customerUnBlocked, deleteCustomer } from '../controllers/admin/customerController.js'
+import {
+    categoryInfo, addCategory, addCategoryOffer, removeCategoryOffer, getListCategory,
     getUnlistCategory, getEditCategory, editCategory, deleteCategory
 } from '../controllers/admin/categoryController.js'
 
 import { userAuth, adminAuth } from '../middleware/auth.js'
-import { getProductAddPage, addProducts, getAllProducts, addProductOffer, removeProductOffer,
-    blockProduct, unBlockProduct, getEditProduct, editProduct, deleteSingleImage,deleteProduct,
+import {
+    getProductAddPage, addProducts, getAllProducts, addProductOffer, removeProductOffer,
+    blockProduct, unBlockProduct, getEditProduct, editProduct, deleteSingleImage, deleteProduct,
 } from '../controllers/admin/productController.js'
-import { getBannerPage, getAddBannerPage, addBanner, bannerDelete }from '../controllers/admin/bannerController.js'
-import {getOfferManagement,editProductOffer,editCategoryOffer,removeProductOfferPage,removeCategoryOfferPage} from '../controllers/admin/offerController.js'
+import { getBannerPage, getAddBannerPage, addBanner, bannerDelete } from '../controllers/admin/bannerController.js'
+import { getOfferManagement, editProductOffer, editCategoryOffer, removeProductOfferPage, removeCategoryOfferPage } from '../controllers/admin/offerController.js'
 
 
 // const { getBrandPage, addBrand, blockBrand, unBlockBrand, deleteBrand, editBrand } = require('../controllers/admin/brandController')
@@ -79,7 +81,7 @@ router.post('/addBrand', adminAuth, uploads.single("image"), addBrand)
 router.get('/blockBrand', adminAuth, blockBrand)
 router.get('/unBlockBrand', adminAuth, unBlockBrand)
 router.get('/deleteBrand', adminAuth, deleteBrand)
-router.post('/editBrand', adminAuth,uploads.single("image"), editBrand)
+router.post('/editBrand', adminAuth, uploads.single("image"), editBrand)
 //product management
 router.get('/addProducts', adminAuth, getProductAddPage)
 router.post('/addProducts', ((req, res, next) => {
@@ -102,35 +104,35 @@ router.get('/addBanner', adminAuth, getAddBannerPage)
 router.post('/addBanner', adminAuth, uploads.single('images'), addBanner)
 router.get('/deleteBanner', adminAuth, bannerDelete)
 //coupon management
-import {loadCoupon,createCoupon,getEditCoupon,editCoupon,deleteCoupon} from'../controllers/admin/couponController.js'
+import { loadCoupon, createCoupon, getEditCoupon, editCoupon, deleteCoupon } from '../controllers/admin/couponController.js'
 // const {loadCoupon,createCoupon,getEditCoupon,editCoupon,deleteCoupon} =require('../controllers/admin/couponController')
 
-router.get('/coupon', adminAuth,loadCoupon)
-router.post('/createCoupon',adminAuth,createCoupon)
-router.get('/editCoupon/:id',adminAuth,getEditCoupon)
-router.post('/updateCoupon',adminAuth,editCoupon)
-router.delete('/deleteCoupon/:id',adminAuth,deleteCoupon)
+router.get('/coupon', adminAuth, loadCoupon)
+router.post('/createCoupon', adminAuth, createCoupon)
+router.get('/editCoupon/:id', adminAuth, getEditCoupon)
+router.post('/updateCoupon', adminAuth, editCoupon)
+router.delete('/deleteCoupon/:id', adminAuth, deleteCoupon)
 //order management
-import {getOrderList,getOrderDetails,changeOrderStatus,approveReturn,rejectReturn} from '../controllers/admin/orderController.js'
+import { getOrderList, getOrderDetails, changeOrderStatus, approveReturn, rejectReturn } from '../controllers/admin/orderController.js'
 // const {getOrderList,getOrderDetails,changeOrderStatus,approveReturn,rejectReturn} = require('../controllers/admin/orderController')
-router.get('/orderList',adminAuth,getOrderList)
-router.get('/order-details',adminAuth,getOrderDetails)
-router.post('/order-change-status',adminAuth,changeOrderStatus)
-router.post('/approve-return',adminAuth,approveReturn)
-router.post('/reject-return',adminAuth,rejectReturn)
+router.get('/orderList', adminAuth, getOrderList)
+router.get('/order-details', adminAuth, getOrderDetails)
+router.post('/order-change-status', adminAuth, changeOrderStatus)
+router.post('/approve-return', adminAuth, approveReturn)
+router.post('/reject-return', adminAuth, rejectReturn)
 //sales Management
-import {loadSalesReport,filterSalesReport,downloadSalesExcel,downloadSalesPDF} from '../controllers/admin/salesReportContoller.js'
+import { loadSalesReport, filterSalesReport, downloadSalesExcel, downloadSalesPDF } from '../controllers/admin/salesReportContoller.js'
 // const {loadSalesReport,filterSalesReport,downloadSalesExcel,downloadSalesPDF} = require('../controllers/admin/salesReportContoller')
-router.get('/sales-report',adminAuth,loadSalesReport)
-router.post('/sales-report/filter',adminAuth,filterSalesReport)
-router.get('/sales-report/download/excel',adminAuth,downloadSalesExcel)
-router.get('/sales-report/download/pdf',adminAuth,downloadSalesPDF)
+router.get('/sales-report', adminAuth, loadSalesReport)
+router.post('/sales-report/filter', adminAuth, filterSalesReport)
+router.get('/sales-report/download/excel', adminAuth, downloadSalesExcel)
+router.get('/sales-report/download/pdf', adminAuth, downloadSalesPDF)
 //offerManagement
-router.get('/offer-management',adminAuth,getOfferManagement)
-router.post('/edit-product-offer',adminAuth,editProductOffer)
-router.post('/remove-product-offer',adminAuth,removeProductOfferPage)
-router.post('/edit-category-offer',adminAuth,editCategoryOffer)
-router.post('/remove-category-offer',adminAuth,removeCategoryOfferPage)
+router.get('/offer-management', adminAuth, getOfferManagement)
+router.post('/edit-product-offer', adminAuth, editProductOffer)
+router.post('/remove-product-offer', adminAuth, removeProductOfferPage)
+router.post('/edit-category-offer', adminAuth, editCategoryOffer)
+router.post('/remove-category-offer', adminAuth, removeCategoryOfferPage)
 
 
 // module.exports = router
