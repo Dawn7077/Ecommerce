@@ -28,7 +28,8 @@ import StatusCodes from '../../utils/httpStatus.js'
 import dotenv from 'dotenv'
 dotenv.config()
 
-import { generateOtp } from '../../utils/otp.js'
+
+import { generateReferralCode,generateOtp } from '../../utils/otp.js'
 import { sendVerificationEmail } from '../../services/emailServices.js'
 
 
@@ -144,7 +145,7 @@ const securePassword = async(password)=>{
         const passwordHash = await bcrypt.hash(password,10)
         return passwordHash
     } catch (error) {
-        
+        console.log(error)
     }
 }
 const getVerifyOtp = async (req,res) => {

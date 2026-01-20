@@ -18,6 +18,7 @@ import path from 'path'
 import userRouter from './routes/userRouter.js'
 import adminRouter from './routes/adminRouter.js'
 import passport from './config/passport.js'
+import morgan from "morgan";
 
 
 const __filename = fileURLToPath(import.meta.url)
@@ -53,6 +54,14 @@ app.use((req,res,next)=>{
 app.set('view engine','ejs')
 app.set('views',path.join(__dirname,'views'))
 app.use(express.static(path.join(__dirname,'public')))
+
+// app.use(
+//   morgan('combined', {
+//     skip: (req) => req.url.startsWith('/js')
+//         || req.url.startsWith('/css')
+//         || req.url.startsWith('/img')
+//   })
+// );
 
 app.use((req,res,next)=>{
     res.locals.user = req.session.user||null

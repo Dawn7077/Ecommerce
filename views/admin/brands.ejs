@@ -2,55 +2,47 @@
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet"> 
+    <link rel="stylesheet" href="/admin/style/brand.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<style>
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
 
-.pagination-container a,
-.pagination-container span {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  text-decoration: none;
-  color: #007bff;
-}
-  
-
-  .pagination a:hover {
-    background-color: #e1e1e1;
-  }
-  .error-message {
-    color: red;
-  }
-</style>
 <section class="content-main">
   <div class="content-header">
     <div>
       <h2 class="content-title card-title">Brands</h2>
     </div>
   </div>
-  <header class="card-header text-center mb-20">
-      <form action="/admin/brands/" method="get" class="d-inline">
-        <div class="input-group input-group-sm border border-1 border-grey rounded-pill  d-flex align-items-center" style="width: 500px; margin-left: 310px;  " >
-          <input type="text" value="<%= search?search:'' %>" class="form-control border-0 rounded-pill " placeholder="Search brand" name="search" />
 
-          <% if(search !=='') {%>
-          <a href="/admin/brands" class="btn btn-secondary rounded-pill d-flex align-items-center ">X</a>
-            <% } %>
-          <button class="btn" type="submit">Search</button>
-        </div>
-      </form>
-    </header>
+  <header class="card-header text-center mb-20">
+    <form id="searchForm" class="d-inline">
+      <div class="input-group input-group-sm border border-1 border-grey rounded-pill d-flex align-items-center" 
+           style="width: 500px; margin-left: 310px;">
+        <input 
+          type="text" 
+          id="searchInput"
+          value="<%= search ? search : '' %>" 
+          class="form-control border-0 rounded-pill" 
+          placeholder="Search brand" 
+          name="search" 
+        />
+        <button 
+          type="button"
+          id="clearSearch"
+          class="btn btn-secondary rounded-pill d-flex align-items-center"
+          style="<%= search === '' ? 'display: none !important;' : '' %>"
+        >
+          X
+        </button>
+        <button class="btn" type="submit">Search</button>
+      </div>
+    </form>
+  </header>
+
   <div class="card">
     <div class="card-body">
       <div class="row">
         <div class="col-md-3">
+          <!-- Add Form -->
           <div id="addForm">
             <form id="addBrandForm" enctype="multipart/form-data">
               <div class="mb-4">
@@ -74,12 +66,13 @@
               </div>
             </form>
           </div>
-          <!-- edit -->
+
+          <!-- Edit Form -->
           <div id="editForm" style="display: none;"> 
             <form id="editBrandForm" enctype="multipart/form-data">
               <input type="hidden" name="brandId" id="editBrandId" />
               <div class="mb-4">
-                <label  class="form-label">Brand Name</label>
+                <label class="form-label">Brand Name</label>
                 <input type="text" name="name" id="editBrandName" class="form-control" />
               </div>
               <label class="form-label">Brand Image</label>
@@ -87,13 +80,18 @@
                 <img src="" alt="" id="editPreview" style="width:80px;margin-bottom: 10px;" />
                 <input type="file" class="form-control border" name="image">
               </div>
-
               <div class="d-grid">
-                <button class="btn btn-primary mt-20"  type="button" onclick="updateBrand()">Update Brand</button>
+                <button class="btn btn-primary mt-20" type="button" onclick="updateBrand()">
+                  Update Brand
+                </button>
+                <button class="btn btn-secondary mt-2" type="button" onclick="cancelEdit()">
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
         </div>
+
         <div class="col-md-7 ml-105">
           <div class="table-responsive">
             <table class="table table-hover">
@@ -102,24 +100,18 @@
                   <th>Brand</th>
                   <th>Logo</th>
                   <th>Status</th>
-                  <th>Block/Unblock/Delete</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <% data.reverse().forEach((brand,index)=>{ %>
-                <tr>
-                  <td class="text-start"><%= brand.brandName %></td>
+              <tbody id="brandTableBody">
+                <% data.forEach((brand, index) => { %>
+                <tr id="row-<%= brand._id %>">
+                  <td class="text-start" id="name-<%= brand._id %>"><%= brand.brandName %></td>
                   <td class="text-start">
-                    <div
-                      class="d-flex align-items-center justify-content-center"
-                      style="
-                        width: 40px;
-                        height: 40px;
-                        border-radius: 50%;
-                        overflow: hidden;
-                      "
-                    >
+                    <div class="d-flex align-items-center justify-content-center"
+                         style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
                       <img
+                        id="img-<%= brand._id %>"
                         src="/uploads/product-image/<%= brand.brandImage %>"
                         alt="<%= brand.brandName %>"
                         class="img-fluid rounded-circle"
@@ -128,48 +120,41 @@
                     </div>
                   </td>
                   <td class="text-start">
-                    <% if(brand.isBlocked === true){ %>
                     <span
-                      class="badge rounded-pill btn-danger"
+                      id="status-<%= brand._id %>"
+                      class="badge rounded-pill <%= brand.isBlocked ? 'btn-danger' : 'btn-success' %>"
                       style="width: 60px"
-                      >Blocked
-                    </span>
-                    <% }else{ %>
-                    <span
-                      class="badge rounded-pill btn-success"
-                      style="width: 60px"
-                      >Active</span
                     >
-                    <% } %>
+                      <%= brand.isBlocked ? 'Blocked' : 'Active' %>
+                    </span>
                   </td>
                   <td class="text-start">
-                    <% if(brand.isBlocked === false){ %>
-                    <button class="btn btn-danger" style="width: 90px">
-                      <a href="/admin/blockBrand?id=<%=brand._id %>" class="text-white">Block</a>
-                    </button>
-                    <% }else{ %>
-                    <button class="btn btn-success" style="width: 90px">
-                      <a href="/admin/unBlockBrand?id=<%=brand._id %>" class="text-white">Unblock</a>
-                    </button>
-                    <% } %>
-                    <button
-                      class="btn btn-danger"
+                    <button 
+                      id="block-btn-<%= brand._id %>"
+                      class="btn <%= brand.isBlocked ? 'btn-success' : 'btn-danger' %>" 
                       style="width: 90px"
-                      onclick="return confirmDelete()"
+                      onclick="toggleBlock('<%= brand._id %>', <%= brand.isBlocked %>)"
                     >
-                      <a href="/admin/deleteBrand?id=<%=brand._id %>" class="text-white">Delete</a>
+                      <%= brand.isBlocked ? 'Unblock' : 'Block' %>
                     </button>
                     <button
                       class="btn btn-danger"
                       style="width: 90px"
-                      onclick=" Edit('<%= brand._id%>','<%= brand.brandName%>','<%= brand.brandImage%>')">Edit</a>
+                      onclick="deleteBrand('<%= brand._id %>')"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      class="btn btn-info"
+                      style="width: 90px"
+                      onclick="editBrandForm('<%= brand._id %>', '<%= brand.brandName %>', '<%= brand.brandImage %>')"
+                    >
+                      Edit
                     </button>
                   </td>
                 </tr>
-
-
-                <%})%>
-                </tbody>
+                <% }) %>
+              </tbody>
             </table>
           </div>
         </div>
@@ -177,103 +162,90 @@
     </div>
   </div>
 
-  
- 
-  <!-- <div class="pagination-container">
-        <% if(currentPage>1){ %>
-            <a href="?page=<%=currentPage - 1 %>">&laquo; Previous</a>
-        <% } %> <% for(let i=1; i<=totalPages; i++){ %>
-                <% if(i=== currentPage){ %>
-                    <span class="current-page"><%= i %></span>
-                <% }else{ %>
-                    <a href="?page=<%= i %>" ><%= i %></a>
-                <% } %>
-                <% } %>
-                <% if(currentPage<totalPages){ %>
-                <a href="?page=<%=currentPage +1 %>">Next &raquo;</a>
-                <% } %>
-    </div> -->
-
-    <div class="pagination-container ms-3">
-   <nav aria-label="Page navigation">
-       <ul class="pagination justify-content-center mb-20">
-
-
-           <% for (let i = 1; i <= totalPages; i++) { %>
-           <li class="page-item <%=(i === currentPage) ? 'active' : '' %>">
-               <a class="page-link" href="?page=<%= i %>&search=<%=search %>"><%= i %></a>
-           </li>
-           <% } %>
-
-
-       </ul>
-   </nav>
-</div>
- 
+  <div class="pagination-container ms-3">
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center mb-20" id="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+          <a class="page-link page-link-btn" href="#" data-page="<%= i %>">
+            <%= i %>
+          </a>
+        </li>
+        <% } %>
+      </ul>
+    </nav>
+  </div>
+</section>
 
 <% if(updated){ %>
   <script> 
-    Swal.fire('Product Updated', 'Product has been updated successfully!', 'success');
-    </script>
-    <% } %>
-    
+    Swal.fire('Brand Updated', 'Brand has been updated successfully!', 'success');
+  </script>
+<% } %>
 
 <script>
-   async function addBrand(){
-    const form  = document.getElementById('addBrandForm')
-    const formData = new FormData(form)
-    console.log(formData)
+  // State management
+  let currentPage = <%= currentPage %>;
+  let currentSearch = '<%= search %>';
 
+  // Simple block/unblock toggle
+  async function toggleBlock(id, isCurrentlyBlocked) {
     try {
-      const res = await fetch('/admin/addBrand',{
-        method:'POST',
-        body:formData
-      })
+      const action = isCurrentlyBlocked ? 'unblock' : 'block';
+      const url = isCurrentlyBlocked ? `/admin/unBlockBrand?id=${id}` : `/admin/blockBrand?id=${id}`;
 
-      const data = await res.json()
-      if(data.success){
-        Swal.fire({ 
-        icon: 'success',
-        title: 'Brand Added',
-        text: 'Brand added successfully!'
-        }).then(()=>{
-          window.location.reload()
-        })
-      }else{
-        Swal.fire({
-        icon: 'error',
-        title: 'Oops!',
-        text: data.message
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
       });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Update status badge
+        const statusBadge = document.getElementById(`status-${id}`);
+        statusBadge.className = `badge rounded-pill ${isCurrentlyBlocked ? 'btn-success' : 'btn-danger'}`;
+        statusBadge.textContent = isCurrentlyBlocked ? 'Active' : 'Blocked';
+
+        // Update block button
+        const blockBtn = document.getElementById(`block-btn-${id}`);
+        blockBtn.className = `btn ${isCurrentlyBlocked ? 'btn-danger' : 'btn-success'}`;
+        blockBtn.textContent = isCurrentlyBlocked ? 'Block' : 'Unblock';
+        blockBtn.setAttribute('onclick', `toggleBlock('${id}', ${!isCurrentlyBlocked})`);
+
+        Swal.fire('Success', `Brand ${action}ed successfully`, 'success');
+      } else {
+        Swal.fire('Error', data.message || 'Action failed', 'error');
       }
     } catch (error) {
-      Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Something went wrong'
-    });
+      console.error('Error toggling block:', error);
+      Swal.fire('Error', 'Something went wrong', 'error');
     }
   }
 
-  async function updateBrand(){
-    const form = document.getElementById('editBrandForm')
-    const formData = new FormData(form)
+  // Add brand
+  async function addBrand() {
+    const form = document.getElementById('addBrandForm');
+    const formData = new FormData(form);
 
     try {
-      const res = await fetch('/admin/editBrand',{
-        method:'POST',
-        body:formData
-      })
+      const res = await fetch('/admin/addBrand', {
+        method: 'POST',
+        body: formData
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
-      if(data.success){
-        Swal.fire({
+      if (data.success) {
+        await Swal.fire({ 
           icon: 'success',
-          title: 'Updated!',
-          text: data.message
-        }).then(() => window.location.reload());
-      }else{
+          title: 'Brand Added',
+          text: 'Brand added successfully!'
+        });
+        
+        // Reload current page to show new brand
+        loadBrands(currentPage, currentSearch);
+        form.reset();
+      } else {
         Swal.fire({
           icon: 'error',
           title: 'Oops!',
@@ -289,21 +261,266 @@
     }
   }
 
-  function confirmDelete(){
-    return confirm("Are you sure you want to delete this brand? ")
+  // Update brand
+  async function updateBrand() {
+    const form = document.getElementById('editBrandForm');
+    const formData = new FormData(form);
+    const brandId = document.getElementById('editBrandId').value;
+
+    try {
+      const res = await fetch('/admin/editBrand', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: data.message
+        });
+
+        // Update the row directly
+        const newName = formData.get('name');
+        document.getElementById(`name-${brandId}`).textContent = newName;
+
+        // Update image if changed
+        if (data.brand && data.brand.brandImage) {
+          document.getElementById(`img-${brandId}`).src = `/uploads/product-image/${data.brand.brandImage}`;
+        }
+
+        // Hide edit form, show add form
+        cancelEdit();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops!',
+          text: data.message
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Something went wrong'
+      });
+    }
   }
 
-  function Edit(id,name,image){
-    document.getElementById('addForm').style.display='none'
-    document.getElementById('editForm').style.display= 'block'
+  // Delete brand
+  async function deleteBrand(id) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
 
-    document.getElementById('editBrandId').value= id
-    document.getElementById('editBrandName').value= name
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/admin/deleteBrand?id=${id}`, {
+          headers: { 'Accept': 'application/json' }
+        });
 
-    document.getElementById('editPreview').src = '/uploads/product-image/'+ image
+        const data = await res.json();
+
+        if (data.success) {
+          // Remove the row from DOM
+          document.getElementById(`row-${id}`).remove();
+
+          Swal.fire('Deleted!', 'Brand has been deleted.', 'success');
+
+          // Reload if table is empty
+          const tbody = document.getElementById('brandTableBody');
+          if (tbody.children.length === 0) {
+            loadBrands(Math.max(1, currentPage - 1), currentSearch);
+          }
+        } else {
+          Swal.fire('Error', data.message || 'Delete failed', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error', 'Something went wrong', 'error');
+      }
+    }
   }
-  </script>
-  
-</section>
+
+  // Show edit form
+  function editBrandForm(id, name, image) {
+    document.getElementById('addForm').style.display = 'none';
+    document.getElementById('editForm').style.display = 'block';
+
+    document.getElementById('editBrandId').value = id;
+    document.getElementById('editBrandName').value = name;
+    document.getElementById('editPreview').src = '/uploads/product-image/' + image;
+  }
+
+  // Cancel edit
+  function cancelEdit() {
+    document.getElementById('addForm').style.display = 'block';
+    document.getElementById('editForm').style.display = 'none';
+    document.getElementById('editBrandForm').reset();
+  }
+
+  // Load brands for pagination/search
+  async function loadBrands(page = 1, search = '') {
+    try {
+      const url = new URL('/admin/brands', window.location.origin);
+      url.searchParams.set('page', page);
+      if (search) url.searchParams.set('search', search);
+
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!res.ok) throw new Error('Failed to load brands');
+
+      const result = await res.json();
+
+      currentPage = result.currentPage;
+      currentSearch = search;
+
+      renderTable(result.data);
+      renderPagination(result.totalPages, result.currentPage);
+      updateURL(page, search);
+
+    } catch (error) {
+      console.error('Error loading brands:', error);
+      Swal.fire('Error', 'Failed to load brands', 'error');
+    }
+  }
+
+  // Render table
+  function renderTable(brands) {
+    const tbody = document.getElementById('brandTableBody');
+
+    if (brands.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center">No brands found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = brands.map(brand => `
+      <tr id="row-${brand._id}">
+        <td class="text-start" id="name-${brand._id}">${escapeHtml(brand.brandName)}</td>
+        <td class="text-start">
+          <div class="d-flex align-items-center justify-content-center"
+               style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
+            <img
+              id="img-${brand._id}"
+              src="/uploads/product-image/${brand.brandImage}"
+              alt="${escapeHtml(brand.brandName)}"
+              class="img-fluid rounded-circle"
+              style="width: 100%; height: auto"
+            />
+          </div>
+        </td>
+        <td class="text-start">
+          <span
+            id="status-${brand._id}"
+            class="badge rounded-pill ${brand.isBlocked ? 'btn-danger' : 'btn-success'}"
+            style="width: 60px"
+          >
+            ${brand.isBlocked ? 'Blocked' : 'Active'}
+          </span>
+        </td>
+        <td class="text-start">
+          <button 
+            id="block-btn-${brand._id}"
+            class="btn ${brand.isBlocked ? 'btn-success' : 'btn-danger'}" 
+            style="width: 90px"
+            onclick="toggleBlock('${brand._id}', ${brand.isBlocked})"
+          >
+            ${brand.isBlocked ? 'Unblock' : 'Block'}
+          </button>
+          <button
+            class="btn btn-danger"
+            style="width: 90px"
+            onclick="deleteBrand('${brand._id}')"
+          >
+            Delete
+          </button>
+          <button
+            class="btn btn-info"
+            style="width: 90px"
+            onclick="editBrandForm('${brand._id}', '${escapeHtml(brand.brandName)}', '${brand.brandImage}')"
+          >
+            Edit
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Render pagination
+  function renderPagination(totalPages, activePage) {
+    const pagination = document.getElementById('pagination');
+
+    if (totalPages === 0) {
+      pagination.innerHTML = '';
+      return;
+    }
+
+    pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
+      .map(page => `
+        <li class="page-item ${page === activePage ? 'active' : ''}">
+          <a class="page-link page-link-btn" href="#" data-page="${page}">
+            ${page}
+          </a>
+        </li>
+      `).join('');
+  }
+
+  // Update URL
+  function updateURL(page, search) {
+    const url = new URL(window.location);
+    url.searchParams.set('page', page);
+
+    if (search) {
+      url.searchParams.set('search', search);
+    } else {
+      url.searchParams.delete('search');
+    }
+
+    window.history.pushState({}, '', url);
+  }
+
+  // Search form
+  document.getElementById('searchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const search = document.getElementById('searchInput').value.trim();
+    currentSearch = search;
+    loadBrands(1, search);
+
+    document.getElementById('clearSearch').style.display = search ? 'flex' : 'none';
+  });
+
+  // Clear search
+  document.getElementById('clearSearch').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    currentSearch = '';
+    loadBrands(1, '');
+    document.getElementById('clearSearch').style.display = 'none';
+  });
+
+  // Pagination
+  document.getElementById('pagination').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (e.target.classList.contains('page-link-btn')) {
+      const page = parseInt(e.target.dataset.page);
+      loadBrands(page, currentSearch);
+    }
+  });
+
+  // Utility
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+
 <%- include("../../views/partials/admin/footer") %>
- 

@@ -1,10 +1,3 @@
-// const User = require('../../models/userSchema')
-// const Order = require('../../models/orderSchema')
-// const mongoose = require('mongoose')
-// const bcrypt = require('bcrypt')
-// const Category = require('../../models/categorySchema')
-// const Product = require('../../models/productSchema')
-// const Brand = require('../../models/brandSchema')
 
 import User from '../../models/userSchema.js'
 import Order from '../../models/orderSchema.js'
@@ -20,6 +13,19 @@ import  {
     getDateFilter
 } from '../../utils/dashbordUtils.js'
 
+import {
+    findAdminByEmail,
+    getTotalUsersCount,
+    getTotalProductsCount,
+    getTotalOrdersCount,
+    calculateTotalRevenue,
+    getOrdersByDateFilter,
+    getTopProducts,
+    getTopCategories,
+    getTopBrands,
+    getSalesTimelineData
+} from '../../services/admin/adminControllerServies.js'
+
 
 const loadlogin = (req,res)=>{
     if(req.session.admin){
@@ -29,10 +35,11 @@ const loadlogin = (req,res)=>{
     
 }
 
-const login= async(req,res)=>{
+const login = async(req,res)=>{
     try {
         const {password,email}=req.body 
-        const admin =await User.findOne({email,isAdmin:true})
+        // const admin =await User.findOne({email,isAdmin:true})
+        const admin = await findAdminByEmail(email)
 
 
         if(!admin){
@@ -82,90 +89,94 @@ const loadDashboard = async (req,res)=>{
             const value = req.query.value || ''
             const dateFilter = getDateFilter(filterType,value)
 
-            const totalUsers = await User.countDocuments()
-            const totalProducts = await Product.countDocuments()
-            const totalOrders = await Order.countDocuments()
+            const totalUsers = await getTotalUsersCount()
+            const totalProducts = await getTotalProductsCount()
+            const totalOrders = await getTotalOrdersCount()
 
-            const revenueData = await Order.aggregate([
-                {
-                    $match:{
-                        createdAt: dateFilter, 
-                        paymentStatus:{$in:['Paid','Completed']}
-                    }
-                },
-                {$unwind:"$orderedItems"},
-                {
-                    $match:{
-                        "orderedItems.status":"Delivered"
-                    }
-                },
-                {
-                    $addFields:{
-                        itemTotal:{
-                            $multiply:["$orderedItems.price","$orderedItems.quantity"]
-                        }
-                    }
-                }, 
-                {
-                    $addFields:{
-                        itemProportion:{
-                            $cond:[
-                                {$gt:["$subtotal",0]},
-                                {$divide:["$itemTotal","$subtotal"]},
-                                0
-                            ]
-                        }
-                    }
-                },
+            // const revenueData = await Order.aggregate([
+            //     {
+            //         $match:{
+            //             createdAt: dateFilter, 
+            //             paymentStatus:{$in:['Paid','Completed']}
+            //         }
+            //     },
+            //     {$unwind:"$orderedItems"},
+            //     {
+            //         $match:{
+            //             "orderedItems.status":"Delivered"
+            //         }
+            //     },
+            //     {
+            //         $addFields:{
+            //             itemTotal:{
+            //                 $multiply:["$orderedItems.price","$orderedItems.quantity"]
+            //             }
+            //         }
+            //     }, 
+            //     {
+            //         $addFields:{
+            //             itemProportion:{
+            //                 $cond:[
+            //                     {$gt:["$subtotal",0]},
+            //                     {$divide:["$itemTotal","$subtotal"]},
+            //                     0
+            //                 ]
+            //             }
+            //         }
+            //     },
 
-                {
-                    $addFields:{
-                        itemDiscount:{
-                            $multiply:[
-                                {$ifNull:["$discount",0]},
-                                "$itemProportion"
-                            ]
-                        },
-                        itemCouponDiscount:{
-                            $cond:[
-                                "$couponApplied",
-                                {
-                                    $multiply:[
-                                        { $ifNull:["$couponDiscount",0]},
-                                        "$itemProportion"
-                                    ]
-                                },
-                                0
-                            ]
-                        }
-                    }
-                },
+            //     {
+            //         $addFields:{
+            //             itemDiscount:{
+            //                 $multiply:[
+            //                     {$ifNull:["$discount",0]},
+            //                     "$itemProportion"
+            //                 ]
+            //             },
+            //             itemCouponDiscount:{
+            //                 $cond:[
+            //                     "$couponApplied",
+            //                     {
+            //                         $multiply:[
+            //                             { $ifNull:["$couponDiscount",0]},
+            //                             "$itemProportion"
+            //                         ]
+            //                     },
+            //                     0
+            //                 ]
+            //             }
+            //         }
+            //     },
 
-                {
-                    $addFields:{
-                        itemRevenue:{
-                            $subtract:[
-                                "$itemTotal",
-                                {$add :["$itemDiscount","$itemCouponDiscount"]}
-                            ]
-                        }
-                    }
-                },
+            //     {
+            //         $addFields:{
+            //             itemRevenue:{
+            //                 $subtract:[
+            //                     "$itemTotal",
+            //                     {$add :["$itemDiscount","$itemCouponDiscount"]}
+            //                 ]
+            //             }
+            //         }
+            //     },
 
-                {
-                    $group:{
-                        _id:null,
-                        totalRevenue:{$sum : "$itemRevenue"}
-                    }
-                }
-            ])
+            //     {
+            //         $group:{
+            //             _id:null,
+            //             totalRevenue:{$sum : "$itemRevenue"}
+            //         }
+            //     }
+            // ])
 
-            const totalRevenue = revenueData.length>0 ? revenueData[0].totalRevenue : 0
-
+            // const totalRevenue = revenueData.length>0 ? revenueData[0].totalRevenue : 0
+ 
 
             //  Calculate Net Sales -------------------
             
-            const orders = await Order.find({ createdAt: dateFilter });
+            const totalRevenue = await calculateTotalRevenue(dateFilter)
+
+            // const orders = await Order.find({ createdAt: dateFilter });
+            const orders = await getOrdersByDateFilter(dateFilter)
+
             const stats = calculateStats(orders);
             const netSales = +stats.totalSales;
                 
@@ -173,66 +184,72 @@ const loadDashboard = async (req,res)=>{
 
             console.log('totalRevenue',totalRevenue,netSales)
 
-            const topProducts = await Order.aggregate([
-                {$match:{
-                    createdAt:dateFilter
-                }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.product",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10},
-                {$lookup:{
-                    from:"products",
-                    localField:"_id",
-                    foreignField:"_id",
-                    as:"product"
-                }},
-                {$unwind:"$product"}
-            ])
+            // const topProducts = await Order.aggregate([
+            //     {$match:{
+            //         createdAt:dateFilter
+            //     }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.product",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10},
+            //     {$lookup:{
+            //         from:"products",
+            //         localField:"_id",
+            //         foreignField:"_id",
+            //         as:"product"
+            //     }},
+            //     {$unwind:"$product"}
+            // ])
 
-            const topCategories = await Order.aggregate([
-                {$match:{ createdAt:dateFilter }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.category",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10},
-                {$lookup:{
-                    from:"categories",
-                    localField:"_id",
-                    foreignField:"_id",
-                    as:"category"
-                }},
-                {$unwind:"$category"}
-            ])
+            // const topCategories = await Order.aggregate([
+            //     {$match:{ createdAt:dateFilter }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.category",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10},
+            //     {$lookup:{
+            //         from:"categories",
+            //         localField:"_id",
+            //         foreignField:"_id",
+            //         as:"category"
+            //     }},
+            //     {$unwind:"$category"}
+            // ])
 
-            const topBrands = await Order.aggregate([
-                {$match:{
-                    // status:"Delivered",
-                    createdAt:dateFilter
-                }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.brand",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10}
-            ])
+            // const topBrands = await Order.aggregate([
+            //     {$match:{
+            //         // status:"Delivered",
+            //         createdAt:dateFilter
+            //     }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.brand",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10}
+            // ])
+
+            const topProducts = await getTopProducts(dateFilter)
+            const topCategories = await getTopCategories(dateFilter)
+            const topBrands = await getTopBrands(dateFilter)
+
+
             console.log(topBrands)
             res.render('admin/dashboard',{
                 totalUsers, totalProducts,totalOrders,totalRevenue,netSales,
@@ -257,66 +274,69 @@ const getLoadDashboard =  async (req,res)=>{
             const dateFilter = getDateFilter(filterType,value)
             console.log(filterType,dateFilter)
 
-            const topProducts = await Order.aggregate([
-                {$match:{
-                    createdAt:dateFilter
-                }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.product",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10},
-                {$lookup:{
-                    from:"products",
-                    localField:"_id",
-                    foreignField:"_id",
-                    as:"product"
-                }},
-                {$unwind:"$product"}
-            ])
+            // const topProducts = await Order.aggregate([
+            //     {$match:{
+            //         createdAt:dateFilter
+            //     }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.product",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10},
+            //     {$lookup:{
+            //         from:"products",
+            //         localField:"_id",
+            //         foreignField:"_id",
+            //         as:"product"
+            //     }},
+            //     {$unwind:"$product"}
+            // ])
 
-            const topCategories = await Order.aggregate([
-                {$match:{ createdAt:dateFilter }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.category",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10},
-                {$lookup:{
-                    from:"categories",
-                    localField:"_id",
-                    foreignField:"_id",
-                    as:"category"
-                }},
-                {$unwind:"$category"}
-            ])
+            // const topCategories = await Order.aggregate([
+            //     {$match:{ createdAt:dateFilter }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.category",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10},
+            //     {$lookup:{
+            //         from:"categories",
+            //         localField:"_id",
+            //         foreignField:"_id",
+            //         as:"category"
+            //     }},
+            //     {$unwind:"$category"}
+            // ])
 
-            const topBrands = await Order.aggregate([
-                {$match:{ 
-                    createdAt:dateFilter
-                }},
-                {$unwind:"$orderedItems"},
-                {$match:{
-                    "orderedItems.status":"Delivered"
-                }},
-                {$group:{
-                    _id:"$orderedItems.brand",
-                    totalSold:{$sum:"$orderedItems.quantity"}
-                }},
-                {$sort:{totalSold:-1}},
-                {$limit:10}
-            ])
+            // const topBrands = await Order.aggregate([
+            //     {$match:{ 
+            //         createdAt:dateFilter
+            //     }},
+            //     {$unwind:"$orderedItems"},
+            //     {$match:{
+            //         "orderedItems.status":"Delivered"
+            //     }},
+            //     {$group:{
+            //         _id:"$orderedItems.brand",
+            //         totalSold:{$sum:"$orderedItems.quantity"}
+            //     }},
+            //     {$sort:{totalSold:-1}},
+            //     {$limit:10}
+            // ])
 
+            const topProducts = await getTopProducts(dateFilter)
+            const topCategories = await getTopCategories(dateFilter)
+            const topBrands = await getTopBrands(dateFilter)
 
 
 
@@ -375,23 +395,25 @@ const getSalesTimeline = async(req,res)=>{
 
 
 
-        const sales = await Order.aggregate([
-            {
-                $match:{
-                    status:'Delivered',
-                    createdAt:dateFilter
-                }
-            },
-            {
-                $group:{
-                    _id:
-                    filterType === 'daily' ?{$hour:'$createdAt'}:
-                        filterType === 'monthly'?{$dayOfMonth:'$createdAt'}:{ $month: '$createdAt' },
-                    totalSales:{$sum:"$finalAmount"}
-                }
-            },
-            {$sort:{"_id":1}}
-        ])
+        // const sales = await Order.aggregate([
+        //     {
+        //         $match:{
+        //             status:'Delivered',
+        //             createdAt:dateFilter
+        //         }
+        //     },
+        //     {
+        //         $group:{
+        //             _id:
+        //             filterType === 'daily' ?{$hour:'$createdAt'}:
+        //                 filterType === 'monthly'?{$dayOfMonth:'$createdAt'}:{ $month: '$createdAt' },
+        //             totalSales:{$sum:"$finalAmount"}
+        //         }
+        //     },
+        //     {$sort:{"_id":1}}
+        // ])
+
+        const sales = await getSalesTimelineData(dateFilter, filterType)
 
         const map = {}
         sales.forEach(s=>{ 
