@@ -1,0 +1,64 @@
+.col-md-3 {
+padding: 20px;
+border: 1px solid #ddd;
+border-radius: 10px;
+margin: 10px;
+}
+
+
+.error-message {
+color: red;
+margin-top: 5px;
+}
+
+
+.form-label {
+margin-bottom: 8px;
+}
+
+
+.form-control {
+width: 100%;
+padding: 8px;
+margin-bottom: 10px;
+border: 1px solid #ccc;
+border-radius: 5px;
+box-sizing: border-box;
+}
+
+
+.d-grid {
+margin-top: 20px;
+}
+
+
+.btn-primary {
+background-color: #007bff;
+color: #fff;
+border: 1px solid #007bff;
+border-radius: 5px;
+padding: 10px 20px;
+cursor: pointer;
+}
+
+
+.btn-primary:hover {
+background-color: #0056b3;
+border-color: #0056b3;
+}
+
+.pagination-container {
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 8px;
+}
+
+.pagination-container a,
+.pagination-container span {
+padding: 6px 12px;
+border: 1px solid #ddd;
+border-radius: 5px;
+text-decoration: none;
+color: #007bff;
+}

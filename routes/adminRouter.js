@@ -8,7 +8,7 @@
 
 import express from 'express'
 const router = express.Router()
-import uploads from '../helpers/multer.js'
+import  { uploads, uploadredirect, validateFileTypes } from '../helpers/multer.js'
 // const uploads = multer({ storage: storage })
 
 
@@ -77,7 +77,7 @@ router.post('/editCategory/:id', adminAuth, editCategory)
 router.delete('/deleteCategory', adminAuth, deleteCategory)
 //brand management
 router.get('/brands', adminAuth, getBrandPage)
-router.post('/addBrand', adminAuth, uploads.single("image"), addBrand)
+router.post('/addBrand', adminAuth, uploads.single("image"),uploadredirect,validateFileTypes,addBrand)
 router.get('/blockBrand', adminAuth, blockBrand)
 router.get('/unBlockBrand', adminAuth, unBlockBrand)
 router.get('/deleteBrand', adminAuth, deleteBrand)
@@ -88,20 +88,20 @@ router.post('/addProducts', ((req, res, next) => {
     console.log("/addProducts has recieved a post req");
     next()
 
-}), adminAuth, uploads.array('images', 4), addProducts)
+}), adminAuth, uploads.array('images', 4),uploadredirect,validateFileTypes,addProducts)
 router.get('/products', adminAuth, getAllProducts)
 router.post('/addProductOffer', adminAuth, addProductOffer)
 router.post('/removeProductOffer', adminAuth, removeProductOffer)
 router.get('/blockProduct', adminAuth, blockProduct)
 router.get('/unBlockProduct', adminAuth, unBlockProduct)
 router.get('/editProduct', adminAuth, getEditProduct)
-router.post('/editProduct', adminAuth, uploads.array('images', 4), editProduct)
+router.post('/editProduct', adminAuth, uploads.array('images', 4),uploadredirect,uploadredirect,validateFileTypes, editProduct)
 router.post('/deleteImage', adminAuth, uploads.array('images', 4), deleteSingleImage)
 router.delete('/deleteProduct', adminAuth, deleteProduct)
 //banner management
 router.get('/banner', adminAuth, getBannerPage)
 router.get('/addBanner', adminAuth, getAddBannerPage)
-router.post('/addBanner', adminAuth, uploads.single('images'), addBanner)
+router.post('/addBanner', adminAuth, uploads.single('images'),uploadredirect,validateFileTypes,addBanner)
 router.get('/deleteBanner', adminAuth, bannerDelete)
 //coupon management
 import { loadCoupon, createCoupon, getEditCoupon, editCoupon, deleteCoupon } from '../controllers/admin/couponController.js'

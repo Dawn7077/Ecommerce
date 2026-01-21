@@ -7,3 +7,10 @@ export function generateReferralCode(name){
 export function generateOtp(){
     return Math.floor(100000 + Math.random()*900000).toString()
 }
+
+export const isStrongPassword = (password) => {
+  const strongPassword =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  return strongPassword.test(password);
+};

@@ -2,6 +2,19 @@ import Brand from '../../models/brandSchema.js'
 import Product from '../../models/productSchema.js'
 import StatusCodes from '../../utils/httpStatus.js'
 
+import {
+    getBrandsPagination,
+    getBrandsCount ,
+    findBrandByName,
+    createBrand,
+    blockBrand as blockBrandSer,
+    unblockBrand as unblockBrandSer,
+    deleteBrandSer,
+    findBrandByNameExcludingId,
+    updateBrandDetails
+
+} from '../../services/admin/brandServices.js'
+
 const getBrandPage = async(req,res)=>{
     try {
         const updated = req.query.updated
@@ -10,19 +23,34 @@ const getBrandPage = async(req,res)=>{
         const limit = 2 
         const skip = (page-1)*limit
 
-        const brandData = await Brand.find({
-            brandName:{$regex: new RegExp('.*'+search+'.*','i')}
-        })
-        .sort({createdAt:-1})
-        .skip(skip)
-        .limit(limit)
+        // const brandData = await Brand.find({
+        //     brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        // })
+        // .sort({createdAt:-1})
+        // .skip(skip)
+        // .limit(limit)
+
+        const brandData = await getBrandsPagination (search,skip,limit)
         console.log('brandData',brandData);
         
-        const totalBrands = await Brand.countDocuments({
-             brandName:{$regex: new RegExp('.*'+search+'.*','i')}
-        })
+       
+        // const totalBrands = await Brand.countDocuments({
+        //      brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        // })
+        const totalBrands = await getBrandsCount(search)
         const totalPages = Math.ceil(totalBrands/limit)
         const reverseBrand = brandData.reverse()
+
+        if (req.headers.accept?.includes('application/json')) {
+            return res.json({
+                success: true,
+                data: reverseBrand,
+                currentPage: page,
+                totalPages,
+                totalBrands,
+                search
+            })
+        }
          
 
         res.render('admin/brands',{
@@ -36,6 +64,14 @@ const getBrandPage = async(req,res)=>{
         })
     } catch (error) {
         console.log(error)
+        
+        if (req.headers.accept?.includes('application/json')) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
+                success: false, 
+                message: 'Server error' 
+            })
+        }
+        
         res.redirect('/admin/pageError')
     }
 }
@@ -45,9 +81,18 @@ const getBrandPage = async(req,res)=>{
 const addBrand = async(req,res)=>{
     try {
         const brand =req.body.name.trim()
-        const findBrand = await Brand.findOne({
-            brandName:{$regex: new RegExp(`^${brand}$`,`i`)}
-        })
+
+        if (!brand) {
+            return res.json({
+                success: false,
+                message: 'Brand name is required'
+            })
+        }
+
+        // const findBrand = await Brand.findOne({
+        //     brandName:{$regex: new RegExp(`^${brand}$`,`i`)}
+        // })
+        const findBrand = await findBrandByName(brand)
         if(findBrand){
              return res.json({
                 success: false,
@@ -55,25 +100,31 @@ const addBrand = async(req,res)=>{
             });
         }
 
-        // if (!req.file) {
-        // return res.json({
-        //         success: false,
-        //         message: 'Brand image is required'
-        //     });
-        // }
-         
-        if(!findBrand){
-            const image = req.file.filename
-            const newBrand =new Brand({
-                brandName:brand,
-                brandImage:image
+        if (!req.file) {
+            return res.json({
+                success: false,
+                message: 'Brand image is required'
             })
-            await newBrand.save()
+        }
+          
+            const image = req.file.filename
+
+            // const newBrand =new Brand({
+            //     brandName:brand,
+            //     brandImage:image
+            // })
+            // await newBrand.save()
+            const newBrand = await createBrand(brand, image)
+
+
+
+
             // res.redirect('/admin/brands')
             return res.json({
-                success: true
-            });
-        }
+                success: true,
+                brand: newBrand
+            })
+         
     } catch (error) {
         console.error(error);
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -86,33 +137,97 @@ const addBrand = async(req,res)=>{
 const blockBrand =async (req,res)=> {
     try {
         const id = req.query.id
-        await Brand.updateOne({_id:id},{$set:{isBlocked:true}})
+        if (!id) {
+            return res.json({
+                success: false,
+                message: 'Brand ID is required'
+            })
+        }
+        // await Brand.updateOne({_id:id},{$set:{isBlocked:true}})
+        await blockBrandSer(id)
+
+        if (req.headers.accept?.includes('application/json')) {
+            return res.json({
+                success: true,
+                isBlocked: true,
+                message: 'Brand blocked successfully'
+            })
+        }
+
         res.redirect('/admin/brands')
     } catch (error) {
-        console.log(error); 
+        console.log(error)
+        
+        if (req.headers.accept?.includes('application/json')) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Failed to block brand'
+            })
+        }
+        
         res.redirect('/admin/pageError')
     }
 }
 const unBlockBrand =async (req,res)=> {
     try {
         const id = req.query.id
-        await Brand.updateOne({_id:id},{$set:{isBlocked:false}})
+         if (!id) {
+            return res.json({
+                success: false,
+                message: 'Brand ID is required'
+            })
+        }
+        // await Brand.updateOne({_id:id},{$set:{isBlocked:false}})
+        await unblockBrandSer(id)
+
+         if (req.headers.accept?.includes('application/json')) {
+            return res.json({
+                success: true,
+                isBlocked: false,
+                message: 'Brand unblocked successfully'
+            })
+        }
+
         res.redirect('/admin/brands')
     } catch (error) {
         console.log(error); 
+        if (req.headers.accept?.includes('application/json')) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Failed to unblock brand'
+            })
+        }
         res.redirect('/admin/pageError')
     }
 }
 const deleteBrand =async (req,res)=> {
     try {
-        const {id} = req.query
-        if(!id){
-            return res.status(StatusCodes.BAD_REQUEST).redirect('/admin/pageError')
+        const {id} = req.query 
+        if (!id) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                message: 'Brand ID is required'
+            })
         }
-        await Brand.deleteOne({_id:id})
+        // await Brand.deleteOne({_id:id})
+        await deleteBrandSer(id)
+
+        if (req.headers.accept?.includes('application/json')) {
+            return res.json({
+                success: true,
+                message: 'Brand deleted successfully'
+            })
+        }
+
         res.redirect('/admin/brands')
     } catch (error) {
         console.log("Error deletiing the brand",error); 
+        if (req.headers.accept?.includes('application/json')) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: 'Failed to delete brand'
+            })
+        }
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).redirect('/admin/pageError')
     }
 }
@@ -121,11 +236,18 @@ const editBrand = async(req,res)=>{
         const {brandId,name} = req.body
         const brandName = name.trim()
 
-        const existingBrand = await Brand.findOne({
-            brandName:{$regex:new RegExp(`^${brandName}$`,'i')},
-            _id:{$ne:brandId}
-        })
+        if (!brandName) {
+            return res.json({
+                success: false,
+                message: 'Brand name is required'
+            })
+        }
 
+        // const existingBrand = await Brand.findOne({
+        //     brandName:{$regex:new RegExp(`^${brandName}$`,'i')},
+        //     _id:{$ne:brandId}
+        // })
+        const existingBrand = await findBrandByNameExcludingId(brandName,brandId)
         if(existingBrand){
             return res.json({
                 success: false,
@@ -141,13 +263,22 @@ const editBrand = async(req,res)=>{
             updateData.brandImage = req.file.filename
         }
 
-        await Brand.findByIdAndUpdate(brandId,updateData)
+        // const updatedBrand = await Brand.findByIdAndUpdate(brandId, updateData, {new: true})
+        const updatedBrand = await updateBrandDetails(brandId,updateData)
+        
         // res.redirect('/admin/brands?updated=true') 
         
-        return res.json({ success: true, message: 'Brand updated successfully!' })
-
+        return res.json({ 
+            success: true, 
+            message: 'Brand updated successfully!',
+            brand: updatedBrand
+        })
     } catch (error) {
         console.log("Error editing brand:",error)
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: 'Server error'
+        })
     }
 }
 

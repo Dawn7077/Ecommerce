@@ -5,7 +5,15 @@ import Wallet from '../../models/walletSchema.js'
 import Coupon from '../../models/couponSchema.js'
 import StatusCodes from '../../utils/httpStatus.js'
 
-const getOrderList = async (req, res) => {
+import { fetchOrderListService,
+    orderFindbyIdPopulate,
+    orderFindbyId,
+    productFindbyId,
+    couponFindbyId,
+
+ } from "../../services/user/orderService.js";
+
+const getOrderList1= async (req, res) => {
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
@@ -85,12 +93,57 @@ const getOrderList = async (req, res) => {
     }
 };
 
+const getOrderList = async (req, res) => {
+  try {
+    const {
+      search = "",
+      page = 1,
+      status: statusFilter = "",
+      paymentStatus: paymentFilter = "",
+      dateFrom = "",
+      dateTo = "",
+      sort = ""
+    } = req.query;
+
+    const limit = 10;
+
+    const { orders, totalPages } = await fetchOrderListService({
+      search,
+      page: parseInt(page),
+      limit,
+      statusFilter,
+      paymentFilter,
+      dateFrom,
+      dateTo,
+      sortQuery: sort
+    });
+
+    res.render("admin/order", {
+      orders,
+      currentPage: parseInt(page),
+      totalPages,
+      search,
+      statusFilter,
+      paymentFilter,
+      dateFrom,
+      dateTo,
+      sort
+    });
+
+  } catch (error) {
+    console.error("Error fetching order list:", error);
+    res.redirect("/admin/pageError");
+  }
+};
+
 const getOrderDetails = async (req, res) => {
     try {
         const orderId = req.query.id;
-        const order = await Order.findById(orderId)
-            .populate('userId')
-            .populate('orderedItems.product');
+        // const order = await Order.findById(orderId)
+        //     .populate('userId')
+        //     .populate('orderedItems.product');
+
+         const order = await orderFindbyIdPopulate(orderId)
 
         if (!order) {
             return res.redirect('/admin/orders');
@@ -140,11 +193,12 @@ const changeOrderStatus1 = async (req, res) => {
                     await product.save();  
                 }
 
-            }
+            
 
             if(!item.refunded && (order.paymentMethod === 'Wallet' || order.paymentMethod === 'Stripe')){
                 await refundToWallet(order.userId, order.finalAmount, `Refund for cancelled order #${order.orderId}`)
                 item.refunded = true;
+            }
             }
 
             console.log(`Variant stock restored for Cancelled Order ${orderId}`);
@@ -185,7 +239,8 @@ const changeOrderStatus = async (req, res) => {
     try {
         const { orderId, status } = req.body;
 
-        const order = await Order.findById(orderId);
+        // const order = await Order.findById(orderId);
+        const order = await orderFindbyId(orderId)
         if (!order) {
             return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: 'Order not found' });
         }
@@ -201,7 +256,8 @@ const changeOrderStatus = async (req, res) => {
 
                 // Restock variant if not restocked yet
                 if (!item.restocked) {
-                    const product = await Product.findById(item.product);
+                    // const product = await Product.findById(item.product);
+                    const product = await productFindbyId(item.product);
                     if (product) {
                         const variant = product.variants.find(v =>
                             v.color === item.variant.color && v.size === item.variant.size
@@ -286,11 +342,13 @@ const approveReturn  = async (req,res)=>{
     try {
         const{orderId,itemId} = req.body
 
-        const order = await Order.findById(orderId);
+        // const order = await Order.findById(orderId);
+        const order = await orderFindbyId(orderId);
         if(!order) return res.json({ success: false, message: "Order not found" });
 
         if(order.couponApplied && order.couponId){
-            const coupon = await Coupon.findById(order.couponId)
+            // const coupon = await Coupon.findById(order.couponId)
+            const coupon = await couponFindbyId(order.couponId)
 
             if(coupon){
                 let remainingTotal =0
@@ -319,7 +377,8 @@ const approveReturn  = async (req,res)=>{
 
         
         if(!item.restocked){
-            const product = await Product.findById(item.product)
+            // const product = await Product.findById(item.product)
+            const product = await productFindbyId(item.product)
             if(product){
     
                 const variant = product.variants.find(v=>
@@ -381,7 +440,8 @@ const rejectReturn  = async (req,res)=>{
     try {
         const{orderId,itemId} = req.body
 
-        const order = await Order.findById(orderId);
+        // const order = await Order.findById(orderId);
+        const order = await orderFindbyId(orderId);
         if(!order) return res.json({ success: false, message: "Order not found" });
 
         const item = order.orderedItems.id(itemId)

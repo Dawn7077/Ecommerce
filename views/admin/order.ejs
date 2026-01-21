@@ -1,33 +1,6 @@
 <%- include("../../views/partials/admin/header") %>
 
-<style>
-.badge-soft-warning { background-color: #fff8dd; color: #ffc107; }
-.badge-soft-success { background-color: #d1e7dd; color: #0f5132; }
-.badge-soft-danger { background-color: #f8d7da; color: #842029; }
-.badge-soft-info { background-color: #cff4fc; color: #055160; }
-.badge-soft-secondary { background-color: #e2e3e5; color: #41464b; }
-
-.table-hover tbody tr:hover { background-color: #f8f9fa; transition: 0.3s; }
-.action-btn { width: 35px; height: 35px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin: 0 2px; }
-.btn-detail {
-    background-color: #0f77e0;
-    color: #fff;
-}
-.btn-detail:hover {
-    background-color: #0160c0;
-    color: #c2c2c2;
-}
-.btn-primary {
-    background-color: #0f77e0;
-    color: #fff;
-}
-.btn-primary:hover {
-    background-color: #0160c0;
-    color: #c2c2c2;
-}
-
-
-</style>
+<link rel="stylesheet" href="/admin/style/orders.css">
 
 <section class="content-main">
     <div class="content-header">
@@ -170,29 +143,4 @@
 <%- include("../../views/partials/admin/footer") %>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-function updateStatus(orderId, newStatus) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: `You are about to change the order status to ${newStatus}`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, update it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/admin/order-change-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId: orderId, status: newStatus })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status) location.reload();
-                else Swal.fire('Error', 'Failed to update status', 'error');
-            }).catch(err => Swal.fire('Error', 'Something went wrong', 'error'));
-        } else { location.reload(); }
-    });
-}
-</script>
+<script src="/admin/js/ordersScript.js"></script>

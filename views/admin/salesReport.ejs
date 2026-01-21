@@ -1,38 +1,6 @@
  <%- include("../../views/partials/admin/header") %>
 
-<style>
-    .stats-card {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .stats-card h4 {
-        color: #666;
-        font-size: 14px;
-        margin-bottom: 10px;
-    }
-    .stats-card h2 {
-        color: #333;
-        font-size: 28px;
-        font-weight: bold;
-        margin: 0;
-    }
-    .filter-card {
-        background: white;
-        border-radius: 10px;
-        padding: 25px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-    .btn-download {
-        margin-left: 10px;
-    }
-    .badge-success { background-color: #d1e7dd; color: #0f5132; }
-    .badge-warning { background-color: #fff3cd; color: #ffc107; }
-    .badge-info { background-color: #cff4fc; color: #055160; }
-</style>
+<link rel="stylesheet" href="/admin/style/salesReport.css">
 
 <section class="content-main">
     <div class="content-header">
@@ -210,71 +178,6 @@
      <% } %>
 </section>
 
-<script>
-document.getElementById('filterForm').addEventListener('submit',function(e){
-    const filterType = document.getElementById('filterType').value
-
-    if(filterType === 'custom'){
-        const from = document.getElementById('customFrom').value
-        const to = document.getElementById('customTo').value
-        
-        if(!from || !to){
-            alert("Please select both From and To dates ")
-            e.preventDefault()
-            return
-        }
-
-        if(from > to){
-            alert("From date cannot be after To Date")
-            e.preventDefault()
-        }
-    }
-})
-
-
-function toggleCustomDate() {
-    const filterType = document.getElementById('filterType').value
-    const customFromDiv = document.getElementById('customFromDiv')
-    const customToDiv = document.getElementById('customToDiv');
-
-    if(filterType === 'custom'){
-        customFromDiv.style.display = 'block'
-        customToDiv.style.display = 'block'
-    }else{
-        customFromDiv.style.display = 'none'
-        customToDiv.style.display = 'none'
-    }
-}
-
-function downloadExcel(){
-    const filterType = document.getElementById('filterType').value;
-    const customFrom = document.getElementById('customFrom').value;
-    const customTo = document.getElementById('customTo').value;
-
-    let url = `/admin/sales-report/download/excel?filterType=${filterType}`
-
-    if(filterType === 'custom'){
-        url+= `&customFrom=${customFrom}&customTo=${customTo}`
-    }
-
-    window.location.href = url
-}
-
-function downloadPDF() {
-    const filterType = document.getElementById('filterType').value
-    const customFrom = document.getElementById('customFrom').value
-    const customTo = document.getElementById('customTo').value
-
-    let url = `/admin/sales-report/download/pdf?filterType=${filterType}`
-    if(filterType === 'custom'){
-        url+= `&customFrom=${customFrom}&customTo=${customTo}`
-    }
-
-    window.open(url, '_blank')
-
-}
-
-document.addEventListener('DOMContentLoaded',toggleCustomDate)
-</script>
+<script src="/admin/js/salesReport.js"></script>
 
  <%- include("../../views/partials/admin/footer") %>

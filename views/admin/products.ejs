@@ -66,14 +66,33 @@
                       <% } %>
                 </td>
                 <td><%= data[i].totalStock %></td>
-                <td class="text-start">
+
+
+
+
+
+
+                <td class="text-start" id="status-<%=data[i]._id %>">
                       <% if(data[i].isBlocked === false){ %>
                       <span class="badge rounded-pill btn-success" style="width: 80px; padding:9px;">Unblocked</span>
                       <% }else{ %>
                       <span class="badge rounded-pill btn-danger" style="width: 80px; padding:9px;">Blocked</span>
                       <% } %>
                     </td>
-                <td>
+
+                <td id="statusBtn-<%=data[i]._id %>">
+                    <% if(data[i].isBlocked === false) {%>
+                    <button class="btn btn-danger" style="width: 80px;" onclick="blockProduct(data[i]._id)">Block</button>
+                    <!-- <a href="/admin/blockProduct?id=<%=data[i]._id %>" class="text-white" style="text-decoration: none;">Block</a> -->
+
+                    <% }else{ %>
+                    <button class="btn btn-success" style="width: 80px;" onclick="unBlockProduct(data[i]._id)">Unblock</button>
+                    <!-- <a href="/admin/unBlockProduct?id=<%=data[i]._id %>" class="text-white" style="text-decoration: none;">Unblock</a> -->
+
+                    <% } %>
+                </td>
+                
+                <!-- <td id="statusBtn-<%=data[i]._id %>">
                     <% if(data[i].isBlocked === false) {%>
                     <button class="btn btn-danger" style="width: 80px;">
                         <a href="/admin/blockProduct?id=<%=data[i]._id %>" class="text-white" style="text-decoration: none;">Block</a>
@@ -83,7 +102,17 @@
                         <a href="/admin/unBlockProduct?id=<%=data[i]._id %>" class="text-white" style="text-decoration: none;">Unblock</a>
                     </button>
                     <% } %>
-                </td>
+                </td> -->
+
+
+
+
+
+
+
+
+
+
                 <td>
                     <button class="btn btn-info" style="width: 80px;">
                         <a href="/admin/editProduct?id=<%=data[i]._id %>&page=<%= currentPage %>" class="text-white" style="text-decoration: none;">Edit</a>
@@ -126,6 +155,41 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script>
+
+    async function blockProduct(productId) {
+        try {
+            const res = await fetch(`/admin/blockProduct?id=${productId}`,{
+
+            })
+            const data = await res.json()
+            if(data.success){
+                const status = document.getElementById(`status-${productId}`)
+                const statusBtn = document.getElementById(`statusBtn-${productId}`)
+                status.innerHTML=`<span class="badge rounded-pill btn-danger" style="width: 80px; padding:9px;">Blocked</span>`
+                statusBtn.innerHTML=`<button class="btn btn-success" style="width: 80px;" onclick="unBlockProduct(data[i]._id)">Unblock</button>`
+            }
+        } catch (error) {
+            
+        }
+    }
+    async function unBlockProduct(productId) {
+        try {
+            const res = await fetch(`/admin/unBlockProduct?id=${productId}`,{
+
+            })
+            const data = await res.json()
+            if(data.success){
+                const status = document.getElementById(`status-${productId}`)
+                const statusBtn = document.getElementById(`statusBtn-${productId}`)
+                status.innerHTML=`<span class="badge rounded-pill btn-success" style="width: 80px; padding:9px;">Unblocked</span>`
+                statusBtn.innerHTML=`<button class="btn btn-danger" style="width: 80px;" onclick="blockProduct(data[i]._id)">Block</button>`
+            }
+        } catch (error) {
+            
+        }
+    }
+
+
     async function addOffer(productId) {
         const {value:amount} = await Swal.fire({
             title:'Offer in percentage',
@@ -195,6 +259,7 @@
                     }).then(async res=>{
                         if(res.ok){
                             Swal.fire('Offer Removed ','Offer has been removed ','success')
+
                             location.reload()
                         }else if(res.status===false){
                                 await Swal.fire('Error','Failed to ,Please try again ','error')
