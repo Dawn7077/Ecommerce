@@ -2,6 +2,19 @@ import Brand from '../../models/brandSchema.js'
 import Product from '../../models/productSchema.js'
 import StatusCodes from '../../utils/httpStatus.js'
 
+import {
+    getBrandsPagination,
+    getBrandsCount ,
+    findBrandByName,
+    createBrand,
+    blockBrand as blockBrandSer,
+    unblockBrand as unblockBrandSer,
+    deleteBrandSer,
+    findBrandByNameExcludingId,
+    updateBrandDetails
+
+} from '../../services/admin/brandServices.js'
+
 const getBrandPage = async(req,res)=>{
     try {
         const updated = req.query.updated
@@ -10,17 +23,21 @@ const getBrandPage = async(req,res)=>{
         const limit = 2 
         const skip = (page-1)*limit
 
-        const brandData = await Brand.find({
-            brandName:{$regex: new RegExp('.*'+search+'.*','i')}
-        })
-        .sort({createdAt:-1})
-        .skip(skip)
-        .limit(limit)
+        // const brandData = await Brand.find({
+        //     brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        // })
+        // .sort({createdAt:-1})
+        // .skip(skip)
+        // .limit(limit)
+
+        const brandData = await getBrandsPagination (search,skip,limit)
         console.log('brandData',brandData);
         
-        const totalBrands = await Brand.countDocuments({
-             brandName:{$regex: new RegExp('.*'+search+'.*','i')}
-        })
+       
+        // const totalBrands = await Brand.countDocuments({
+        //      brandName:{$regex: new RegExp('.*'+search+'.*','i')}
+        // })
+        const totalBrands = await getBrandsCount(search)
         const totalPages = Math.ceil(totalBrands/limit)
         const reverseBrand = brandData.reverse()
 
@@ -72,9 +89,10 @@ const addBrand = async(req,res)=>{
             })
         }
 
-        const findBrand = await Brand.findOne({
-            brandName:{$regex: new RegExp(`^${brand}$`,`i`)}
-        })
+        // const findBrand = await Brand.findOne({
+        //     brandName:{$regex: new RegExp(`^${brand}$`,`i`)}
+        // })
+        const findBrand = await findBrandByName(brand)
         if(findBrand){
              return res.json({
                 success: false,
@@ -90,11 +108,17 @@ const addBrand = async(req,res)=>{
         }
           
             const image = req.file.filename
-            const newBrand =new Brand({
-                brandName:brand,
-                brandImage:image
-            })
-            await newBrand.save()
+
+            // const newBrand =new Brand({
+            //     brandName:brand,
+            //     brandImage:image
+            // })
+            // await newBrand.save()
+            const newBrand = await createBrand(brand, image)
+
+
+
+
             // res.redirect('/admin/brands')
             return res.json({
                 success: true,
@@ -119,7 +143,8 @@ const blockBrand =async (req,res)=> {
                 message: 'Brand ID is required'
             })
         }
-        await Brand.updateOne({_id:id},{$set:{isBlocked:true}})
+        // await Brand.updateOne({_id:id},{$set:{isBlocked:true}})
+        await blockBrandSer(id)
 
         if (req.headers.accept?.includes('application/json')) {
             return res.json({
@@ -152,7 +177,8 @@ const unBlockBrand =async (req,res)=> {
                 message: 'Brand ID is required'
             })
         }
-        await Brand.updateOne({_id:id},{$set:{isBlocked:false}})
+        // await Brand.updateOne({_id:id},{$set:{isBlocked:false}})
+        await unblockBrandSer(id)
 
          if (req.headers.accept?.includes('application/json')) {
             return res.json({
@@ -183,7 +209,8 @@ const deleteBrand =async (req,res)=> {
                 message: 'Brand ID is required'
             })
         }
-        await Brand.deleteOne({_id:id})
+        // await Brand.deleteOne({_id:id})
+        await deleteBrandSer(id)
 
         if (req.headers.accept?.includes('application/json')) {
             return res.json({
@@ -216,11 +243,11 @@ const editBrand = async(req,res)=>{
             })
         }
 
-        const existingBrand = await Brand.findOne({
-            brandName:{$regex:new RegExp(`^${brandName}$`,'i')},
-            _id:{$ne:brandId}
-        })
-
+        // const existingBrand = await Brand.findOne({
+        //     brandName:{$regex:new RegExp(`^${brandName}$`,'i')},
+        //     _id:{$ne:brandId}
+        // })
+        const existingBrand = await findBrandByNameExcludingId(brandName,brandId)
         if(existingBrand){
             return res.json({
                 success: false,
@@ -236,7 +263,8 @@ const editBrand = async(req,res)=>{
             updateData.brandImage = req.file.filename
         }
 
-        const updatedBrand = await Brand.findByIdAndUpdate(brandId, updateData, {new: true})
+        // const updatedBrand = await Brand.findByIdAndUpdate(brandId, updateData, {new: true})
+        const updatedBrand = await updateBrandDetails(brandId,updateData)
         
         // res.redirect('/admin/brands?updated=true') 
         

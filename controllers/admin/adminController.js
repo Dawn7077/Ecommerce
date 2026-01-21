@@ -26,6 +26,7 @@ import {
     getSalesTimelineData
 } from '../../services/admin/adminControllerServies.js'
 
+import { logger } from '../../utils/logger.js'
 
 const loadlogin = (req,res)=>{
     if(req.session.admin){
@@ -84,7 +85,8 @@ const login = async(req,res)=>{
 
 const loadDashboard = async (req,res)=>{
     if(req.session.admin){
-        try {
+        try {  
+            logger.info('admin login success--')
             const filterType = req.query.filterType || ''
             const value = req.query.value || ''
             const dateFilter = getDateFilter(filterType,value)

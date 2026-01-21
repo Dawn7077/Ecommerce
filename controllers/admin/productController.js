@@ -65,7 +65,7 @@ const addProducts = async(req,res)=>{
 
                         },500)
                     } catch (error) {
-                        console.error(`Error processing image ${req.files[i].filename}:`, err.message)
+                        console.error(`Error processing image ${req.files[i].filename}:`, error.message)
                     }
   
                 }
@@ -89,7 +89,7 @@ const addProducts = async(req,res)=>{
                 const size = sizes[i]?.trim()
                 const stockValue = Number(stocks[i])
 
-                if(!color && !size && !stock) continue 
+                if(!color && !size && !stockValue) continue 
 
                 if (!color || !size) {
                   console.log("Skipped incomplete variant row");
@@ -332,7 +332,8 @@ const blockProduct = async(req,res)=>{
   try {
     const id = req.query.id
     await Product.updateOne({_id:id},{$set:{isBlocked:true}})
-    res.redirect('/admin/products')
+    // res.redirect('/admin/products')
+    return res.json({success:true})
   } catch (error) {
     res.redirect('/pageError')
   }

@@ -1,0 +1,328 @@
+
+let currentPage = <%= currentPage %>;
+let currentSearch = '<%= search %>';
+
+async function toggleBlock(id, isCurrentlyBlocked) {
+try {
+    const action = isCurrentlyBlocked ? 'unblock' : 'block';
+    const url = isCurrentlyBlocked ? `/admin/unBlockBrand?id=${id}` : `/admin/blockBrand?id=${id}`;
+
+    const res = await fetch(url, {
+    headers: { 'Accept': 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (data.success) { 
+    const statusBadge = document.getElementById(`status-${id}`);
+    statusBadge.className = `badge rounded-pill ${isCurrentlyBlocked ? 'btn-success' : 'btn-danger'}`;
+    statusBadge.textContent = isCurrentlyBlocked ? 'Active' : 'Blocked';
+
+    const blockBtn = document.getElementById(`block-btn-${id}`);
+    blockBtn.className = `btn ${isCurrentlyBlocked ? 'btn-danger' : 'btn-success'}`;
+    blockBtn.textContent = isCurrentlyBlocked ? 'Block' : 'Unblock';
+    blockBtn.setAttribute('onclick', `toggleBlock('${id}', ${!isCurrentlyBlocked})`);
+
+    Swal.fire('Success', `Brand ${action}ed successfully`, 'success');
+    } else {
+    Swal.fire('Error', data.message || 'Action failed', 'error');
+    }
+} catch (error) {
+    console.error('Error toggling block:', error);
+    Swal.fire('Error', 'Something went wrong', 'error');
+}
+}
+
+
+async function addBrand() {
+const form = document.getElementById('addBrandForm');
+const formData = new FormData(form);
+
+try {
+    const res = await fetch('/admin/addBrand', {
+    method: 'POST',
+    body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+    await Swal.fire({ 
+        icon: 'success',
+        title: 'Brand Added',
+        text: 'Brand added successfully!'
+    });
+     
+    loadBrands(currentPage, currentSearch);
+    form.reset();
+    } else {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops!',
+        text: data.message
+    });
+    }
+} catch (error) {
+    Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: 'Something went wrong'
+    });
+}
+}
+
+
+async function updateBrand() {
+const form = document.getElementById('editBrandForm');
+const formData = new FormData(form);
+const brandId = document.getElementById('editBrandId').value;
+
+try {
+    const res = await fetch('/admin/editBrand', {
+    method: 'POST',
+    body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+    await Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: data.message
+    });
+ 
+    const newName = formData.get('name');
+    document.getElementById(`name-${brandId}`).textContent = newName;
+ 
+    if (data.brand && data.brand.brandImage) {
+        document.getElementById(`img-${brandId}`).src = `/uploads/product-image/${data.brand.brandImage}`;
+    }
+ 
+    cancelEdit();
+    } else {
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops!',
+        text: data.message
+    });
+    }
+} catch (error) {
+    Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: 'Something went wrong'
+    });
+}
+}
+
+
+async function deleteBrand(id) {
+const result = await Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+});
+
+if (result.isConfirmed) {
+    try {
+    const res = await fetch(`/admin/deleteBrand?id=${id}`, {
+        headers: { 'Accept': 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (data.success) { 
+        document.getElementById(`row-${id}`).remove();
+
+        Swal.fire('Deleted!', 'Brand has been deleted.', 'success');
+ 
+        const tbody = document.getElementById('brandTableBody');
+        if (tbody.children.length === 0) {
+        loadBrands(Math.max(1, currentPage - 1), currentSearch);
+        }
+    } else {
+        Swal.fire('Error', data.message || 'Delete failed', 'error');
+    }
+    } catch (error) {
+    Swal.fire('Error', 'Something went wrong', 'error');
+    }
+}
+}
+
+
+function editBrandForm(id, name, image) {
+document.getElementById('addForm').style.display = 'none';
+document.getElementById('editForm').style.display = 'block';
+
+document.getElementById('editBrandId').value = id;
+document.getElementById('editBrandName').value = name;
+document.getElementById('editPreview').src = '/uploads/product-image/' + image;
+}
+
+
+function cancelEdit() {
+document.getElementById('addForm').style.display = 'block';
+document.getElementById('editForm').style.display = 'none';
+document.getElementById('editBrandForm').reset();
+}
+
+
+async function loadBrands(page = 1, search = '') {
+try {
+    const url = new URL('/admin/brands', window.location.origin);
+    url.searchParams.set('page', page);
+    if (search) url.searchParams.set('search', search);
+
+    const res = await fetch(url, {
+    headers: { 'Accept': 'application/json' }
+    });
+
+    if (!res.ok) throw new Error('Failed to load brands');
+
+    const result = await res.json();
+
+    currentPage = result.currentPage;
+    currentSearch = search;
+
+    renderTable(result.data);
+    renderPagination(result.totalPages, result.currentPage);
+    updateURL(page, search);
+
+} catch (error) {
+    console.error('Error loading brands:', error);
+    Swal.fire('Error', 'Failed to load brands', 'error');
+}
+}
+
+
+function renderTable(brands) {
+const tbody = document.getElementById('brandTableBody');
+
+if (brands.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No brands found</td></tr>';
+    return;
+}
+
+tbody.innerHTML = brands.map(brand => `
+    <tr id="row-${brand._id}">
+    <td class="text-start" id="name-${brand._id}">${escapeHtml(brand.brandName)}</td>
+    <td class="text-start">
+        <div class="d-flex align-items-center justify-content-center"
+            style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
+        <img
+            id="img-${brand._id}"
+            src="/uploads/product-image/${brand.brandImage}"
+            alt="${escapeHtml(brand.brandName)}"
+            class="img-fluid rounded-circle"
+            style="width: 100%; height: auto"
+        />
+        </div>
+    </td>
+    <td class="text-start">
+        <span
+        id="status-${brand._id}"
+        class="badge rounded-pill ${brand.isBlocked ? 'btn-danger' : 'btn-success'}"
+        style="width: 60px"
+        >
+        ${brand.isBlocked ? 'Blocked' : 'Active'}
+        </span>
+    </td>
+    <td class="text-start">
+        <button 
+        id="block-btn-${brand._id}"
+        class="btn ${brand.isBlocked ? 'btn-success' : 'btn-danger'}" 
+        style="width: 90px"
+        onclick="toggleBlock('${brand._id}', ${brand.isBlocked})"
+        >
+        ${brand.isBlocked ? 'Unblock' : 'Block'}
+        </button>
+        <button
+        class="btn btn-danger"
+        style="width: 90px"
+        onclick="deleteBrand('${brand._id}')"
+        >
+        Delete
+        </button>
+        <button
+        class="btn btn-info"
+        style="width: 90px"
+        onclick="editBrandForm('${brand._id}', '${escapeHtml(brand.brandName)}', '${brand.brandImage}')"
+        >
+        Edit
+        </button>
+    </td>
+    </tr>
+`).join('');
+}
+
+
+function renderPagination(totalPages, activePage) {
+const pagination = document.getElementById('pagination');
+
+if (totalPages === 0) {
+    pagination.innerHTML = '';
+    return;
+}
+
+pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .map(page => `
+    <li class="page-item ${page === activePage ? 'active' : ''}">
+        <a class="page-link page-link-btn" href="#" data-page="${page}">
+        ${page}
+        </a>
+    </li>
+    `).join('');
+}
+
+
+function updateURL(page, search) {
+const url = new URL(window.location);
+url.searchParams.set('page', page);
+
+if (search) {
+    url.searchParams.set('search', search);
+} else {
+    url.searchParams.delete('search');
+}
+
+window.history.pushState({}, '', url);
+}
+
+
+document.getElementById('searchForm').addEventListener('submit', (e) => {
+e.preventDefault();
+const search = document.getElementById('searchInput').value.trim();
+currentSearch = search;
+loadBrands(1, search);
+
+document.getElementById('clearSearch').style.display = search ? 'flex' : 'none';
+});
+
+
+document.getElementById('clearSearch').addEventListener('click', () => {
+document.getElementById('searchInput').value = '';
+currentSearch = '';
+loadBrands(1, '');
+document.getElementById('clearSearch').style.display = 'none';
+});
+
+
+document.getElementById('pagination').addEventListener('click', (e) => {
+e.preventDefault();
+if (e.target.classList.contains('page-link-btn')) {
+    const page = parseInt(e.target.dataset.page);
+    loadBrands(page, currentSearch);
+}
+});
+
+
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.textContent = text;
+return div.innerHTML;
+}

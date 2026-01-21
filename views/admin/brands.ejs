@@ -42,6 +42,7 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-3">
+
           <!-- Add Form -->
           <div id="addForm">
             <form id="addBrandForm" enctype="multipart/form-data">
@@ -180,15 +181,16 @@
 <% if(updated){ %>
   <script> 
     Swal.fire('Brand Updated', 'Brand has been updated successfully!', 'success');
-  </script>
+    </script>
 <% } %>
+<script src="/admin/js/brand.js"></script>
 
-<script>
-  // State management
+
+<script> 
+
   let currentPage = <%= currentPage %>;
   let currentSearch = '<%= search %>';
-
-  // Simple block/unblock toggle
+ 
   async function toggleBlock(id, isCurrentlyBlocked) {
     try {
       const action = isCurrentlyBlocked ? 'unblock' : 'block';
@@ -200,13 +202,11 @@
 
       const data = await res.json();
 
-      if (data.success) {
-        // Update status badge
+      if (data.success) { 
         const statusBadge = document.getElementById(`status-${id}`);
         statusBadge.className = `badge rounded-pill ${isCurrentlyBlocked ? 'btn-success' : 'btn-danger'}`;
         statusBadge.textContent = isCurrentlyBlocked ? 'Active' : 'Blocked';
-
-        // Update block button
+ 
         const blockBtn = document.getElementById(`block-btn-${id}`);
         blockBtn.className = `btn ${isCurrentlyBlocked ? 'btn-danger' : 'btn-success'}`;
         blockBtn.textContent = isCurrentlyBlocked ? 'Block' : 'Unblock';
@@ -222,7 +222,7 @@
     }
   }
 
-  // Add brand
+   
   async function addBrand() {
     const form = document.getElementById('addBrandForm');
     const formData = new FormData(form);
@@ -261,7 +261,7 @@
     }
   }
 
-  // Update brand
+   
   async function updateBrand() {
     const form = document.getElementById('editBrandForm');
     const formData = new FormData(form);
@@ -309,7 +309,7 @@
     }
   }
 
-  // Delete brand
+   
   async function deleteBrand(id) {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -349,7 +349,7 @@
     }
   }
 
-  // Show edit form
+   
   function editBrandForm(id, name, image) {
     document.getElementById('addForm').style.display = 'none';
     document.getElementById('editForm').style.display = 'block';
@@ -359,14 +359,14 @@
     document.getElementById('editPreview').src = '/uploads/product-image/' + image;
   }
 
-  // Cancel edit
+ 
   function cancelEdit() {
     document.getElementById('addForm').style.display = 'block';
     document.getElementById('editForm').style.display = 'none';
     document.getElementById('editBrandForm').reset();
   }
 
-  // Load brands for pagination/search
+  
   async function loadBrands(page = 1, search = '') {
     try {
       const url = new URL('/admin/brands', window.location.origin);
@@ -394,7 +394,7 @@
     }
   }
 
-  // Render table
+ 
   function renderTable(brands) {
     const tbody = document.getElementById('brandTableBody');
 
@@ -455,7 +455,7 @@
     `).join('');
   }
 
-  // Render pagination
+  
   function renderPagination(totalPages, activePage) {
     const pagination = document.getElementById('pagination');
 
@@ -474,7 +474,7 @@
       `).join('');
   }
 
-  // Update URL
+   
   function updateURL(page, search) {
     const url = new URL(window.location);
     url.searchParams.set('page', page);
@@ -488,7 +488,7 @@
     window.history.pushState({}, '', url);
   }
 
-  // Search form
+ 
   document.getElementById('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const search = document.getElementById('searchInput').value.trim();
@@ -498,7 +498,7 @@
     document.getElementById('clearSearch').style.display = search ? 'flex' : 'none';
   });
 
-  // Clear search
+ 
   document.getElementById('clearSearch').addEventListener('click', () => {
     document.getElementById('searchInput').value = '';
     currentSearch = '';
@@ -506,7 +506,7 @@
     document.getElementById('clearSearch').style.display = 'none';
   });
 
-  // Pagination
+ 
   document.getElementById('pagination').addEventListener('click', (e) => {
     e.preventDefault();
     if (e.target.classList.contains('page-link-btn')) {
@@ -515,7 +515,7 @@
     }
   });
 
-  // Utility
+   
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

@@ -29,7 +29,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-import { generateReferralCode,generateOtp } from '../../utils/otp.js'
+import { generateReferralCode,generateOtp,isStrongPassword } from '../../utils/otp.js'
 import { sendVerificationEmail } from '../../services/emailServices.js'
 
 
@@ -106,6 +106,12 @@ const loadSignUp = async(req,res)=>{
         
 //     }
 // }
+// const isStrongPassword = (password) => {
+//   const strongPassword =
+//     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+//   return strongPassword.test(password);
+// };
 
 
 
@@ -115,6 +121,13 @@ const signup = async(req,res)=>{
         if(password!==cPassword){
             return res.render('user/signup',{message:"Password do not match"})
         }
+        if (!isStrongPassword(password)) {
+            return res.render('user/signup', {
+                message:
+                'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'
+            });
+        }
+
         const findUser = await User.findOne({email})
         if(findUser){
             if(findUser.isGoogleUser){
